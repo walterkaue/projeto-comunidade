@@ -38,7 +38,7 @@ export const privacidade: Pagina = {
       titulo: 'O que o servidor pode ver',
       blocos: [
         'O site é entregue pelo GitHub Pages (GitHub, da Microsoft). Como em qualquer site, o servidor recebe o endereço de internet (IP) e dados do navegador de quem abre as páginas, e pode guardar isso em registros. Não controlamos esses registros.',
-        'Fontes, imagens e códigos vêm do próprio site. Não carregamos nada de outros sites.',
+        'Fontes, imagens e códigos vêm do próprio site. A única exceção é a contagem de visitas (veja abaixo).',
       ],
     },
     {
@@ -57,8 +57,9 @@ export const privacidade: Pagina = {
     {
       titulo: 'Métricas de visita',
       blocos: [
-        'Hoje não medimos visitas.',
-        'Se passarmos a medir, será sem cookie e sem identificar você. Esta página avisará antes.',
+        'Contamos visitas com o GoatCounter, um serviço sem cookie que não identifica você.',
+        'A cada tela aberta, o site manda só o nome da tela (por exemplo, "evento" ou "cards") e o nome do site. Nunca vão os dados do evento, do card, da ata nem o título da página.',
+        'Não mandamos de onde você veio nem o tamanho da tela. O GoatCounter recebe, como qualquer site, o endereço de internet (IP) e o tipo de navegador, e diz que não os guarda.',
       ],
     },
     {

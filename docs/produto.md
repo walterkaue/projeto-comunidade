@@ -31,6 +31,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Sem fins lucrativos**, sustentado no futuro por doações. Formato jurídico ainda a definir. |
 | 05/11/2026 | **Menores podem usar**, sem restrição de uso, se o advogado confirmar (ECA Digital). |
 | 05/11/2026 | **Só pessoas usam**, sem conta de organização, por enquanto. |
+| 05/11/2026 | **Métricas ligadas já no beta** (troca o padrão "nenhuma métrica no beta"), para achar problemas antes da divulgação. GoatCounter sem cookie, por imagem de 1 pixel e sem script de fora; manda só o nome da tela aberta, nunca os dados do link. Citado na Política de Privacidade. |
 
 ## 4. Princípios (regras que nunca mudam)
 

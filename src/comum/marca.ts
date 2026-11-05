@@ -14,7 +14,7 @@ export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
  * Só o script de métricas pode falar com outro site (ver testes/privacidade.test.ts).
  * Conta criada: 'projetocomunidade'. Como ligar: src/comum/metricas.ts.
  */
-export const METRICAS_ID = '';
+export const METRICAS_ID = 'projetocomunidade';
 
 /**
  * Lançamento público (divulgação). Enquanto for false, Termos, Privacidade e Regras de uso mostram a faixa

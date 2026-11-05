@@ -84,7 +84,9 @@ describe('peso do pacote inicial', () => {
     const permitido = (url: string, linha: string) =>
       /^https?:\/\/www\.w3\.org\//.test(url) ||
       LINKS_DE_SAIDA.test(url) ||
+      // Contagem de visitas (src/comum/metricas.ts) e a liberação dela na CSP.
       /^https:\/\/[^/]*\.goatcounter\.com\/count/.test(url) ||
+      (/Content-Security-Policy/.test(linha) && /^https:\/\/[a-z0-9-]+\.goatcounter\.com;?$/.test(url)) ||
       (/property="og:image"/.test(linha) && url.startsWith('https://walterkaue.github.io/'));
     const arquivos = [
       ...readdirSync(join(saida, 'assets')).map((a) => join('assets', a)),
