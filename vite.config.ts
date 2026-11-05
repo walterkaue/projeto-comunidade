@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
 import { defineConfig } from 'vitest/config';
@@ -25,6 +25,8 @@ function precargaDoServiceWorker(): Plugin {
     },
     closeBundle() {
       const sw = join(saida, 'sw.js');
+      // Build que falhou também passa aqui: não esconde o erro original.
+      if (!existsSync(sw)) return;
       const versao = createHash('sha256').update(arquivos.join('\n')).digest('hex').slice(0, 10);
       const antes = readFileSync(sw, 'utf8');
       const depois = antes

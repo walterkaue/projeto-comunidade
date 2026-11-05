@@ -71,7 +71,8 @@ self.addEventListener('activate', (evento) => {
   evento.waitUntil(
     (async () => {
       const nomes = await caches.keys();
-      await Promise.all(nomes.filter((n) => !n.startsWith(VERSAO)).map((n) => caches.delete(n)));
+      // Só os caches deste site ('pc-'): no github.io a origem é dividida com outros projetos do mesmo dono.
+      await Promise.all(nomes.filter((n) => n.startsWith('pc-') && !n.startsWith(`${VERSAO}-`)).map((n) => caches.delete(n)));
       await self.clients.claim();
     })(),
   );
@@ -99,14 +100,24 @@ self.addEventListener('fetch', (evento) => {
   }
 });
 
+// Internet fraca: se a rede não responder em alguns segundos e já houver página guardada, usa a guardada
+// (a resposta da rede, quando chegar, atualiza o cache para a próxima vez).
+const ESPERA_DA_REDE_MS = 4000;
+
 async function redePrimeiro(req) {
   const cache = await caches.open(CACHE_PAGINA);
-  try {
-    const resp = await fetch(req);
+  const daRede = fetch(req).then(async (resp) => {
     if (resp.ok) await cache.put(PAGINA, resp.clone());
     return resp;
+  });
+  daRede.catch(() => {}); // se a guardada já respondeu, a falha da rede não importa
+  const guardada = () => cache.match(PAGINA);
+  const demorou = new Promise((ok) => setTimeout(ok, ESPERA_DA_REDE_MS)).then(guardada);
+  try {
+    const primeira = await Promise.race([daRede, demorou]);
+    return primeira ?? (await daRede);
   } catch {
-    return (await cache.match(PAGINA)) ?? (await cache.match(OFFLINE)) ?? Response.error();
+    return (await guardada()) ?? (await cache.match(OFFLINE)) ?? Response.error();
   }
 }
 

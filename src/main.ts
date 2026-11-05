@@ -4,6 +4,7 @@
 import './comum/fontes.css';
 import './comum/tema.css';
 import './comum/componentes.css';
+import { prepararAviso } from './comum/aviso';
 import { ligarMetricas } from './comum/metricas';
 import { lerRota, type NomeDaRota, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
@@ -34,7 +35,15 @@ let primeira = true;
 
 function mostrar(tela: Tela, rota: Rota): void {
   limpar?.();
-  limpar = tela(raiz, rota);
+  limpar = undefined;
+  try {
+    limpar = tela(raiz, rota);
+  } catch (erro) {
+    // Ex.: um link de evento malformado. Nunca deixa a pessoa numa tela morta.
+    console.error(erro);
+    mostrarFalha('Não deu para abrir', 'Esta parte encontrou um problema. Atualize a página ou volte ao início.');
+    return;
+  }
   // Leitor de tela: a cada troca de tela, o foco vai para o título (na primeira, fica no começo da página).
   if (!primeira) raiz.querySelector<HTMLElement>('h1')?.focus();
   primeira = false;
@@ -45,13 +54,19 @@ function telaCarregando(): string {
   return `<main class="tela" aria-busy="true"><p role="status">Carregando…</p></main>`;
 }
 
-function telaSemRede(): string {
-  return `<main class="tela">
-    <h1 tabindex="-1">Sem conexão</h1>
-    <p>Não deu para abrir esta parte agora. Confira a internet e tente de novo.</p>
-    <button class="botao" type="button" data-tentar>Tentar de novo</button>
+/**
+ * Tela de falha. O botão recarrega a página: o navegador guarda o import() que falhou, e depois de um
+ * deploy novo os arquivos antigos somem; recarregar resolve os dois casos.
+ */
+function mostrarFalha(titulo: string, texto: string): void {
+  raiz.innerHTML = `<main class="tela">
+    <h1 tabindex="-1">${titulo}</h1>
+    <p>${texto}</p>
+    <button class="botao" type="button" data-atualizar>Atualizar a página</button>
     <a class="botao botao-sec" href="#/">Voltar ao início</a>
   </main>`;
+  raiz.querySelector<HTMLElement>('h1')?.focus();
+  raiz.querySelector('[data-atualizar]')?.addEventListener('click', () => location.reload());
 }
 
 function abrir(): void {
@@ -71,13 +86,12 @@ function abrir(): void {
     },
     () => {
       if (minha !== navegacao) return;
-      raiz.innerHTML = telaSemRede();
-      raiz.querySelector('h1')?.focus();
-      raiz.querySelector('[data-tentar]')?.addEventListener('click', abrir);
+      mostrarFalha('Sem conexão', 'Não deu para abrir esta parte agora. Confira a internet e atualize a página.');
     },
   );
 }
 
+prepararAviso();
 ligarAvisoDeSaida();
 window.addEventListener('hashchange', abrir);
 abrir();

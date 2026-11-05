@@ -28,11 +28,19 @@ function partirPalavra(medir: Medir, palavra: string, largura: number): string[]
 }
 
 /** Corta com reticências no fim, até caber na largura. */
+// Busca binária no tamanho: texto longo (descrição de 10 mil letras) não trava aparelho fraco.
 export function cortarTexto(medir: Medir, texto: string, largura: number): string {
   if (medir(texto) <= largura) return texto;
   const letras = Array.from(texto);
-  while (letras.length > 0 && medir(letras.join('').trimEnd() + '…') > largura) letras.pop();
-  return letras.join('').trimEnd() + '…';
+  const cabe = (n: number) => medir(letras.slice(0, n).join('').trimEnd() + '…') <= largura;
+  let min = 0;
+  let max = letras.length - 1;
+  while (min < max) {
+    const meio = Math.ceil((min + max) / 2);
+    if (cabe(meio)) min = meio;
+    else max = meio - 1;
+  }
+  return letras.slice(0, min).join('').trimEnd() + '…';
 }
 
 /**

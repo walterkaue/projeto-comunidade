@@ -7,6 +7,8 @@
   --tinta: #1d232a;
   --tinta-suave: #4a5460;
   --borda: #c9ccd1;
+  /* Borda de campo e de componente: 3:1 ou mais sobre o fundo (WCAG 1.4.11). */
+  --borda-campo: #767b83;
   --destaque: #1d232a;
   --sobre-destaque: #ffffff;
   --foco: #0b57d0;
@@ -24,6 +26,7 @@
     --tinta: #f1f2f4;
     --tinta-suave: #b8bec6;
     --borda: #48515c;
+    --borda-campo: #8a929c;
     --destaque: #f1f2f4;
     --sobre-destaque: #14181d;
     --foco: #8ab4f8;

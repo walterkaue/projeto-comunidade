@@ -96,7 +96,7 @@
   width: 100%;
   min-height: var(--toque);
   padding: 10px 12px;
-  border: 2px solid var(--borda);
+  border: 2px solid var(--borda-campo);
   border-radius: var(--raio);
   background: var(--superficie);
   color: var(--tinta);

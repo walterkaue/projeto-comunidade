@@ -7,6 +7,14 @@ export const TEMPO_DO_AVISO_MS = 5000;
 
 const temporizadores = new WeakMap<object, ReturnType<typeof setTimeout>>();
 
+/**
+ * Cria a região vazia logo na abertura do site (src/main.ts): leitor de tela costuma ignorar
+ * texto numa região aria-live recém-inserida, então ela precisa existir antes do primeiro aviso.
+ */
+export function prepararAviso(doc: Document = document): void {
+  regiao(doc);
+}
+
 function regiao(doc: Document): HTMLElement {
   const existente = doc.getElementById(ID_AVISO);
   if (existente) return existente;

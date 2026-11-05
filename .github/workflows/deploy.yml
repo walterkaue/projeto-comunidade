@@ -3,6 +3,8 @@ name: Publicar no GitHub Pages
 on:
   push:
     branches: [main]
+  # Em PR só testa e faz o build; publica só na main.
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -12,7 +14,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:

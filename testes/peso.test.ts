@@ -29,10 +29,23 @@ export function arquivosIniciais(html: string): string[] {
 describe('peso do pacote inicial', () => {
   let saida = '';
   let html = '';
+  /** Módulos de código-fonte que vão no pacote inicial (entrada + o que ela importa de forma estática). */
+  let modulosIniciais: string[] = [];
 
   beforeAll(async () => {
     saida = mkdtempSync(join(tmpdir(), 'pc-peso-'));
-    await build({ root: RAIZ, logLevel: 'silent', build: { outDir: saida, emptyOutDir: true } });
+    const resultado = await build({ root: RAIZ, logLevel: 'silent', build: { outDir: saida, emptyOutDir: true } });
+    type Pedaco = { type: string; fileName: string; isEntry?: boolean; imports?: string[]; moduleIds?: string[] };
+    const saidas = (Array.isArray(resultado) ? resultado : [resultado]).flatMap((r) => (r as { output: Pedaco[] }).output);
+    const porNome = new Map(saidas.map((p) => [p.fileName, p]));
+    const visitar = (p: Pedaco | undefined, vistos: Set<string>): void => {
+      if (!p || p.type !== 'chunk' || vistos.has(p.fileName)) return;
+      vistos.add(p.fileName);
+      modulosIniciais.push(...(p.moduleIds ?? []).map((m) => m.replace(/\\/g, '/')));
+      (p.imports ?? []).forEach((i) => visitar(porNome.get(i), vistos));
+    };
+    const vistos = new Set<string>();
+    saidas.filter((p) => p.isEntry).forEach((p) => visitar(p, vistos));
     html = readFileSync(join(saida, 'index.html'), 'utf8');
   });
 
@@ -55,7 +68,9 @@ describe('peso do pacote inicial', () => {
     const total = tamanhos.reduce((s, t) => s + t.kb, 0);
     console.log(`Pacote inicial: ${total.toFixed(1)} KB gzip (${tamanhos.map((t) => `${t.a} ${t.kb.toFixed(1)}`).join(', ')})`);
     expect(total).toBeLessThanOrEqual(LIMITE_KB);
-    // Cada ferramenta é um arquivo à parte, baixado só quando abre.
-    expect(iniciais.filter((a) => /\/(cards|evento|reuniao)-/.test(a))).toEqual([]);
+    // Cada ferramenta (e as páginas institucionais) é um arquivo à parte, baixado só quando abre:
+    // nenhum módulo delas pode estar no pacote inicial, nem por import estático.
+    expect(modulosIniciais.some((m) => m.endsWith('/src/main.ts'))).toBe(true);
+    expect(modulosIniciais.filter((m) => /\/src\/(ferramentas\/|paginas\/index\.ts)/.test(m))).toEqual([]);
   });
 });
