@@ -27,6 +27,10 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Página de evento por link:** dados só depois do `#`, nada de link livre, PIX ou telefone, faixa "conteúdo de quem enviou", denúncia e lista pública de links bloqueados. |
 | 05/11/2026 | A regra "validado no servidor" não se aplica à Onda 1, que não tem regra, permissão nem contagem. Volta a valer na Onda 2. |
 | 05/11/2026 | **Rascunho da ata só na aba aberta** enquanto o site estiver no endereço do GitHub (o armazenamento do aparelho é dividido com outros projetos desse endereço). Some ao fechar; a pessoa salva o PDF. Rever com domínio próprio. |
+| 05/11/2026 | **Denúncias por e-mail**, no endereço de contato. Uma IA (Gemini, no plano do Kauê) pode ajudar a separar e resumir, mas **quem decide a remoção é uma pessoa**. Sem área de administração no site. |
+| 05/11/2026 | **Sem fins lucrativos**, sustentado no futuro por doações. Formato jurídico ainda a definir. |
+| 05/11/2026 | **Menores podem usar**, sem restrição de uso, se o advogado confirmar (ECA Digital). |
+| 05/11/2026 | **Só pessoas usam**, sem conta de organização, por enquanto. |
 
 ## 4. Princípios (regras que nunca mudam)
 
@@ -53,11 +57,11 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 ## 6. Perguntas abertas
 
 - [ ] Nome e marca definitivos (domínio no Registro.br e busca no INPI). Não trava a construção; trava a divulgação.
-- [ ] Pessoa física, MEI, empresa ou associação sem fins lucrativos (OSC) como responsável. Uma OSC abre editais, doações, `.org.br`, Google para ONGs e TechSoup; definir com contador e advogado.
-- [ ] Como se sustenta sendo grátis: editais, doações, apoio institucional, voluntariado.
-- [ ] Quem modera e com que regras (na Onda 1: quem atende denúncia e atualiza a lista de bloqueio).
-- [ ] Se haverá conta de "organização" (com várias pessoas administrando) ou só contas pessoais (Onda 3).
-- [ ] Se menores de 18 poderão usar e como (antes da Onda 2).
+- [ ] Pessoa física, MEI, empresa ou associação sem fins lucrativos (OSC) como responsável (já decidido: sem fins lucrativos). Uma OSC abre editais, doações, `.org.br`, Google para ONGs e TechSoup; definir com contador e advogado.
+- [x] Como se sustenta sendo grátis: doações no futuro (decidido em 05/11).
+- [ ] Quem modera e com que regras (na Onda 1: quem atende denúncia e atualiza a lista de bloqueio). Já decidido: e-mail, IA ajuda, pessoa decide; falta dizer quem.
+- [x] Se haverá conta de "organização" (com várias pessoas administrando) ou só contas pessoais (Onda 3): só pessoas, por enquanto (05/11).
+- [x] Se menores de 18 poderão usar e como (antes da Onda 2): podem, sem restrição, se o advogado confirmar (05/11).
 
 ## 7. Escopo da Onda 1
 
