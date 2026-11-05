@@ -1,13 +1,13 @@
 # Partidos políticos — usados por testes/neutralidade.test.ts. Uma entrada por linha; "#" começa comentário.
 #
-# ATENÇÃO: lista montada de memória em 05/11/2026. CONFERIR com a lista oficial do TSE antes de confiar nela:
-# https://www.tse.jus.br/partidos/partidos-registrados-no-tse
+# Conferida com a lista oficial do TSE (30 partidos registrados) em 05/11/2026.
+# Fonte: https://www.tse.jus.br/partidos/partidos-registrados-no-tse/registrados-no-tse
 # Partido novo, fusão ou troca de nome: atualize aqui no mesmo commit.
 #
 # Duas seções:
 # - [siglas]: comparação que diferencia maiúsculas e ignora acento ("PT" conta; "pt-BR" não).
 #   Siglas que são palavras comuns em caixa alta (NOVO, REDE, UNIÃO, AVANTE, AGIR, PODE, PODEMOS, CIDADANIA,
-#   SOLIDARIEDADE, MISSÃO, MOBILIZA, PATRIOTA) ou abreviações comuns (UP, DC, SD, PEN, PR = Paraná)
+#   SOLIDARIEDADE, MISSÃO, MOBILIZA, DEMOCRATA, PATRIOTA) ou abreviações comuns (UP, DC, SD, PEN, PR = Paraná)
 #   ficam de fora: dariam alarme falso em "NOVO EVENTO" ou "REDE DE APOIO". Esses partidos são
 #   cobertos pelo nome por extenso, na seção seguinte.
 # - [nomes]: nome por extenso, sem diferenciar maiúsculas nem acento.
@@ -45,6 +45,9 @@ PTC
 PPL
 PMN
 PTdoB
+PRP
+PTN
+PSDC
 
 [nomes]
 Movimento Democrático Brasileiro
@@ -79,6 +82,8 @@ Partido da Mobilização Nacional
 Partido Renovação Democrática
 União Brasil
 Partido Missão
+Partido Democrata
+Mobilização Nacional
 Partido Trabalhista Brasileiro
 Partido Social Cristão
 Partido Social Liberal
