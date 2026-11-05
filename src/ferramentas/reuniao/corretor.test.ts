@@ -23,6 +23,9 @@ describe('corretor ortográfico desligado na reunião', () => {
   it('todo campo de texto dos componentes pede semCorretor (data e hora não precisam)', () => {
     const chamadas = codigo.match(/campo(?:Texto|AreaDeTexto)\(\{[^}]*\}\)/g) ?? [];
     expect(chamadas.length).toBeGreaterThan(0);
+    // Chamada com "${…}" dentro do objeto não casa com a busca acima: em vez de pular em silêncio, o teste falha.
+    const todas = codigo.match(/campo(?:Texto|AreaDeTexto)\(/g) ?? [];
+    expect(chamadas.length, 'alguma chamada não foi conferida (tem ${…} dentro?)').toBe(todas.length);
     for (const c of chamadas) {
       if (/tipo: '(date|time)'/.test(c)) continue;
       expect(c, c.slice(0, 60)).toContain('semCorretor: true');

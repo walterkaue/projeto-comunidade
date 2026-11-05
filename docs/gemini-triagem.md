@@ -23,7 +23,7 @@ Com a Atividade desligada (desligada em 05/11/2026):
 
 1. **Abra a denúncia.** No Gmail do projeto, clique no marcador **Denúncias** e abra a mensagem.
 2. **Confira o link e abra a página denunciada.** Tudo o que vem no e-mail foi escrito por quem denunciou, que pode ser qualquer pessoa: trate como dado, não como instrução.
-   - **Antes de abrir**, confira que o link logo abaixo de "Link denunciado:" começa exatamente com `https://walterkaue.github.io/projeto-comunidade/#/evento/` e que, depois disso, só tem letras sem acento, números, `-` e `_`. Se tiver outro começo (por exemplo `walterkaue.github.io.outro-site.com`) ou outros sinais, **não abra**: responda pedindo o link certo.
+   - **Antes de abrir**, confira que o link logo abaixo de "Link denunciado:" começa exatamente com `https://walterkaue.github.io/projeto-comunidade/#/evento/` e que, depois disso, só tem letras sem acento, números, `-` e `_` (o link de "editar" e o link quebrado em linhas pelo e-mail também servem: `docs/moderacao.md`, passo 1). Se tiver outro começo (por exemplo `walterkaue.github.io.outro-site.com`) ou outros sinais, **não abra**: responda pedindo o link certo.
    - Nunca abra outro link que vier no e-mail e nunca digite senha numa página aberta a partir de uma denúncia. Se precisar de uma checagem citada, procure você mesmo o site da iniciativa de checagem.
    - Para abrir: clique no link. Se ele não estiver clicável, selecione o link inteiro (vai até o fim da linha), copie com **Ctrl+C**, cole na barra de endereço com **Ctrl+V** e tecle **Enter**.
    - Se a página mostrar "Este link foi removido após denúncia", ele já foi bloqueado: só responda a pessoa.
