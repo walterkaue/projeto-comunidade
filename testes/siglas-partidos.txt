@@ -1,12 +1,18 @@
-# Siglas de partidos políticos — usadas por testes/neutralidade.test.ts.
-# Uma sigla por linha; "#" começa comentário. A comparação diferencia maiúsculas (só a sigla em
-# caixa alta conta: "NOVO" é sigla, "novo" é palavra comum) e ignora acento ("UNIÃO" = "UNIAO").
+# Partidos políticos — usados por testes/neutralidade.test.ts. Uma entrada por linha; "#" começa comentário.
 #
 # ATENÇÃO: lista montada de memória em 05/11/2026. CONFERIR com a lista oficial do TSE antes de confiar nela:
 # https://www.tse.jus.br/partidos/partidos-registrados-no-tse
 # Partido novo, fusão ou troca de nome: atualize aqui no mesmo commit.
+#
+# Duas seções:
+# - [siglas]: comparação que diferencia maiúsculas e ignora acento ("PT" conta; "pt-BR" não).
+#   Siglas que são palavras comuns em caixa alta (NOVO, REDE, UNIÃO, AVANTE, AGIR, PODE, PODEMOS, CIDADANIA,
+#   SOLIDARIEDADE, MISSÃO, MOBILIZA, PATRIOTA) ou abreviações comuns (UP, DC, SD, PEN, PR = Paraná)
+#   ficam de fora: dariam alarme falso em "NOVO EVENTO" ou "REDE DE APOIO". Esses partidos são
+#   cobertos pelo nome por extenso, na seção seguinte.
+# - [nomes]: nome por extenso, sem diferenciar maiúsculas nem acento.
 
-# --- registrados no TSE (conferir) ---
+[siglas]
 MDB
 PT
 PSDB
@@ -15,33 +21,17 @@ PDT
 PL
 PSB
 PSD
-REPUBLICANOS
-CIDADANIA
 PCdoB
 PC do B
 PV
 PSOL
-NOVO
-REDE
-PODE
-PODEMOS
-AVANTE
-SOLIDARIEDADE
-AGIR
-DC
 PRTB
 PMB
 PCO
 PSTU
 PCB
-UP
-MOBILIZA
 PRD
-UNIÃO
-UNIÃO BRASIL
-MISSÃO
-
-# --- siglas antigas (fundidas ou renomeadas), ainda reconhecidas como partidárias ---
+# antigas (fundidas ou renomeadas), ainda reconhecidas como partidárias
 PMDB
 PTB
 PSC
@@ -50,12 +40,47 @@ PSL
 DEM
 PPS
 PRB
-# "PR" (antigo Partido da República) fica de fora: é também a sigla do Paraná em listas de estados.
 PHS
 PTC
 PPL
-PATRIOTA
 PMN
 PTdoB
-PEN
-SD
+
+[nomes]
+Movimento Democrático Brasileiro
+Partido dos Trabalhadores
+Partido da Social Democracia Brasileira
+Progressistas
+Partido Progressista
+Partido Democrático Trabalhista
+Partido Liberal
+Partido Socialista Brasileiro
+Partido Social Democrático
+Republicanos
+Partido Comunista do Brasil
+Partido Verde
+Partido Socialismo e Liberdade
+Partido Novo
+Rede Sustentabilidade
+Partido Podemos
+Partido Solidariedade
+Partido Cidadania
+Partido Avante
+Partido Agir
+Democracia Cristã
+Partido Renovador Trabalhista Brasileiro
+Partido da Mulher Brasileira
+Partido da Causa Operária
+Partido Socialista dos Trabalhadores Unificado
+Partido Comunista Brasileiro
+Unidade Popular
+Partido Mobiliza
+Partido da Mobilização Nacional
+Partido Renovação Democrática
+União Brasil
+Partido Missão
+Partido Trabalhista Brasileiro
+Partido Social Cristão
+Partido Social Liberal
+Democratas
+Partido Patriota
