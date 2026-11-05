@@ -70,10 +70,11 @@ Quem é personificado é a vítima e a melhor fonte para dizer se convocou ou n�
 ## Guarda dos e-mails
 
 - **E-mail da denúncia:** até 6 meses depois de encerrado o caso (resposta e eventual revisão).
+- **E-mail de contato** (dúvida, sugestão, pedido que não é denúncia): até 6 meses depois de encerrada a conversa.
 - **Linha da planilha de controle** (sem dado pessoal): 3 anos. Depois, apague a linha.
 - **Impressão na lista pública:** enquanto o bloqueio valer.
 - **Exceção:** se houver processo, ordem judicial, requisição de autoridade ou possível investigação (por exemplo, conteúdo sexual com criança, aviso falso de perigo), guarde o caso inteiro até o fim dele. No Gmail, ponha o marcador `Guardar`.
-- **Uma vez por mês:** no Gmail do projeto, busque `label:Denúncias -label:Guardar older_than:6m`. Confira que cada caso está encerrado há mais de 6 meses e apague. A lixeira do Gmail apaga de vez depois de 30 dias.
+- **Uma vez por mês:** no Gmail do projeto, busque `label:Denúncias -label:Guardar older_than:6m`. Confira que cada caso está encerrado há mais de 6 meses e apague. Depois, faça o mesmo com as mensagens de contato: busque `in:inbox -label:Denúncias -label:Guardar older_than:6m`, confira que a conversa acabou e apague. A lixeira do Gmail apaga de vez depois de 30 dias.
 
 ## Planilha de controle e relatório semestral
 

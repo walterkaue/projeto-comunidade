@@ -33,7 +33,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Só pessoas usam**, sem conta de organização, por enquanto. |
 | 05/11/2026 | **Métricas ligadas já no beta** (troca o padrão "nenhuma métrica no beta"), para achar problemas antes da divulgação. GoatCounter sem cookie, por imagem de 1 pixel e sem script de fora; manda só o nome da tela aberta, nunca os dados do link. Citado na Política de Privacidade. |
 | 05/11/2026 | **Resposta à denúncia** escrita com ajuda de IA leva a frase "escrita com ajuda de inteligência artificial e revisada por uma pessoa" e oferece falar com uma pessoa respondendo o e-mail. |
-| 05/11/2026 | **E-mail de denúncia guardado por até 6 meses depois de encerrado o caso; o registro sem dados pessoais (planilha), por 3 anos**; com processo ou ordem de autoridade, até o fim dele. Troca o "sem prazo definido" decidido antes, que a análise jurídica preliminar apontou como contrário à LGPD (arts. 6º, III, e 9º, II). Limpeza mensal no Gmail (`docs/moderacao.md`). Atividade do Gemini desligada. |
+| 05/11/2026 | **E-mail de denúncia guardado por até 6 meses depois de encerrado o caso; o registro sem dados pessoais (planilha), por 3 anos**; com processo ou ordem de autoridade, até o fim dele. Troca o "sem prazo definido" decidido antes, que a análise jurídica preliminar apontou como contrário à LGPD (arts. 6º, III, e 9º, II). E-mails de **contato**: até 6 meses depois de encerrada a conversa (decidido em 05/11). Limpeza mensal no Gmail (`docs/moderacao.md`). Atividade do Gemini desligada. |
 | 05/11/2026 | **Responsável pelos dados (controlador) é o Kauê, como pessoa física**, até existir a associação. Nome civil completo (**Kauê Sevilhano Walter**, sem CPF e sem endereço) e e-mail do projeto na Política de Privacidade, nos Termos e no Sobre (`RESPONSAVEL` em `src/comum/marca.ts`). Agente de pequeno porte, sem encarregado, com o e-mail como canal. |
 | 05/11/2026 | **Benchmark aprovado** (`claude/benchmarks.md`): regras de operação da seção 4.1 e direção das Ondas 2 e 3 na seção 8. |
 | 05/11/2026 | **Nenhum robô nem API oficial do WhatsApp**, por princípio: a política da Meta proíbe partidos e campanhas, e a plataforma é aberta a todos. Só links `wa.me` e recursos nativos do WhatsApp. |
@@ -105,7 +105,6 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - [ ] Quem modera além do Kauê (na Onda 1: quem atende denúncia e atualiza a lista de bloqueio). As regras estão na seção 4.1.
 - [ ] Se haverá conta de "organização" (Onda 3). Por enquanto, só pessoas.
 - [ ] Na lista "quem leva o quê": nome, apelido ou nada, e quando a lista se apaga sozinha (antes da Onda 2).
-- [ ] Prazo de guarda dos e-mails de **contato** (o de denúncia já tem prazo: seção 3). Sugestão: o mesmo, 6 meses depois de encerrada a conversa.
 - [ ] Parecer do advogado sobre a análise jurídica preliminar de 05/11/2026 (feita por IA). As normas de 2026 citadas nela (adequação da União Europeia, decretos do Marco Civil e do ECA Digital) só entram nos textos públicos depois que ele confirmar.
 
 ## 7. Escopo da Onda 1

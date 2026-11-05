@@ -78,7 +78,7 @@ export const privacidade: Pagina = {
         'Quem decide a remoção é sempre uma pessoa.',
         'A lista pública de links recusados guarda só uma impressão digital (um código) de cada link, nunca o conteúdo.',
         'Guardamos o e-mail da denúncia por até 6 meses depois de encerrar o caso. Depois disso, fica só um registro sem dados pessoais (data, tipo de problema e decisão), por até 3 anos, para prestar contas e nos defender se for preciso. Se houver processo ou ordem de autoridade, guardamos o necessário até o fim dele.',
-        'Mensagens de contato: o prazo de guarda ainda vai ser definido. Você pode pedir a qualquer momento que apaguemos o seu e-mail (veja "Seus direitos").',
+        'Mensagens de contato: guardamos por até 6 meses depois de encerrada a conversa. Você pode pedir a qualquer momento que apaguemos o seu e-mail (veja "Seus direitos").',
       ],
     },
     {

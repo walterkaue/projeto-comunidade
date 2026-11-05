@@ -37,5 +37,5 @@ O projeto usa o legítimo interesse (LGPD, art. 7º, IX) em três usos. Para cad
 | Finalidade | Responder dúvidas, sugestões e pedidos. |
 | Dados | O e-mail de quem escreve e o que escreveu. |
 | Necessidade e impacto | Mínimos: sem a mensagem não há resposta, e ela não tem outro uso. |
-| Cuidados | Prazo de guarda ainda a decidir (`docs/produto.md`, seção 6); a sugestão é a mesma das denúncias, 6 meses depois de encerrada a conversa. |
+| Cuidados | Guardadas por até 6 meses depois de encerrada a conversa, com a mesma exceção das denúncias (processo ou ordem de autoridade). Limpeza mensal (`docs/moderacao.md`). |
 | Conclusão | O interesse de quem escreveu e do projeto prevalece. |
