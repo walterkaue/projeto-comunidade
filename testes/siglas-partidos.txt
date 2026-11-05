@@ -1,0 +1,61 @@
+# Siglas de partidos políticos — usadas por testes/neutralidade.test.ts.
+# Uma sigla por linha; "#" começa comentário. A comparação diferencia maiúsculas (só a sigla em
+# caixa alta conta: "NOVO" é sigla, "novo" é palavra comum) e ignora acento ("UNIÃO" = "UNIAO").
+#
+# ATENÇÃO: lista montada de memória em 05/11/2026. CONFERIR com a lista oficial do TSE antes de confiar nela:
+# https://www.tse.jus.br/partidos/partidos-registrados-no-tse
+# Partido novo, fusão ou troca de nome: atualize aqui no mesmo commit.
+
+# --- registrados no TSE (conferir) ---
+MDB
+PT
+PSDB
+PP
+PDT
+PL
+PSB
+PSD
+REPUBLICANOS
+CIDADANIA
+PCdoB
+PC do B
+PV
+PSOL
+NOVO
+REDE
+PODE
+PODEMOS
+AVANTE
+SOLIDARIEDADE
+AGIR
+DC
+PRTB
+PMB
+PCO
+PSTU
+PCB
+UP
+MOBILIZA
+PRD
+UNIÃO
+UNIÃO BRASIL
+MISSÃO
+
+# --- siglas antigas (fundidas ou renomeadas), ainda reconhecidas como partidárias ---
+PMDB
+PTB
+PSC
+PROS
+PSL
+DEM
+PPS
+PRB
+# "PR" (antigo Partido da República) fica de fora: é também a sigla do Paraná em listas de estados.
+PHS
+PTC
+PPL
+PATRIOTA
+PMN
+PTdoB
+PEN
+SD
