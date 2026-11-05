@@ -136,7 +136,7 @@ export const tela: Tela = (raiz, rota) => {
       <h2 id="cards-saidas-titulo">Enviar ou guardar</h2>
       <button type="button" class="botao" id="cards-compartilhar">Compartilhar imagem</button>
       <button type="button" class="botao botao-sec" id="cards-baixar">Baixar imagem</button>
-      <a class="botao botao-sec" id="cards-whatsapp" href="${esc(linkDoWhatsApp(''))}" target="_blank" rel="noopener noreferrer">Abrir no WhatsApp com o texto</a>
+      <a class="botao botao-sec" id="cards-whatsapp" href="${esc(linkDoWhatsApp(''))}" target="_blank" rel="noopener noreferrer" aria-label="Abrir no WhatsApp com o texto (abre outro site)">Abrir no WhatsApp com o texto</a>
       <button type="button" class="botao botao-sec" id="cards-copiar">Copiar texto</button>
       <button type="button" class="botao botao-sec" id="cards-imprimir">Imprimir cartaz ou salvar em PDF</button>
     </section>

@@ -158,6 +158,12 @@ a {
   border-top: 1px solid var(--borda);
 }
 
+/* Rodapé comum (fora do #app): mesma largura e centro do conteúdo. */
+#rodape-comum {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
 .rodape ul {
   display: flex;
   flex-wrap: wrap;

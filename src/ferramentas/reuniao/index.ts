@@ -4,7 +4,7 @@
 
 import './reuniao.css';
 import { avisar } from '../../comum/aviso';
-import { ehLinkDoEvento } from '../../comum/entreTelas';
+import { ehLinkDoEvento, TAMANHO_MAXIMO } from '../../comum/entreTelas';
 import { compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
 import { campoAreaDeTexto, campoTexto, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
@@ -214,7 +214,7 @@ export const tela: Tela = (raiz) => {
     limparTodosOsErros(painel);
     const faltas = faltasDaConvocacao(c);
     const link = c.link.trim();
-    const linkRuim = link !== '' && !ehLinkDoEvento(link, location.href);
+    const linkRuim = link !== '' && (link.length > TAMANHO_MAXIMO.link || !ehLinkDoEvento(link, location.href));
     // mostrarErro leva o foco ao primeiro campo com erro; vai do último ao primeiro para terminar no primeiro.
     const erros = [
       ...faltas.map((f) => ({ id: `conv-${f.campo}`, texto: f.mensagem })),

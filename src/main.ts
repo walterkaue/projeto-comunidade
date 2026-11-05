@@ -6,12 +6,11 @@ import './comum/tema.css';
 import './comum/componentes.css';
 import { prepararAviso } from './comum/aviso';
 import { ligarMetricas } from './comum/metricas';
-import { lerRota, type NomeDaRota, type Rota } from './comum/rotas';
+import { lerRota, linkPara, type NomeDaRota, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
 import type { Limpeza, Tela } from './comum/tela';
 import { NOME } from './comum/marca';
 import { esc } from './comum/html';
-import { linkPara } from './comum/rotas';
 import { RODAPE, telaInicio } from './paginas/inicio';
 import { registrarServiceWorker } from './pwa';
 
@@ -74,7 +73,7 @@ function mostrar(tela: Tela, rota: Rota): void {
 }
 
 function telaCarregando(): string {
-  return `<main class="tela" aria-busy="true"><p role="status">Carregando…</p></main>`;
+  return `<main class="tela" aria-busy="true"><h1 tabindex="-1">Carregando…</h1></main>`;
 }
 
 /**
@@ -104,6 +103,8 @@ function abrir(): void {
   limpar?.();
   limpar = undefined;
   raiz.innerHTML = telaCarregando();
+  // Leitor de tela: em internet lenta, o foco não fica perdido enquanto a parte baixa.
+  if (!primeira) raiz.querySelector<HTMLElement>('h1')?.focus();
   (alvo as Carregador)().then(
     (m) => {
       if (minha === navegacao) mostrar(m.tela, rota);

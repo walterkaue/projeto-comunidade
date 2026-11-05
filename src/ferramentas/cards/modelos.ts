@@ -1,6 +1,7 @@
 // Modelos, formatos e limites dos cards (puro, sem DOM).
 
 import { MODELOS_DE_CARD, TAMANHO_MAXIMO, type ModeloDeCard } from '../../comum/entreTelas';
+import { letras } from '../../comum/texto';
 
 export { MODELOS_DE_CARD, TAMANHO_MAXIMO };
 export type { ModeloDeCard };
@@ -65,7 +66,7 @@ export const CARD_VAZIO: CamposDoCard = { modelo: 'reuniao', titulo: '', data: '
 
 /** Corta cada campo no limite (por letra). */
 export function aplicarLimites(c: CamposDoCard): CamposDoCard {
-  const cortar = (s: string, n: number) => Array.from(s).slice(0, n).join('');
+  const cortar = (s: string, n: number) => letras(s).slice(0, n).join('');
   return {
     ...c,
     titulo: cortar(c.titulo, TAMANHO_MAXIMO.titulo),

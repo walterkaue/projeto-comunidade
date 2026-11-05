@@ -21,11 +21,12 @@ export interface Dependencias {
 const padrao: Dependencias = { bloqueado: (d) => linkBloqueado(d), ler: decodificar };
 
 export async function abrirEvento(dados: string, deps: Dependencias = padrao): Promise<Aberto> {
-  // A lista e a leitura andam juntas (a lista é a parte lenta em internet fraca).
-  const [lista, leitura] = await Promise.all([deps.bloqueado([dados]), deps.ler(dados)]);
-  if (lista) return { estado: 'bloqueado' };
+  // Lê o evento primeiro (rápido, no aparelho) para conferir a lista UMA vez, com o link como veio e a forma
+  // canônica juntos: em internet fraca, a lista é a parte lenta.
+  const leitura = await deps.ler(dados);
+  const canonico = leitura.ok ? dadosCanonicos(leitura.evento) : '';
+  const conferir = canonico && canonico !== dados ? [dados, canonico] : [dados];
+  if (await deps.bloqueado(conferir)) return { estado: 'bloqueado' };
   if (!leitura.ok) return { estado: 'problema', problema: leitura.problema };
-  const canonico = dadosCanonicos(leitura.evento);
-  if (canonico !== dados && (await deps.bloqueado([canonico]))) return { estado: 'bloqueado' };
   return { estado: 'ok', evento: leitura.evento };
 }

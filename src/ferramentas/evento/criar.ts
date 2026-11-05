@@ -170,6 +170,8 @@ export function telaCriar(raiz: HTMLElement, aEditar?: string): Limpeza {
         desenhar(raiz, {}, vivo, 'Não deu para abrir os dados desse link. Preencha o formulário do começo.');
       }
       raiz.querySelector<HTMLElement>('h1')?.focus();
+      const nota = raiz.querySelector('.evento-regra[role="status"]')?.textContent;
+      if (nota) avisar(nota);
     })
     .catch(() => {
       if (!vivo()) return;

@@ -2,7 +2,7 @@
 // Carregadas sob demanda. Os textos ficam em textos/*.ts.
 
 import './paginas.css';
-import { EMAIL_CONTATO, NOME } from '../comum/marca';
+import { EMAIL_CONTATO } from '../comum/marca';
 import { lerLinkDenunciado } from '../comum/entreTelas';
 import { esc, urlSegura } from '../comum/html';
 import { linkPara, type NomeDaRota } from '../comum/rotas';
@@ -24,7 +24,7 @@ function caixaDeDenuncia(link: string): string {
   if (!link) return '';
   return `<section class="caixa" aria-labelledby="den-titulo">
     <h2 id="den-titulo">Link que você quer denunciar</h2>
-    <p class="link-denunciado" tabindex="0" aria-label="Link denunciado">${esc(link)}</p>
+    <p class="link-denunciado">${esc(link)}</p>
     ${botaoDeEmail(mailtoDeDenuncia(link), 'Enviar denúncia por e-mail')}
     <p>Vai abrir o seu aplicativo de e-mail, com o link já escrito. Conte o motivo e envie.</p>
   </section>`;
@@ -56,7 +56,6 @@ const caixaDeApagar = () => `<section class="caixa" aria-labelledby="ap-titulo">
 export const tela: Tela = (raiz, rota) => {
   const pagina = PAGINAS[rota.nome] ?? PAGINAS.sobre;
   if (!pagina) return;
-  document.title = `${pagina.titulo} – ${NOME}`;
   let meio = '';
   let link = '';
   if (rota.nome === 'denunciar') {
@@ -75,6 +74,7 @@ export const tela: Tela = (raiz, rota) => {
   const resultado = raiz.querySelector<HTMLElement>('[data-resultado]');
   const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
   botao?.addEventListener('click', async () => {
+    if (botao.getAttribute('aria-disabled') === 'true') return;
     if (resultado) resultado.textContent = '';
     botao.setAttribute('aria-disabled', 'true');
     try {

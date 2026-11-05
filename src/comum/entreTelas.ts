@@ -10,6 +10,7 @@
 //   evento, nunca o conteúdo. impressaoDoLink(resto) e estaBloqueado(impressao, json).
 
 import { linkPara } from './rotas';
+import { letras } from './texto';
 
 export const MODELOS_DE_CARD = ['reuniao', 'evento', 'aviso', 'resultado', 'agradecimento'] as const;
 export type ModeloDeCard = (typeof MODELOS_DE_CARD)[number];
@@ -36,9 +37,11 @@ const TEXTOS = ['titulo', 'local', 'texto', 'organizacao'] as const;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-const limpar = (s: string, max: number) =>
-  // Tira caracteres de controle e espaços repetidos; corta sem partir um emoji (ponto de código).
-  Array.from(s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim()).slice(0, max).join('');
+/** Tira caracteres de controle e espaços repetidos; passando do máximo, corta com "…" sem partir emoji composto. */
+const limpar = (s: string, max: number) => {
+  const partes = letras(s.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim());
+  return partes.length <= max ? partes.join('') : `${partes.slice(0, max - 1).join('').trimEnd()}…`;
+};
 
 /** Endereço relativo do Cards já preenchido: "#/cards/modelo=evento&titulo=…". */
 export function linkDoCard(d: DadosDoCard): string {
@@ -50,7 +53,8 @@ export function linkDoCard(d: DadosDoCard): string {
   }
   if (d.data && DATA.test(d.data)) p.set('data', d.data);
   if (d.hora && HORA.test(d.hora)) p.set('hora', d.hora);
-  if (d.link) p.set('link', d.link.slice(0, TAMANHO_MAXIMO.link));
+  // Link cortado viraria QR quebrado: comprido demais, fica de fora.
+  if (d.link && d.link.length <= TAMANHO_MAXIMO.link) p.set('link', d.link);
   return linkPara('cards', p.toString());
 }
 
