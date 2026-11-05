@@ -35,7 +35,7 @@ interface Config {
 
 const CONFIG: Record<Formato, Config> = {
   status: { faixa: 300, titulo: 124, tituloLinhas: 6, corpo: 54, corpoLinhas: 6, rotulo: 32, info: 60, rodapeAltura: 230, qr: 0 },
-  conversa: { faixa: 190, titulo: 100, tituloLinhas: 3, corpo: 44, corpoLinhas: 4, rotulo: 28, info: 48, rodapeAltura: 170, qr: 0 },
+  conversa: { faixa: 190, titulo: 100, tituloLinhas: 3, corpo: 44, corpoLinhas: 4, rotulo: 28, info: 48, rodapeAltura: 220, qr: 0 },
   cartaz: { faixa: 240, titulo: 112, tituloLinhas: 4, corpo: 48, corpoLinhas: 5, rotulo: 30, info: 54, rodapeAltura: 330, qr: 290 },
 };
 
@@ -216,7 +216,8 @@ export function desenharCard(ctx: CanvasRenderingContext2D, c: CamposDoCard, for
   // conteúdo: encolhe até caber
   let k = 1.3;
   let blocos: Bloco[] = [];
-  for (; k >= 0.55; k -= 0.05) {
+  for (let t = 1.3; t >= 0.55 - 1e-9; t -= 0.05) {
+    k = t;
     blocos = montarBlocos(ctx, c, formato, k, larguraTexto);
     if (alturaDosBlocos(blocos, cfg.rotulo, k) + 40 <= areaAltura) break;
   }

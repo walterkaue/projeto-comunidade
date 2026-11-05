@@ -64,6 +64,8 @@ export const tela: Tela = (raiz, rota) => {
     exemplo: 0,
   };
   let matriz: { link: string; dados: Matriz } | undefined;
+  let qrFalhou = false;
+  let sujo = true;
 
   // ---------- HTML ----------
   const c = estado.campos;
@@ -125,7 +127,7 @@ export const tela: Tela = (raiz, rota) => {
 
     <section class="cards-previa" aria-labelledby="cards-previa-titulo">
       <h2 id="cards-previa-titulo">Sua imagem</h2>
-      <p class="cards-estado" id="cards-estado" aria-hidden="true"></p>
+      <p class="cards-estado" id="cards-estado" role="status"></p>
       <div class="cards-moldura"><canvas id="cards-canvas" role="img" aria-label="Prévia do card"></canvas></div>
       <p class="campo-dica" id="cards-qr-nota" hidden>O cartaz sai com um QR que abre a página do evento.</p>
     </section>
@@ -226,7 +228,7 @@ export const tela: Tela = (raiz, rota) => {
   }
 
   function atualizarTextos(): void {
-    const comQr = !!estado.campos.link;
+    const comQr = !!estado.campos.link && !qrFalhou;
     whats.value = textoParaWhatsApp(estado.campos);
     alt.value = textoAlternativo(estado.campos, estado.formato, comQr && estado.formato === 'cartaz');
     canvas.setAttribute('aria-label', alt.value);
@@ -245,15 +247,17 @@ export const tela: Tela = (raiz, rota) => {
       try {
         matriz = { link, dados: await matrizDoQr(link) };
       } catch {
+        qrFalhou = true;
         return undefined;
       }
     }
     return matriz.dados;
   }
 
-  async function desenharEm(alvo: HTMLCanvasElement, formato: Formato): Promise<void> {
+  async function desenharEm(alvo: HTMLCanvasElement, formato: Formato, vigente: () => boolean = () => true): Promise<void> {
     await esperarFontes();
     const qr = await matrizSePrecisa(formato);
+    if (!vigente()) return;
     const escala = escalaDoFormato(formato, leve ? 'leve' : 'normal');
     const { largura, altura } = tamanhoDoCanvas(formato, escala);
     alvo.width = largura;
@@ -270,8 +274,14 @@ export const tela: Tela = (raiz, rota) => {
     estadoEl.textContent = '';
     pronto = (async () => {
       try {
-        await desenharEm(canvas, estado.formato);
-        if (meu === token) estadoEl.textContent = '';
+        await desenharEm(canvas, estado.formato, () => meu === token);
+        if (meu === token) {
+          sujo = false;
+          const semQr = qrFalhou && estado.formato === 'cartaz' && !!estado.campos.link;
+          estadoEl.textContent = semQr ? 'Não deu para gerar o QR deste link. O cartaz sai sem QR.' : '';
+          q('cards-qr-nota').hidden = semQr || !(estado.formato === 'cartaz' && estado.campos.link);
+          atualizarTextos();
+        }
       } catch (e) {
         if (meu === token) estadoEl.textContent = e instanceof Error ? e.message : 'Não deu para desenhar.';
       }
@@ -280,6 +290,7 @@ export const tela: Tela = (raiz, rota) => {
   }
 
   function agendar(): void {
+    sujo = true;
     if (espera) clearTimeout(espera);
     espera = setTimeout(() => void desenharPrevia(), leve ? 900 : 450);
   }
@@ -383,7 +394,8 @@ export const tela: Tela = (raiz, rota) => {
 
   async function arquivoPronto(): Promise<File> {
     lerCampos();
-    await desenharPrevia();
+    // Se nada mudou, usa a prévia como está: refazer o desenho antes de compartilhar atrasa o toque.
+    if (sujo || espera) await desenharPrevia();
     return canvasParaArquivo(canvas, nomeDoArquivo(estado.campos.modelo, estado.formato));
   }
 
