@@ -114,3 +114,37 @@ describe('oficial sem falar do site passa', () => {
     }
   });
 });
+
+describe('pedido de senha, cartão, código ou documento', () => {
+  it('recusa', () => {
+    for (const x of [
+      'Só recebe a cesta quem mandar antes, por mensagem ao organizador, o número do cartão do banco e a senha.',
+      'Informe a senha do banco na inscrição',
+      'Precisamos da foto do cartão de crédito',
+      'Passe o código que chegar por SMS',
+      'Mande seu CPF para garantir a vaga',
+      'Envie o documento antes do evento',
+      'Confirme com o código de segurança do cartão',
+    ]) {
+      expect(motivoDeRecusa(x), x).toBe('dados');
+    }
+    // Com a palavra PIX, já cai na regra de pagamento.
+    expect(motivoDeRecusa('Senha do pix para a rifa')).not.toBeNull();
+  });
+
+  it('textos comuns passam', () => {
+    for (const x of [
+      'Distribuição de senhas na entrada a partir das 8h',
+      'Retire sua senha de atendimento no balcão',
+      'Traga documento com foto',
+      'Leve o cartão do SUS e o cartão de vacina',
+      'Traga o número do cartão do SUS',
+      'Oficina: como criar senha segura no celular',
+      'Envie sua dúvida antes da reunião',
+      'Inscrições com documento na secretaria',
+    ]) {
+      expect(motivoDeRecusa(x), x).toBeNull();
+    }
+  });
+});
+

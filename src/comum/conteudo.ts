@@ -41,7 +41,7 @@ export function limparTexto(s: string, multilinha = false): string {
 
 // ---------- recusa de conteúdo ----------
 
-export type Motivo = 'html' | 'link' | 'contato' | 'pix' | 'plataforma';
+export type Motivo = 'html' | 'link' | 'contato' | 'pix' | 'dados' | 'plataforma';
 
 const TLDS =
   'com|net|org|edu|gov|mil|int|info|biz|br|pt|io|me|co|ly|gl|tv|cc|ws|to|link|app|dev|site|online|xyz|club|shop|store|top|tk|ml|ga|cf|gq|ai|us|uk|de|ar|fm|ee|gle|page|click|live|one|cloud|tech|vip|fun|win|bid|icu|cyou|rest|sbs|today|digital|cam|bio|day|zip|mov|ru|cn|su|pw|cx|in|at|be|eu|fr|it|es|nl|ch|jp|kr|id|vn|tr|ir|pk|ng|za|mx|cl|pe|uy|py|bo|ve|ec|cu|gt|hn|ni|pa|do|sv|cr|blog|pro|name|art|lat|sh|is|gg|so|ao|mz|bet|rio|news|ong|social|wiki|email|space|website|world|chat';
@@ -186,6 +186,20 @@ export function paraConferir(texto: string): string {
  * Por que este texto não pode ir no conteúdo, ou null se pode. A conferência é feita sobre `paraConferir`,
  * para não ser enganada por disfarce (letras de largura total, invisíveis, alfabeto trocado, "[dot]").
  */
+// Pedido de senha, dados de cartão, código recebido por mensagem ou documento: é assim que golpe começa.
+// Texto já sem acento e em minúsculas. "Senha" sozinha é comum ("distribuição de senhas na entrada") e
+// "cartão" também ("cartão do SUS", "cartão de vacina"): só contam ligados a banco, cartão de pagamento ou envio.
+const B = String.raw`(?<![\p{L}\p{N}])`;
+const F = String.raw`(?![\p{L}\p{N}])`;
+const DADOS: readonly RegExp[] = [
+  new RegExp(String.raw`${B}senhas?${F}.{0,40}${B}(cartao|cartoes|banco|bancari[oa]|pix)`, 'u'),
+  new RegExp(String.raw`${B}(cartao|cartoes|banco|bancari[oa]|pix)${F}.{0,40}${B}senhas?${F}`, 'u'),
+  new RegExp(String.raw`${B}(numero|numeros|dados|foto|fotos)\s+d[oe]s?\s+(seu\s+|teu\s+)?cartao\s+(de\s+(credito|debito)|do\s+banco|bancario)${F}`, 'u'),
+  new RegExp(String.raw`${B}(cvv|cvc|codigo\s+de\s+seguranca|token)${F}`, 'u'),
+  new RegExp(String.raw`${B}codigos?${F}.{0,30}${B}(sms|chegar|chegou|receber|recebeu|mensagem)${F}`, 'u'),
+  new RegExp(String.raw`${B}(mande|mandem|manda|envie|enviem|envia|informe|informem|passe|passem|repasse)${F}.{0,40}${B}(cpf|rg|documento|documentos|senha|senhas|cartao|codigo)${F}`, 'u'),
+];
+
 export function motivoDeRecusa(texto: string): Motivo | null {
   const t = paraConferir(texto);
   if (/[<>]/.test(t) || /&#?\w+;/.test(t)) return 'html';
@@ -194,11 +208,13 @@ export function motivoDeRecusa(texto: string): Motivo | null {
   const semInvisiveis = texto.normalize('NFKC').replace(IGNORAVEIS, '');
   if (LINK.some((re) => re.test(t)) || /[\p{L}\p{N}]\.[a-z]{2,}(?![\p{L}\p{N}])/u.test(semInvisiveis)) return 'link';
   if (PIX.some((re) => re.test(t))) return 'pix';
+  if (DADOS.some((re) => re.test(t))) return 'dados';
   if (imitaPlataforma(t)) return 'plataforma';
   return null;
 }
 
 export const MENSAGEM_DO_MOTIVO: Record<Motivo, string> = {
+  dados: 'o evento não pode pedir senha, dados de cartão, código recebido por mensagem nem documento. É assim que muitos golpes começam.',
   html: 'não use os sinais < e > nem códigos como &amp; (o texto é mostrado como está, sem formatação).',
   link:
     'parece ter um link ou endereço de site. Por segurança, os eventos não aceitam links. Se foi só um ponto sem espaço depois, coloque um espaço.',
