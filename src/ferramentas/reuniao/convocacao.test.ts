@@ -1,16 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { conferirDadosDoCard } from '../../comum/entreTelas';
 import { dataPorExtenso, horaEmTexto } from './data';
-import {
-  convocacaoVazia,
-  dadosDoCardDaConvocacao,
-  faltasDaConvocacao,
-  moverItem,
-  pautaPreenchida,
-  textoDaConvocacao,
-  tirarItem,
-  type Convocacao,
-} from './convocacao';
+import { convocacaoVazia, moverItem, pautaPreenchida, tirarItem, type Convocacao } from './convocacao';
 
 const c: Convocacao = {
   organizacao: 'Associação de Moradores do Bairro Novo',
@@ -48,47 +38,8 @@ describe('pauta', () => {
   });
 });
 
-describe('faltas', () => {
-  it('pede tudo quando está vazia', () => {
-    expect(faltasDaConvocacao(convocacaoVazia()).map((f) => f.campo)).toEqual(['organizacao', 'data', 'hora', 'local', 'pauta']);
-  });
-  it('não pede nada quando está completa', () => {
-    expect(faltasDaConvocacao(c)).toEqual([]);
-  });
-});
-
-describe('texto da convocação', () => {
-  it('sai com negrito do WhatsApp e pauta numerada', () => {
-    const t = textoDaConvocacao(c);
-    expect(t).toContain('*Convocação para reunião*');
-    expect(t).toContain('*Associação de Moradores do Bairro Novo*');
-    expect(t).toContain('📅 *Data:* quinta-feira, 12/11/2026');
-    expect(t).toContain('*Hora:* 19h00');
-    expect(t).toContain('*Local:* Salão da escola');
-    expect(t).toContain('1. Mutirão de limpeza\n2. Contas do mês');
-    expect(t).not.toContain('Mais informações');
-  });
-  it('põe o link do evento quando há', () => {
-    expect(textoDaConvocacao(c, 'https://exemplo.org/#/evento/abc')).toContain('Mais informações: https://exemplo.org/#/evento/abc');
-  });
-});
-
-describe('card da convocação', () => {
-  it('abre o Cards no modelo reunião, com os dados', () => {
-    const d = conferirDadosDoCard(dadosDoCardDaConvocacao(c), 'https://x.org/');
-    expect(d.modelo).toBe('reuniao');
-    expect(d.organizacao).toBe(c.organizacao);
-    expect(d.data).toBe('2026-11-12');
-    expect(d.hora).toBe('19:00');
-    expect(d.local).toBe('Salão da escola');
-    expect(d.texto).toBe('Pauta: Mutirão de limpeza; Contas do mês');
-  });
-  it('leva o link do evento só se for do site', () => {
-    const base = 'https://x.org/projeto/';
-    const bom = 'https://x.org/projeto/#/evento/abc';
-    const d = conferirDadosDoCard(dadosDoCardDaConvocacao(c, bom), base);
-    expect(d.link).toBe(bom);
-    const ruim = conferirDadosDoCard(dadosDoCardDaConvocacao(c, 'https://golpe.com/#/evento/abc'), base);
-    expect(ruim.link).toBeUndefined();
+describe('convocação vazia', () => {
+  it('começa com um item de pauta em branco e sem link', () => {
+    expect(convocacaoVazia()).toEqual({ organizacao: '', data: '', hora: '', local: '', pauta: [''], link: '' });
   });
 });

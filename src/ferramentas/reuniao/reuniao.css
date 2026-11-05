@@ -5,17 +5,6 @@
 .reuniao-tela h3 { font-size: 1.125rem; margin: 1.5rem 0 0.5rem; }
 .reuniao-intro { margin: 0 0 1rem; }
 
-.reuniao-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-.reuniao-partes .botao { margin: 0; }
-.reuniao-partes .botao[aria-pressed='true'] {
-  background: var(--destaque);
-  color: var(--sobre-destaque);
-}
-/* Sinal que não é só cor: marca de conferido antes do nome da parte aberta. */
-.reuniao-partes .botao[aria-pressed='true']::before {
-  content: '✓ ';
-}
-
 .reuniao-itens { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.75rem; }
 .item { display: grid; gap: 6px; padding: 0.75rem; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); min-width: 0; }
 .item .campo-rotulo { margin-top: 0.25rem; }
@@ -69,7 +58,18 @@
 
 /* ---------- impressão: só a ata ---------- */
 @media print {
-  @page { size: A4; margin: 2cm; }
+  /* Rodapé em todas as páginas do PDF (análise jurídica preliminar). Navegador sem caixas de margem da página
+     (@bottom-center) fica só com o aviso no fim da ata (.ata-aviso). Texto igual a RODAPE_DO_PDF em ata.ts. */
+  @page {
+    size: A4;
+    margin: 2cm;
+    @bottom-center {
+      content: 'Modelo de ata gratuito. Não substitui o que o estatuto da organização exige.';
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 9pt;
+      color: #000;
+    }
+  }
   /* Com a ata pronta na tela, tudo some, menos a folha. */
   body:has(.imprimindo-ata) > *:not(#app) { display: none !important; }
   .reuniao-tela.imprimindo-ata > *:not(#ata-saida) { display: none !important; }

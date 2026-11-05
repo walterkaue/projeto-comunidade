@@ -99,3 +99,13 @@ describe('HTML da ata', () => {
     expect(h).toContain('<th scope="col">Até quando</th>');
   });
 });
+
+describe('rodapé do PDF da ata', () => {
+  it('o CSS de impressão leva o mesmo texto em todas as páginas', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { RODAPE_DO_PDF } = await import('./ata');
+    const css = readFileSync(new URL('./reuniao.css', import.meta.url), 'utf8');
+    expect(css).toMatch(/@bottom-center/);
+    expect(css).toContain(`content: '${RODAPE_DO_PDF}'`);
+  });
+});
