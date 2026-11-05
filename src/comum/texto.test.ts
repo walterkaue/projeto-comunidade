@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cortarTexto, normalizarEspacos, quebrarTexto } from './texto';
+import { cortarTexto, letras, normalizarEspacos, quebrarTexto, type Medir } from './texto';
 
 const medir = (s: string) => s.length * 10;
 
@@ -61,5 +61,14 @@ describe('cortarTexto', () => {
   });
   it('largura mínima devolve só as reticências', () => {
     expect(cortarTexto(medir, 'abcdefghij', 5)).toBe('…');
+  });
+});
+
+describe('emoji composto', () => {
+  const porLetra: Medir = (s) => letras(s).length;
+  it('não parte bandeira, família nem tom de pele', () => {
+    expect(letras('🇧🇷👨‍👩‍👧👍🏽a')).toEqual(['🇧🇷', '👨‍👩‍👧', '👍🏽', 'a']);
+    expect(quebrarTexto(porLetra, '🇧🇷👨‍👩‍👧👍🏽', 1)).toEqual(['🇧🇷', '👨‍👩‍👧', '👍🏽']);
+    expect(cortarTexto(porLetra, '👨‍👩‍👧👨‍👩‍👧👨‍👩‍👧', 2)).toBe('👨‍👩‍👧…');
   });
 });

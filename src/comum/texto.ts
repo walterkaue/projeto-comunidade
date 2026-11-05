@@ -13,11 +13,21 @@ export function normalizarEspacos(texto: string): string {
     .trim();
 }
 
+/**
+ * Letras como a pessoa vê (grafemas): emoji composto (bandeira, família, tom de pele) e letra com acento
+ * combinado ficam inteiros. Sem Intl.Segmenter (navegador antigo), cai para ponto de código.
+ */
+const segmentador =
+  typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter('pt-BR', { granularity: 'grapheme' }) : null;
+export function letras(texto: string): string[] {
+  return segmentador ? Array.from(segmentador.segment(texto), (s) => s.segment) : Array.from(texto);
+}
+
 /** Parte uma palavra mais larga que a linha em pedaços que cabem (sempre ao menos 1 caractere por pedaço). */
 function partirPalavra(medir: Medir, palavra: string, largura: number): string[] {
   const pedacos: string[] = [];
   let atual = '';
-  for (const ch of Array.from(palavra)) {
+  for (const ch of letras(palavra)) {
     if (atual && medir(atual + ch) > largura) {
       pedacos.push(atual);
       atual = ch;
@@ -31,16 +41,16 @@ function partirPalavra(medir: Medir, palavra: string, largura: number): string[]
 // Busca binária no tamanho: texto longo (descrição de 10 mil letras) não trava aparelho fraco.
 export function cortarTexto(medir: Medir, texto: string, largura: number): string {
   if (medir(texto) <= largura) return texto;
-  const letras = Array.from(texto);
-  const cabe = (n: number) => medir(letras.slice(0, n).join('').trimEnd() + '…') <= largura;
+  const partes = letras(texto);
+  const cabe = (n: number) => medir(partes.slice(0, n).join('').trimEnd() + '…') <= largura;
   let min = 0;
-  let max = letras.length - 1;
+  let max = partes.length - 1;
   while (min < max) {
     const meio = Math.ceil((min + max) / 2);
     if (cabe(meio)) min = meio;
     else max = meio - 1;
   }
-  return letras.slice(0, min).join('').trimEnd() + '…';
+  return partes.slice(0, min).join('').trimEnd() + '…';
 }
 
 /**

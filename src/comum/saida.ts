@@ -28,7 +28,7 @@ export function dominioDoLink(href: string): string {
 export function htmlDaFolha(href: string): string {
   const dominio = dominioDoLink(href);
   return `<div class="folha-caixa">
-    <p>Você vai sair do ${esc(NOME)} e abrir ${dominio ? `<strong>${esc(dominio)}</strong>` : 'outro site'}.</p>
+    <p id="folha-texto">Você vai sair do ${esc(NOME)} e abrir ${dominio ? `<strong>${esc(dominio)}</strong>` : 'outro site'}.</p>
     <a class="botao" data-sem-aviso href="${esc(href)}" target="_blank" rel="noopener noreferrer">Ir para o site</a>
     <button class="botao botao-sec" type="button" data-ficar>Ficar aqui</button>
   </div>`;
@@ -40,6 +40,7 @@ function abrirFolha(href: string, doc: Document): void {
   folha.setAttribute('role', 'dialog');
   folha.setAttribute('aria-modal', 'true');
   folha.setAttribute('aria-label', 'Saída do site');
+  folha.setAttribute('aria-describedby', 'folha-texto');
   folha.innerHTML = htmlDaFolha(href);
   const anterior = doc.activeElement as HTMLElement | null;
   const fechar = () => {

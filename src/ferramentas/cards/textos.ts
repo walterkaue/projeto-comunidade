@@ -73,13 +73,9 @@ export function textoAlternativo(c: CamposDoCard, formato: Formato, comQr = fals
 
 /** Link para abrir o WhatsApp com o texto pronto (a pessoa escolhe a conversa lá). */
 export function linkDoWhatsApp(texto: string): string {
-  return `${ENDERECO_DO_WHATSAPP()}${encodeURIComponent(texto)}`;
+  // Link comum (<a href>) que a pessoa toca; o aviso de saída (src/comum/saida.ts) avisa antes de abrir.
+  // testes/peso.test.ts libera só este prefixo no build.
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
 }
-
-// cópia provisória: pedido em docs/pedidos-comum.md
-// O endereço é montado em partes (sem texto inteiro no build) porque testes/peso.test.ts não deixa o build citar outro domínio, e este
-// é um link comum (<a href>) que a pessoa toca; o aviso de saída (src/comum/saida.ts) a avisa antes de abrir.
-const PARTES_DO_WHATSAPP = { protocolo: 'https:', sitio: 'wa.me' };
-const ENDERECO_DO_WHATSAPP = () => `${PARTES_DO_WHATSAPP.protocolo}//${PARTES_DO_WHATSAPP.sitio}/?text=`;
 
 export const RODAPE = `Feito com ${NOME}`;

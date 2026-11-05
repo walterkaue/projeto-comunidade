@@ -9,7 +9,10 @@ import { ligarMetricas } from './comum/metricas';
 import { lerRota, type NomeDaRota, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
 import type { Limpeza, Tela } from './comum/tela';
-import { telaInicio } from './paginas/inicio';
+import { NOME } from './comum/marca';
+import { esc } from './comum/html';
+import { linkPara } from './comum/rotas';
+import { RODAPE, telaInicio } from './paginas/inicio';
 import { registrarServiceWorker } from './pwa';
 
 type Carregador = () => Promise<{ tela: Tela }>;
@@ -30,6 +33,25 @@ const TELAS: Record<NomeDaRota, Tela | Carregador> = {
 };
 
 const raiz = document.getElementById('app')!;
+const rodapeComum = document.getElementById('rodape-comum');
+
+// Rodapé com Sobre, Termos, Regras e "Como denunciar" em toda tela (quem chega por um link de evento no
+// WhatsApp precisa achar as regras sem voltar ao início). A página inicial tem o próprio rodapé.
+if (rodapeComum) {
+  rodapeComum.innerHTML = `<nav aria-label="Informações"><ul>
+    <li><a href="${linkPara('inicio')}">Início</a></li>
+    ${RODAPE.map((r) => `<li><a href="${linkPara(r.rota)}">${esc(r.titulo)}</a></li>`).join('')}
+  </ul></nav>`;
+}
+
+// Título da aba = título da tela (WCAG 2.4.2). Observa o <h1>, porque algumas telas carregam o conteúdo
+// depois (o evento confere a lista de bloqueio antes de mostrar).
+function atualizarTitulo(): void {
+  const h1 = raiz.querySelector('h1')?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
+  const titulo = !h1 || h1 === NOME ? NOME : `${h1} · ${NOME}`;
+  if (document.title !== titulo) document.title = titulo;
+}
+new MutationObserver(atualizarTitulo).observe(raiz, { childList: true, subtree: true, characterData: true });
 let limpar: Limpeza | void;
 let navegacao = 0;
 let primeira = true;
@@ -74,6 +96,7 @@ function abrir(): void {
   const rota = lerRota(location.hash);
   const alvo = TELAS[rota.nome];
   const minha = ++navegacao;
+  if (rodapeComum) rodapeComum.hidden = rota.nome === 'inicio';
   if (alvo === telaInicio) {
     mostrar(telaInicio, rota);
     return;

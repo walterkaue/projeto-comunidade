@@ -2,6 +2,11 @@
    Celular primeiro, toque (nunca hover). Importar no main.ts depois do tema. */
 
 /* ---------- aviso (aria-live) ---------- */
+/* O aviso fica fixo no rodapé por alguns segundos: a rolagem até o foco deixa espaço para ele não cobrir o botão. */
+html {
+  scroll-padding-bottom: 5rem;
+}
+
 .aviso-vivo {
   position: fixed;
   left: 16px;

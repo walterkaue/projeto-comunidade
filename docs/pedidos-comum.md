@@ -14,6 +14,18 @@ Modelo de pedido (copie, preencha e apague os comentários):
 
 ## Pedidos abertos
 
+Nenhum.
+
+## Pedidos atendidos
+
+Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
+
+- WhatsApp, mapa e agenda liberados em `testes/peso.test.ts` (`LINKS_DE_SAIDA`); cópia provisória do Cards removida.
+- `letras()` com `Intl.Segmenter` em `src/comum/texto.ts`.
+- `scripts/bloquear.mjs` grava também a impressão da forma canônica (teste em `src/ferramentas/evento/moderacao.test.ts`).
+- `document.title` por tela e rodapé comum em `src/main.ts` (`#rodape-comum` no `index.html`).
+- `aria-describedby` na folha de saída e `scroll-padding-bottom` em `componentes.css`.
+
 ### 2026-11-05 · sessão cards · testes/peso.test.ts deve permitir o link do WhatsApp
 - **O que precisa:** a varredura "o build não cita outro domínio" reprova `https://wa.me/?text=` (botão "Abrir no WhatsApp" dos cards, que é um `<a href target="_blank">` comum, permitido pelo `testes/privacidade.test.ts`). Liberar `https://wa.me/` na função `permitido` do teste.
 - **Por quê:** o botão é pedido em docs/produto.md 7.1. Nada é carregado: só abre quando a pessoa toca.
@@ -44,7 +56,5 @@ Modelo de pedido (copie, preencha e apague os comentários):
 ### 2026-11-05 · sessão evento · acabamentos comuns de acessibilidade
 - **O que precisa:** (1) `src/comum/saida.ts`: ligar o `<p>` da folha de saída ao diálogo com `aria-describedby`, para o leitor de tela ler "Você vai sair do… e abrir <domínio>" ao abrir; (2) `src/comum/componentes.css`: `html { scroll-padding-bottom: 5rem; }` para o aviso (`.aviso-vivo`, fixo no rodapé por 5 s) não cobrir o botão focado; (3) um rodapé ou `<nav>` comum a todas as telas (hoje o rodapé com Sobre, Termos e Regras só existe na página inicial): quem abre um link de evento no WhatsApp não encontra Termos, Regras nem "Como denunciar" sem voltar ao início.
 - **Por quê:** achados da revisão de acessibilidade (WCAG 2.4.3, 4.1.2, 2.4.5). A tela do evento já tem os links "Conhecer o Projeto Comunidade" e "Denunciar".
-
-## Pedidos atendidos
 
 Nenhum.
