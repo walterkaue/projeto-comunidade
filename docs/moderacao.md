@@ -20,3 +20,28 @@
 Limite conhecido: sem internet e sem nenhuma cópia da lista guardada no aparelho (primeira visita já sem rede), o evento é mostrado. Com rede lenta ou erro do servidor, vale a última lista guardada.
 
 Quem decide e com que regras ainda é pergunta aberta (`docs/produto.md`, seção 6).
+
+## Planilha de controle e relatório semestral
+
+> `docs/produto.md`, seção 4.1: relatório público a cada seis meses, sem dados pessoais.
+
+- O modelo está em `docs/controle-denuncias-modelo.csv` (só o cabeçalho). **Importe no Google Planilhas e use a cópia lá. Não guarde denúncias reais neste repositório**, que é público.
+- Uma linha por denúncia. **Nunca** escreva nome, e-mail, link do evento nem trecho do conteúdo: só o número da denúncia (1, 2, 3…) e as categorias abaixo.
+
+| Coluna | O que vai |
+|---|---|
+| `numero` | Número em sequência. |
+| `recebida_em` | Data em que o e-mail chegou (AAAA-MM-DD). |
+| `tipo` | `golpe`, `ameaça`, `risco a criança`, `dado pessoal`, `ódio`, `ofensa`, `mentira comprovada`, `direito autoral`, `outro` ou `sem regra ferida`. |
+| `regra_ferida` | Número da regra de `regras.ts` (1 a 8), ou vazio. |
+| `prioridade` | `urgente` (golpe, ameaça, risco a criança, dado pessoal exposto), `alta` ou `normal`. |
+| `prazo_limite` | Urgente: recebida + 48 horas (`PRAZO_URGENTE_HORAS`). Outras: recebida + 5 dias úteis (`PRAZO_DENUNCIA_DIAS_UTEIS`). |
+| `respondida_em` | Data e hora da resposta. |
+| `prazo_cumprido` | `sim` ou `não` (resposta até o prazo limite). |
+| `decisao` | `removido`, `mantido` ou `pedido mais informação`. |
+| `recurso_pedido` | `sim` ou `não`. |
+| `decisao_do_recurso` | `mantida`, `revertida` ou vazio. |
+| `conflito_declarado` | `sim` se quem decidiu tinha conflito de interesse (a regra pede que isso apareça no relatório), senão `não`. |
+| `triagem_com_ia` | `sim` ou `não`. |
+
+**Relatório a cada semestre** (números agregados, sem dados pessoais): total de denúncias; quantas por `tipo`; removidas e mantidas; recursos pedidos e quantos revertidos; percentual de `prazo_cumprido` = sim; quantas com `conflito_declarado` = sim. Dá para fazer com `CONT.SE` e tabela dinâmica. Publique como texto simples na página "Como denunciar" (pedir ao Claude Code).
