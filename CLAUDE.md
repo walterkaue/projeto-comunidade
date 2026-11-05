@@ -50,7 +50,7 @@ Várias sessões trabalham ao mesmo tempo, cada uma em seu worktree. Para não h
 - **Dados de evento ficam depois do `#`** (o servidor não os vê) e levam só o que a pessoa escolheu publicar.
 - **Todo texto digitado passa por `esc`** (`src/comum/html.ts`) antes de ir para `innerHTML`. **Todo `href` com dado variável passa também por `urlSegura`** (barra `javascript:` e `data:`): `href="${esc(urlSegura(link))}"`.
 - **CSP no `index.html`:** o navegador só deixa o site falar consigo mesmo. Não afrouxe sem pedido em `docs/pedidos-comum.md`.
-- **Armazenamento no aparelho:** enquanto o site estiver em `walterkaue.github.io`, `localStorage` e IndexedDB são divididos com os outros projetos desse endereço. Rascunho só com chave prefixada `pc:`, só o necessário, com botão de apagar; nada sensível (presença, ata, dado de terceiros) até haver domínio próprio.
+- **Armazenamento no aparelho:** enquanto o site estiver em `walterkaue.github.io`, `localStorage` e IndexedDB são divididos com os outros projetos desse endereço. Rascunho só com chave prefixada `pc:`, só o necessário, com botão de apagar; nada sensível (presença, ata, dado de terceiros) até haver domínio próprio. O rascunho da ata fica só na memória da aba aberta.
 - **Contrato das telas:** título em `<h1 tabindex="-1">` (o roteador põe o foco nele); para atualizar o link sem remontar a tela, use `history.replaceState` (detalhes em `src/comum/tela.ts`).
 
 ## Neutralidade

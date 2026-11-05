@@ -26,6 +26,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Presença e ata ficam só no aparelho** de quem escreve e nunca entram em link compartilhável (presença revela filiação). |
 | 05/11/2026 | **Página de evento por link:** dados só depois do `#`, nada de link livre, PIX ou telefone, faixa "conteúdo de quem enviou", denúncia e lista pública de links bloqueados. |
 | 05/11/2026 | A regra "validado no servidor" não se aplica à Onda 1, que não tem regra, permissão nem contagem. Volta a valer na Onda 2. |
+| 05/11/2026 | **Rascunho da ata só na aba aberta** enquanto o site estiver no endereço do GitHub (o armazenamento do aparelho é dividido com outros projetos desse endereço). Some ao fechar; a pessoa salva o PDF. Rever com domínio próprio. |
 
 ## 4. Princípios (regras que nunca mudam)
 
@@ -79,7 +80,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 
 ### 7.3 Reunião: convocação, pauta e ata
 - Convocação: gera card e texto da reunião com a pauta numerada, e opcionalmente o link do evento.
-- Ata: modelo guiado (data, local, presentes, pauta, o que foi decidido, encaminhamentos com responsável e prazo), com rascunho salvo **só neste aparelho** e botão "Apagar do aparelho".
+- Ata: modelo guiado (data, local, presentes, pauta, o que foi decidido, encaminhamentos com responsável e prazo), com rascunho **só na aba aberta** (some ao fechar; salvar no aparelho só com domínio próprio, ver decisão de 05/11) e botão "Apagar".
 - Saída da ata: imprimir ou salvar em PDF (pelo próprio navegador, sem biblioteca pesada) e copiar o texto. A ata **não** vira link.
 
 ### 7.4 Páginas institucionais
