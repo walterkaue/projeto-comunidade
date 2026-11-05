@@ -24,7 +24,7 @@ export const denunciar: Pagina = {
           'seu nome e um meio de resposta, se quiser ser respondido.',
         ],
         'Pedidos sobre direito autoral e uso de marca também entram por aqui.',
-        'Quer tirar do ar um link que você criou? O site não sabe quem criou cada link. Mande um print em que você aparece mandando o link, com a data (apague no print o nome e o número das outras pessoas), ou escreva do e-mail que a organização já usa em público. Sem isso, não removemos: qualquer pessoa poderia pedir a remoção do link de outra.',
+        'Quer tirar do ar um link que você criou? O site não sabe quem criou cada link. Mande um print em que você aparece mandando o link, com a data (apague no print o nome e o número das outras pessoas), ou escreva do e-mail que a organização já usa em público. Sem isso, não removemos: qualquer pessoa poderia pedir a remoção do link de outra. Se o evento mostra um dado seu (nome, endereço, foto), não precisa provar que criou o link: basta pedir.',
       ],
     },
     {
@@ -34,11 +34,11 @@ export const denunciar: Pagina = {
           'A denúncia chega por e-mail.',
           'Uma inteligência artificial (Gemini, do Google) pode ajudar a separar e resumir as denúncias.',
           'Quem decide é uma pessoa. A inteligência artificial nunca decide sozinha.',
-          'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site. A página do link mostra a regra ferida e como pedir revisão.',
+          'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site. A página do link mostra o motivo e como pedir revisão.',
           'Respondemos por e-mail. Se não quiser resposta, diga no texto.',
         ],
         [
-          'Conteúdo sexual com criança ou adolescente: bloqueamos na hora, assim que lemos, e avisamos as autoridades (SaferNet ou polícia).',
+          'Conteúdo sexual com criança ou adolescente: bloqueamos na hora, assim que lemos, e avisamos a SaferNet ou a polícia.',
           `Outro risco a criança ou adolescente, ameaça, golpe em andamento, aviso falso de perigo ou em nome de órgão público: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
           `Dado pessoal exposto: em até ${PRAZO_DADO_PESSOAL_HORAS} horas.`,
           `Os outros casos: em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis.`,

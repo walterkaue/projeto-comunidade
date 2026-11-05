@@ -78,7 +78,7 @@ export const privacidade: Pagina = {
         'Quem decide a remoção é sempre uma pessoa.',
         'A lista pública de links recusados guarda só uma impressão digital (um código) de cada link, nunca o conteúdo.',
         'Guardamos o e-mail da denúncia por até 6 meses depois de encerrar o caso. Depois disso, fica só um registro sem dados pessoais (data, tipo de problema e decisão), por até 3 anos, para prestar contas e nos defender se for preciso. Se houver processo ou ordem de autoridade, guardamos o necessário até o fim dele.',
-        'Você pode pedir a qualquer momento que apaguemos o seu e-mail (veja "Seus direitos").',
+        'Mensagens de contato: o prazo de guarda ainda vai ser definido. Você pode pedir a qualquer momento que apaguemos o seu e-mail (veja "Seus direitos").',
       ],
     },
     {
@@ -104,7 +104,7 @@ export const privacidade: Pagina = {
     {
       titulo: 'Crianças e adolescentes',
       blocos: [
-        `Crianças e adolescentes podem usar o site. Ele não pede idade, não tem conta, não coleta dados e não tem conversa entre pessoas. Se você tem menos de 18 anos, não coloque no evento seu nome completo, seu telefone nem o endereço da sua casa. Viu algo que coloca uma criança ou um adolescente em risco? Denuncie: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
+        `Crianças e adolescentes podem usar o site. Ele não pede idade, não tem conta, não pede dados pessoais para usar e não tem conversa entre pessoas. Se você tem menos de 18 anos, não coloque no evento seu nome completo, seu telefone nem o endereço da sua casa. Viu algo que coloca uma criança ou um adolescente em risco? Denuncie: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
       ],
     },
     {

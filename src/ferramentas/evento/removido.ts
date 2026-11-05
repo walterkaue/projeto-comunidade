@@ -3,7 +3,7 @@
 // revisão (docs/produto.md 4.1: quem foi denunciado pode pedir revisão).
 
 import type { MotivoDaRemocao } from '../../comum/entreTelas';
-import { EMAIL_CONTATO } from '../../comum/marca';
+import { EMAIL_CONTATO, PRAZO_DENUNCIA_DIAS_UTEIS } from '../../comum/marca';
 import { textoDaRegra } from '../../comum/regras';
 
 export interface TextosDoRemovido {
@@ -16,7 +16,7 @@ export interface TextosDoRemovido {
 export const REGRAS_DE_PROTECAO_A_CRIANCAS = [8, 10];
 
 export function textosDoRemovido(motivo: MotivoDaRemocao): TextosDoRemovido {
-  const revisao = `Criou este link e discorda? Escreva para ${EMAIL_CONTATO}, mande o link e peça revisão. Uma pessoa responde em até 5 dias úteis.`;
+  const revisao = `Criou este link e discorda? Escreva para ${EMAIL_CONTATO}, mande o link e peça revisão. Uma pessoa responde em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis.`;
   if (motivo.tipo === 'pedido') {
     return {
       titulo: 'Este link foi removido a pedido de quem o criou',

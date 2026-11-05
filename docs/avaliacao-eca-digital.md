@@ -16,7 +16,7 @@ O site é aberto a qualquer pessoa e chama também grêmios estudantis, grupos d
 | Algoritmo e anúncio | Não há feed, recomendação, ranking nem anúncio. Nada de perfil para publicidade. |
 | Mecânicas de atenção | Não há recompensa diária, sequência de dias nem notificação. |
 | Contagem de visitas | Agregada, sem cookie e sem identificador guardado; só o nome da tela (`docs/legitimo-interesse.md`, item 2). |
-| Conteúdo de terceiros | Só na página de evento por link, como texto puro, sem link, telefone ou pedido de pagamento, com faixa "conteúdo de quem enviou" e botão Denunciar. |
+| Conteúdo de terceiros | Só na página de evento por link, como texto puro, sem link, telefone, chave PIX nem pedido de pagamento com valor ou dado bancário (o filtro pega os casos comuns, não todos), com faixa "conteúdo de quem enviou", a frase "Nunca faça pagamento pedido por um evento" e botão Denunciar. |
 
 ## O que foi feito
 

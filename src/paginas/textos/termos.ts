@@ -16,7 +16,7 @@ export const termos: Pagina = {
     {
       titulo: 'Crianças e adolescentes',
       blocos: [
-        `Crianças e adolescentes podem usar o site. Ele não pede idade, não tem conta, não coleta dados e não tem conversa entre pessoas. Se você tem menos de 18 anos, não coloque no evento seu nome completo, seu telefone nem o endereço da sua casa. Viu algo que coloca uma criança ou um adolescente em risco? Denuncie: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
+        `Crianças e adolescentes podem usar o site. Ele não pede idade, não tem conta, não pede dados pessoais para usar e não tem conversa entre pessoas. Se você tem menos de 18 anos, não coloque no evento seu nome completo, seu telefone nem o endereço da sua casa. Viu algo que coloca uma criança ou um adolescente em risco? Denuncie: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
       ],
     },
     {
