@@ -9,7 +9,7 @@ import { linkPara, type NomeDaRota } from '../comum/rotas';
 import type { Tela } from '../comum/tela';
 import { apagarDadosDoSite } from './apagar';
 import { avisar } from '../comum/aviso';
-import { gmailDeDenuncia, mailtoDeDenuncia, textoParaCopiar } from './denuncia';
+import { htmlDoFormulario, ligarFormulario } from './formularioDenuncia';
 import { paginaEmHtml } from './render';
 import { PAGINAS } from './textos';
 
@@ -21,38 +21,7 @@ const voltar = `<a class="botao botao-sec" href="${linkPara('inicio')}">Voltar a
 
 const botaoDeEmail = (href: string, texto: string) => `<a class="botao" href="${esc(urlSegura(href))}">${esc(texto)}</a>`;
 
-/**
- * Três jeitos de mandar, porque nem todo aparelho tem aplicativo de e-mail (no computador, o botão de e-mail
- * muitas vezes não abre nada): aplicativo de e-mail, Gmail no navegador, ou copiar e colar.
- */
-function jeitosDeEnviar(link: string, idTexto: string): string {
-  return `${botaoDeEmail(mailtoDeDenuncia(link), 'Enviar pelo aplicativo de e-mail')}
-    <a class="botao botao-sec" href="${esc(urlSegura(gmailDeDenuncia(link)))}" target="_blank" rel="noopener noreferrer" aria-label="Enviar pelo Gmail no navegador (abre outro site)">Enviar pelo Gmail no navegador</a>
-    <p>Se nenhum dos dois abrir, copie o texto abaixo e mande de qualquer e-mail para <strong>${esc(EMAIL_CONTATO)}</strong>.</p>
-    <div class="campo">
-      <label class="campo-rotulo" for="${idTexto}">Texto da denúncia</label>
-      <textarea class="campo-entrada campo-area" id="${idTexto}" rows="6" readonly>${esc(textoParaCopiar(link))}</textarea>
-    </div>
-    <button type="button" class="botao botao-sec" data-copiar="${idTexto}">Copiar o texto</button>`;
-}
-
-function caixaDeDenuncia(link: string): string {
-  if (!link) return '';
-  return `<section class="caixa" aria-labelledby="den-titulo">
-    <h2 id="den-titulo">Link que você quer denunciar</h2>
-    <p class="link-denunciado">${esc(link)}</p>
-    <p>O e-mail já vai com o link escrito. Conte o motivo e envie.</p>
-    ${jeitosDeEnviar(link, 'den-texto')}
-  </section>`;
-}
-
-const avisoDeLinkInvalido = `<p class="caixa" role="note">Não reconhecemos este link como de um evento deste site. Descreva onde está o conteúdo na denúncia.</p>`;
-
-const caixaDeDenunciaGeral = () => `<section class="caixa" aria-labelledby="dg-titulo">
-    <h2 id="dg-titulo">Escrever a denúncia</h2>
-    <p>Conte onde está o conteúdo e o motivo.</p>
-    ${jeitosDeEnviar('', 'dg-texto')}
-  </section>`;
+const avisoDeLinkInvalido = `<p class="caixa" role="note">Não reconhecemos este link como de um evento deste site. Diga no formulário onde está o conteúdo.</p>`;
 
 const caixaDeContato = () => `<section class="caixa" aria-labelledby="ct-titulo">
     <h2 id="ct-titulo">Nosso e-mail</h2>
@@ -77,13 +46,13 @@ export const tela: Tela = (raiz, rota) => {
   let link = '';
   if (rota.nome === 'denunciar') {
     link = lerLinkDenunciado(rota.resto, location.href);
-    meio = link ? caixaDeDenuncia(link) : rota.resto ? avisoDeLinkInvalido : '';
+    meio = (rota.resto && !link ? avisoDeLinkInvalido : '') + htmlDoFormulario(link);
   }
   if (rota.nome === 'contato') meio = caixaDeContato();
   // A caixa de apagar vai depois das seções, na Privacidade.
   const depois = rota.nome === 'privacidade' ? caixaDeApagar() : '';
   raiz.innerHTML = `<main class="tela pagina">
-    ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !link ? caixaDeDenunciaGeral() : ''}
+    ${paginaEmHtml(pagina, meio)}${depois}
     ${voltar}
   </main>`;
 
@@ -95,12 +64,7 @@ export const tela: Tela = (raiz, rota) => {
       avisar('Não deu para copiar. Toque e segure no texto para selecionar e copiar.');
     }
   };
-  raiz.querySelectorAll<HTMLButtonElement>('[data-copiar]').forEach((b) => {
-    b.addEventListener('click', () => {
-      const campo = raiz.querySelector<HTMLTextAreaElement>(`#${b.dataset.copiar}`);
-      if (campo) void copiar(campo.value, 'Texto copiado. Cole no seu e-mail e envie.');
-    });
-  });
+  if (rota.nome === 'denunciar') ligarFormulario(raiz, link);
   raiz.querySelector('[data-copiar-email]')?.addEventListener('click', () => void copiar(EMAIL_CONTATO, 'Endereço copiado.'));
 
   const botao = raiz.querySelector<HTMLButtonElement>('[data-apagar]');

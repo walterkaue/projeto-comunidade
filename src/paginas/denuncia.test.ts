@@ -1,47 +1,80 @@
 import { describe, expect, it } from 'vitest';
 import { EMAIL_CONTATO } from '../comum/marca';
 import { urlSegura } from '../comum/html';
-import { gmailDeDenuncia, mailtoDeDenuncia, textoParaCopiar } from './denuncia';
+import { corpoDaDenuncia, gmailDeDenuncia, mailtoDeDenuncia, textoParaCopiar, validarDenuncia, type Denuncia } from './denuncia';
 
-describe('mailtoDeDenuncia', () => {
-  const link = 'https://walterkaue.github.io/projeto-comunidade/#/evento/abc123';
+const link = 'https://walterkaue.github.io/projeto-comunidade/#/evento/abc123';
+const comLink: Denuncia = { link, onde: '', tipo: 'golpe', descricao: 'Pede a senha do banco para dar a cesta.' };
+const semLink: Denuncia = { link: '', onde: 'Um card que recebi no grupo do bairro', tipo: 'ofensa', descricao: 'Xinga uma vizinha pelo nome.' };
 
-  it('monta assunto e corpo com o link, tudo codificado', () => {
-    const m = mailtoDeDenuncia(link);
-    expect(m.startsWith(`mailto:${EMAIL_CONTATO}?subject=`)).toBe(true);
-    const q = new URLSearchParams(m.split('?')[1]);
-    expect(q.get('subject')).toBe('Denúncia de conteúdo');
-    expect(q.get('body')).toContain(link);
-    expect(q.get('body')).toContain('Motivo');
-    expect(m).not.toContain(' ');
-    expect(m).not.toContain('\n');
+describe('validação da denúncia', () => {
+  it('aceita denúncia completa', () => {
+    expect(validarDenuncia(comLink)).toEqual({});
+    expect(validarDenuncia(semLink)).toEqual({});
   });
 
-  it('passa por urlSegura sem perder nada', () => {
-    const m = mailtoDeDenuncia(link);
-    expect(urlSegura(m)).toBe(m);
-  });
-
-  it('sem link, pede a descrição', () => {
-    const q = new URLSearchParams(mailtoDeDenuncia('').split('?')[1]);
-    expect(q.get('body')).toContain('Onde está o conteúdo');
+  it('pede tipo e descrição; sem link, pede onde', () => {
+    const e = validarDenuncia({ link: '', onde: ' ', tipo: '', descricao: 'curto' });
+    expect(Object.keys(e).sort()).toEqual(['descricao', 'onde', 'tipo']);
+    expect(validarDenuncia({ ...comLink, tipo: 'inventado' }).tipo).toBeDefined();
+    expect(validarDenuncia({ ...comLink, descricao: 'x'.repeat(1001) }).descricao).toContain('1000');
   });
 });
 
-describe('outros jeitos de enviar', () => {
-  const link = 'https://walterkaue.github.io/projeto-comunidade/#/evento/abc123';
+describe('e-mail da denúncia', () => {
+  it('corpo traz o link, o tipo e o que há de errado, como na revisão', () => {
+    const c = corpoDaDenuncia(comLink);
+    expect(c).toContain(link);
+    expect(c).toContain('Golpe, ou pedido de dinheiro ou de dados');
+    expect(c).toContain('Pede a senha do banco');
+    expect(corpoDaDenuncia(semLink)).toContain('Onde está o conteúdo:\nUm card que recebi');
+  });
+
+  it('mailto com assunto e corpo codificados, e passa por urlSegura', () => {
+    const m = mailtoDeDenuncia(comLink);
+    expect(m.startsWith(`mailto:${EMAIL_CONTATO}?subject=`)).toBe(true);
+    const q = new URLSearchParams(m.split('?')[1]);
+    expect(q.get('subject')).toBe('Denúncia de conteúdo');
+    expect(q.get('body')).toBe(corpoDaDenuncia(comLink));
+    expect(m).not.toMatch(/[\s<>"]/);
+    expect(urlSegura(m)).toBe(m);
+  });
+
+  it('texto digitado com HTML ou aspas não quebra o link', () => {
+    const m = mailtoDeDenuncia({ ...semLink, descricao: '"><script>alert(1)</script> & mais' });
+    expect(m).not.toMatch(/[<>"]/);
+    expect(new URLSearchParams(m.split('?')[1]).get('body')).toContain('<script>');
+  });
+
   it('Gmail no navegador com destinatário, assunto e corpo', () => {
-    const u = new URL(gmailDeDenuncia(link));
+    const u = new URL(gmailDeDenuncia(comLink));
     expect(u.origin + u.pathname).toBe('https://mail.google.com/mail/');
     expect(u.searchParams.get('view')).toBe('cm');
     expect(u.searchParams.get('to')).toBe(EMAIL_CONTATO);
     expect(u.searchParams.get('su')).toBe('Denúncia de conteúdo');
-    expect(u.searchParams.get('body')).toContain(link);
+    expect(u.searchParams.get('body')).toBe(corpoDaDenuncia(comLink));
   });
-  it('texto para copiar traz para quem, assunto e o link', () => {
-    const t = textoParaCopiar(link);
+
+  it('texto para copiar traz para quem, assunto e o corpo', () => {
+    const t = textoParaCopiar(comLink);
     expect(t).toContain(`Para: ${EMAIL_CONTATO}`);
     expect(t).toContain('Assunto: Denúncia de conteúdo');
-    expect(t).toContain(link);
+    expect(t).toContain(corpoDaDenuncia(comLink));
+  });
+});
+
+describe('link resumido na tela', () => {
+  it('mostra só o começo de link comprido', async () => {
+    const { linkResumido } = await import('./formularioDenuncia');
+    expect(linkResumido('https://x.exemplo/#/evento/abc')).toBe('https://x.exemplo/#/evento/abc');
+    expect(linkResumido('a'.repeat(100))).toBe(`${'a'.repeat(60)}…`);
+  });
+});
+
+describe('texto com metade de emoji', () => {
+  it('não quebra o link do e-mail', () => {
+    const d = { ...semLink, descricao: 'Texto com emoji partido \uD83D no meio, mais texto.' };
+    expect(() => mailtoDeDenuncia(d)).not.toThrow();
+    expect(() => gmailDeDenuncia(d)).not.toThrow();
   });
 });

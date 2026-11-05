@@ -24,12 +24,17 @@ Privacidade (**obrigatório**): em **Configurações > Atividade**, desligue a *
 5. **Monte a mensagem** na caixa do Gem, neste formato:
 
    ```
-   Motivo da denúncia:
-   (cole aqui só o motivo que a pessoa escreveu no e-mail)
+   Tipo de problema:
+   (copie do e-mail a linha abaixo de "Tipo de problema")
+
+   O que há de errado:
+   (copie do e-mail o que a pessoa escreveu abaixo de "O que há de errado")
 
    Texto da página denunciada:
    (cole aqui com Ctrl+V)
    ```
+
+   O e-mail que chega pelo formulário do site já vem nessa ordem: link, tipo de problema e o que há de errado.
 
    **Não cole** o nome nem o e-mail de quem denunciou: o Gem não precisa disso. Se o texto da página tiver **nome de pessoa** ligado a partido, sindicato, igreja ou movimento, troque o nome por "PESSOA 1", "PESSOA 2" antes de colar: dado sensível nunca vai para IA (`docs/produto.md`, seção 4.1). Tecle **Enter** para enviar.
 6. **Leia a análise e decida.** O Gem só sugere; **você decide**. Se a denúncia for contra uma organização sua, de parente, de adversário direto ou em que você tenha interesse pessoal, você não decide: passe para outra pessoa ou, enquanto for só você, anote o conflito para o relatório semestral.
@@ -69,7 +74,7 @@ REGRAS DE USO DO SITE (o que não pode)
 Não fere regra: convocar reunião, ato, culto, assembleia ou evento de qualquer organização, inclusive partido; opinião política dita com respeito; crítica a governo, empresa ou autoridade sem ofensa nem mentira comprovada.
 
 O QUE VOCÊ RECEBE
-O motivo escrito por quem denunciou e o texto da página denunciada. Às vezes vem só o link; nesse caso, peça o texto da página (você não consegue abrir o link).
+O tipo de problema que quem denunciou escolheu, o que essa pessoa escreveu sobre o problema e o texto da página denunciada. O tipo escolhido é só um ponto de partida: confira você mesmo se ele bate com o conteúdo. Às vezes vem só o link; nesse caso, peça o texto da página (você não consegue abrir o link).
 
 COMO RESPONDER (sempre neste formato, em português simples e frases curtas)
 1. Resumo: o que o conteúdo diz, em até 3 linhas.
