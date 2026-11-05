@@ -9,3 +9,6 @@ prints/
 
 # Configuração pessoal do Claude Code (permissões locais)
 .claude/settings.local.json
+
+# Worktrees de subagentes (o Claude Code cria aqui)
+.claude/worktrees/

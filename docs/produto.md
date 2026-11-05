@@ -1,6 +1,6 @@
 # Projeto Comunidade — produto (fonte da verdade)
 
-> Versão 0.6 · 05/11/2026 · nome provisório. Este documento guarda regras e decisões. O que está em "Perguntas abertas" ainda não foi decidido. A cópia que vale no código é `docs/produto.md` no repositório; esta aqui deve ficar igual a ela. A v0.5 junta a v0.4 (benchmark aprovado) com as decisões tomadas no Claude Code em 05/11 (ata só na aba, denúncias por e-mail com ajuda do Gemini, sem fins lucrativos, menores, só pessoas, métricas no beta).
+> Versão 0.7 · 05/11/2026 · nome provisório. Este documento guarda regras e decisões. O que está em "Perguntas abertas" ainda não foi decidido. A cópia que vale no código é `docs/produto.md` no repositório; esta aqui deve ficar igual a ela. A v0.5 junta a v0.4 (benchmark aprovado) com as decisões tomadas no Claude Code em 05/11 (ata só na aba, denúncias por e-mail com ajuda do Gemini, sem fins lucrativos, menores, só pessoas, métricas no beta). A v0.7 registra as decisões tomadas a partir da revisão de segurança e da análise jurídica preliminar de 05/11 (guarda dos e-mails, nome do responsável, prazos de denúncia, regras 9 a 11).
 
 ## 1. O que é
 
@@ -33,13 +33,15 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Só pessoas usam**, sem conta de organização, por enquanto. |
 | 05/11/2026 | **Métricas ligadas já no beta** (troca o padrão "nenhuma métrica no beta"), para achar problemas antes da divulgação. GoatCounter sem cookie, por imagem de 1 pixel e sem script de fora; manda só o nome da tela aberta, nunca os dados do link. Citado na Política de Privacidade. |
 | 05/11/2026 | **Resposta à denúncia** escrita com ajuda de IA leva a frase "escrita com ajuda de inteligência artificial e revisada por uma pessoa" e oferece falar com uma pessoa respondendo o e-mail. |
-| 05/11/2026 | **E-mails de denúncia e contato guardados sem prazo definido**, por enquanto; reavaliar quando o espaço do e-mail virar problema ou se o advogado pedir prazo (LGPD, necessidade). Atividade do Gemini desligada. |
-| 05/11/2026 | **Responsável pelos dados (controlador) é o Kauê, como pessoa física**, até existir a associação. Nome e e-mail do projeto na Política de Privacidade e no Sobre (`RESPONSAVEL` em `src/comum/marca.ts`). |
+| 05/11/2026 | **E-mail de denúncia guardado por até 6 meses depois de encerrado o caso; o registro sem dados pessoais (planilha), por 3 anos**; com processo ou ordem de autoridade, até o fim dele. Troca o "sem prazo definido" decidido antes, que a análise jurídica preliminar apontou como contrário à LGPD (arts. 6º, III, e 9º, II). Limpeza mensal no Gmail (`docs/moderacao.md`). Atividade do Gemini desligada. |
+| 05/11/2026 | **Responsável pelos dados (controlador) é o Kauê, como pessoa física**, até existir a associação. Nome civil completo (**Kauê Sevilhano Walter**, sem CPF e sem endereço) e e-mail do projeto na Política de Privacidade, nos Termos e no Sobre (`RESPONSAVEL` em `src/comum/marca.ts`). Agente de pequeno porte, sem encarregado, com o e-mail como canal. |
 | 05/11/2026 | **Benchmark aprovado** (`claude/benchmarks.md`): regras de operação da seção 4.1 e direção das Ondas 2 e 3 na seção 8. |
 | 05/11/2026 | **Nenhum robô nem API oficial do WhatsApp**, por princípio: a política da Meta proíbe partidos e campanhas, e a plataforma é aberta a todos. Só links `wa.me` e recursos nativos do WhatsApp. |
 | 05/11/2026 | **Nada de IA dentro do site na Onda 1.** A única IA é a ajuda na triagem de denúncias, fora do site e sob as regras da seção 4.1. |
-| 05/11/2026 | Padrão adotado (pode ser trocado): **prazo de resposta a denúncia** de até 5 dias úteis, e até 48 horas para golpe, ameaça, risco a criança ou dado pessoal exposto. |
+| 05/11/2026 | **Prazo de resposta a denúncia:** conteúdo sexual com criança ou adolescente, bloqueio imediato ao ler; outro risco a criança ou adolescente, ameaça, golpe e aviso falso de perigo ou de órgão público, até 24 horas; dado pessoal exposto, até 48 horas; o resto, até 5 dias úteis; revisão, até 5 dias úteis. Troca o padrão anterior (48 horas para os urgentes), a partir da análise jurídica preliminar. |
 | 05/11/2026 | **Fluxo único** (caminho B, telas aprovadas pelo Kauê): a entrada do site deixa de ser "três ferramentas" e vira "O que você quer fazer?". Um caminho de 3 passos curtos, com exemplo já preenchido e prévia sempre à vista, termina numa tela que entrega imagem, texto, link e cartaz de uma vez. A ata vira "Depois da reunião". Escopo na seção 7.6. |
+| 05/11/2026 | **Depois da revisão de segurança** (`docs/auditoria/2026-11-05/seguranca.md`): regra nova nas Regras de uso, "fingir ser outra pessoa, organização ou órgão público"; a tela de link removido mostra a regra ferida e como pedir revisão; pedido "é um conteúdo meu" só é atendido com indício de que a pessoa criou o link; o Cards só abre preenchido pelo que outra ferramenta preparou na mesma aba, nunca por dados no link. |
+| 05/11/2026 | **Depois da análise jurídica preliminar** (feita por IA, a conferir pelo advogado; não muda a faixa "em revisão jurídica"): a regra 9 ganha exceção para paródia, sátira e crítica que quem lê percebe logo; regras novas 10 (expor criança ou adolescente) e 11 (incentivo a automutilação ou suicídio); seção "O que não é removido" (crítica, mesmo dura, não é ofensa); a tela de link removido fala como decisão do site e, nas regras 8 e 10, não repete o texto da regra; a página de evento pede para não ser indexada e avisa "Nunca faça pagamento pedido por um evento"; cada decisão de moderação registra o fundamento; Termos com responsabilidade, cláusula eleitoral e nenhum atendimento exclusivo a partido, candidato ou campanha. |
 
 ## 4. Princípios (regras que nunca mudam)
 
@@ -103,6 +105,8 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - [ ] Quem modera além do Kauê (na Onda 1: quem atende denúncia e atualiza a lista de bloqueio). As regras estão na seção 4.1.
 - [ ] Se haverá conta de "organização" (Onda 3). Por enquanto, só pessoas.
 - [ ] Na lista "quem leva o quê": nome, apelido ou nada, e quando a lista se apaga sozinha (antes da Onda 2).
+- [ ] Prazo de guarda dos e-mails de **contato** (o de denúncia já tem prazo: seção 3). Sugestão: o mesmo, 6 meses depois de encerrada a conversa.
+- [ ] Parecer do advogado sobre a análise jurídica preliminar de 05/11/2026 (feita por IA). As normas de 2026 citadas nela (adequação da União Europeia, decretos do Marco Civil e do ECA Digital) só entram nos textos públicos depois que ele confirmar.
 
 ## 7. Escopo da Onda 1
 
@@ -121,7 +125,9 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - Mostra título, data, hora, local (com botão "Ver no mapa" gerado por nós) e descrição; tem "Adicionar à agenda" (.ics e Google) e o card pronto.
 - Proibido: link livre, PIX, telefone, HTML. Tudo exibido como texto puro, com limite de tamanho.
 - Faixa fixa: "Conteúdo criado por quem enviou este link. O [nome] não confere nem guarda este conteúdo. Denunciar".
-- Antes de mostrar, confere se o link está na lista `bloqueados.json`; se estiver, mostra "Este link foi removido após denúncia".
+- Antes de mostrar, confere se o link está na lista `bloqueados.json`; se estiver, mostra que ele foi removido após denúncia (ou a pedido de quem o criou), o motivo como decisão do site e como pedir revisão por e-mail.
+- Quem chama aparece como "segundo quem criou o link". A faixa também diz "Nunca faça pagamento pedido por um evento". A página pede aos buscadores para não indexar.
+- O card do evento recebe os dados pela memória da aba, nunca pelo link.
 
 ### 7.3 Reunião: convocação, pauta e ata
 - Convocação: gera card e texto da reunião com a pauta numerada, e opcionalmente o link do evento.
