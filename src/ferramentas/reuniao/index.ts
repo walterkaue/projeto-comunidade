@@ -58,12 +58,13 @@ export const tela: Tela = (raiz) => {
 
   function marcarParte(): void {
     base.querySelectorAll<HTMLElement>('[data-acao="parte"]').forEach((b) => {
-      if (b.dataset.parte === parteAberta) b.setAttribute('aria-current', 'true');
-      else b.removeAttribute('aria-current');
+      b.setAttribute('aria-pressed', String(b.dataset.parte === parteAberta));
     });
   }
 
   function limparSaidas(): void {
+    const havia = saidaDaAta.innerHTML !== '' || !!painel.querySelector('#conv-saida:not(:empty)');
+    if (havia) avisar('O que foi gerado deixou de valer. Gere de novo.');
     saidaDaAta.innerHTML = '';
     base.classList.remove('imprimindo-ata');
     painel.querySelector<HTMLElement>('#conv-saida')?.replaceChildren();
@@ -151,6 +152,8 @@ export const tela: Tela = (raiz) => {
       case 'parte':
         parteAberta = b.dataset.parte as Parte;
         desenhar();
+        avisar(parteAberta === 'ata' ? 'Parte aberta: Ata.' : 'Parte aberta: Convocação.');
+        painel.querySelector<HTMLElement>('h2')?.focus();
         break;
       case 'gerar-conv':
         void gerarConvocacao();
@@ -176,7 +179,7 @@ export const tela: Tela = (raiz) => {
       case 'ver-ata':
         if (montarAta()) {
           avisar('A ata está pronta, logo abaixo dos botões.');
-          saidaDaAta.querySelector<HTMLElement>('.ata-folha')?.scrollIntoView({ block: 'start' });
+          saidaDaAta.querySelector<HTMLElement>('h2')?.focus();
         }
         break;
       case 'imprimir-ata':
@@ -216,7 +219,7 @@ export const tela: Tela = (raiz) => {
     const texto = textoDaConvocacao(c, link);
     const card = enderecoDoCard(c, link);
     const saida = painel.querySelector<HTMLElement>('#conv-saida')!;
-    saida.innerHTML = `<h2>Texto para o WhatsApp</h2>
+    saida.innerHTML = `<h3 tabindex="-1">Texto para o WhatsApp</h3>
       ${campoAreaDeTexto({ id: 'conv-texto', rotulo: 'Texto pronto', dica: 'Você pode mudar o texto antes de copiar ou enviar.', valor: texto, linhas: 14 })}
       <div class="reuniao-botoes">
         <button type="button" class="botao" data-acao="copiar-conv">Copiar texto</button>
@@ -224,7 +227,7 @@ export const tela: Tela = (raiz) => {
         <a class="botao botao-sec" href="${esc(card)}">Fazer o card da convocação</a>
       </div>`;
     avisar('Texto da convocação pronto, logo abaixo.');
-    saida.querySelector<HTMLElement>('h2')?.scrollIntoView({ block: 'start' });
+    saida.querySelector<HTMLElement>('h3')?.focus();
   }
 
   async function copiarTexto(texto: string): Promise<void> {
@@ -250,7 +253,7 @@ export const tela: Tela = (raiz) => {
   /** Desenha a ata pronta (a folha que sai na impressão). */
   function montarAta(): boolean {
     if (!faltasAvisadas()) return false;
-    saidaDaAta.innerHTML = `<h2 class="ata-titulo-tela">Ata pronta</h2>
+    saidaDaAta.innerHTML = `<h2 class="ata-titulo-tela" tabindex="-1">Ata pronta</h2>
       <article class="ata-folha" aria-label="Ata pronta">${htmlDaAta(rascunho.ata)}</article>`;
     base.classList.add('imprimindo-ata');
     return true;
@@ -280,13 +283,13 @@ export const tela: Tela = (raiz) => {
       .map(
         (t, i) => `<li class="item">
           <label class="campo-rotulo" for="conv-pauta-${i}">Item ${i + 1}</label>
-          <input class="campo-entrada" type="text" id="conv-pauta-${i}" data-lista="pauta" data-i="${i}" maxlength="120" value="${esc(t)}">
+          <input class="campo-entrada" type="text" autocomplete="off" id="conv-pauta-${i}" data-lista="pauta" data-i="${i}" maxlength="120" value="${esc(t)}"${i === 0 ? ' aria-describedby="conv-pauta-erro"' : ''}>
           ${botoesDoItem('pauta', i, c.pauta.length, `item ${i + 1}`)}
         </li>`,
       )
       .join('');
     return `<section aria-labelledby="titulo-conv">
-      <h2 id="titulo-conv">Convocação</h2>
+      <h2 id="titulo-conv" tabindex="-1">Convocação</h2>
       <p>Preencha e gere o texto para o WhatsApp. Se quiser, faça também o card da convocação.</p>
       ${campoTexto({ id: 'conv-organizacao', rotulo: 'Organização', obrigatorio: true, valor: c.organizacao, maximo: 80, autocomplete: 'off' })}
       ${campoTexto({ id: 'conv-data', rotulo: 'Data', tipo: 'date', obrigatorio: true, valor: c.data })}
@@ -314,11 +317,11 @@ export const tela: Tela = (raiz) => {
     const n = i + 1;
     return `<li class="item item-ponto">
       <label class="campo-rotulo" for="ata-pontos-${i}-titulo">Ponto ${n}: assunto</label>
-      <input class="campo-entrada" type="text" id="ata-pontos-${i}-titulo" data-lista="pontos" data-i="${i}" data-k="titulo" maxlength="120" value="${esc(p.titulo)}">
+      <input class="campo-entrada" type="text" autocomplete="off" id="ata-pontos-${i}-titulo" data-lista="pontos" data-i="${i}" data-k="titulo" maxlength="120" value="${esc(p.titulo)}">
       <label class="campo-rotulo" for="ata-pontos-${i}-discutido">Ponto ${n}: o que foi discutido</label>
-      <textarea class="campo-entrada campo-area" rows="3" id="ata-pontos-${i}-discutido" data-lista="pontos" data-i="${i}" data-k="discutido" maxlength="${MAXIMOS.texto}">${esc(p.discutido)}</textarea>
+      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off" id="ata-pontos-${i}-discutido" data-lista="pontos" data-i="${i}" data-k="discutido" maxlength="${MAXIMOS.texto}">${esc(p.discutido)}</textarea>
       <label class="campo-rotulo" for="ata-pontos-${i}-decidido">Ponto ${n}: o que foi decidido</label>
-      <textarea class="campo-entrada campo-area" rows="3" id="ata-pontos-${i}-decidido" data-lista="pontos" data-i="${i}" data-k="decidido" maxlength="${MAXIMOS.texto}">${esc(p.decidido)}</textarea>
+      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off" id="ata-pontos-${i}-decidido" data-lista="pontos" data-i="${i}" data-k="decidido" maxlength="${MAXIMOS.texto}">${esc(p.decidido)}</textarea>
       ${botoesDoItem('pontos', i, a.pontos.length, `o ponto ${n}`)}
     </li>`;
   }
@@ -328,7 +331,7 @@ export const tela: Tela = (raiz) => {
     const n = i + 1;
     const campo = (k: string, rotulo: string, tipo: string, valor: string, max = 120) =>
       `<label class="campo-rotulo" for="ata-encaminhamentos-${i}-${k}">${rotulo} (encaminhamento ${n})</label>
-      <input class="campo-entrada" type="${tipo}" id="ata-encaminhamentos-${i}-${k}" data-lista="encaminhamentos" data-i="${i}" data-k="${k}"${tipo === 'text' ? ` maxlength="${max}"` : ''} value="${esc(valor)}">`;
+      <input class="campo-entrada" type="${tipo}" autocomplete="off" id="ata-encaminhamentos-${i}-${k}" data-lista="encaminhamentos" data-i="${i}" data-k="${k}"${tipo === 'text' ? ` maxlength="${max}"` : ''} value="${esc(valor)}">`;
     return `<li class="item item-ponto">
       ${campo('oque', 'O quê', 'text', e.oque, 200)}
       ${campo('quem', 'Quem', 'text', e.quem)}
@@ -340,7 +343,7 @@ export const tela: Tela = (raiz) => {
   function htmlDaAtaForm(): string {
     const a = rascunho.ata;
     return `<section aria-labelledby="titulo-ata">
-      <h2 id="titulo-ata">Ata</h2>
+      <h2 id="titulo-ata" tabindex="-1">Ata</h2>
       <div class="reuniao-aviso" role="note">
         <p><strong>O rascunho some ao fechar.</strong> A ata fica só na memória desta aba. Ao terminar, salve o PDF ou copie o texto.</p>
         <p>A lista de presença pode mostrar a que grupos as pessoas pertencem. Por isso ela nunca vira link e não sai deste aparelho.</p>
@@ -351,7 +354,7 @@ export const tela: Tela = (raiz) => {
       ${campoTexto({ id: 'ata-local', rotulo: 'Local', valor: a.local, maximo: 120, autocomplete: 'off' })}
       ${campoTexto({ id: 'ata-inicio', rotulo: 'Hora de início', tipo: 'time', valor: a.inicio })}
       ${campoTexto({ id: 'ata-fim', rotulo: 'Hora do fim', tipo: 'time', valor: a.fim })}
-      ${campoAreaDeTexto({ id: 'ata-presentes', rotulo: 'Presentes', dica: 'Um nome por linha.', valor: a.presentes, linhas: 6, maximo: MAXIMOS.presentes })}
+      ${campoAreaDeTexto({ id: 'ata-presentes', rotulo: 'Presentes', dica: 'Um nome por linha.', valor: a.presentes, autocomplete: 'off', linhas: 6, maximo: MAXIMOS.presentes })}
       <h3>Pauta e decisões</h3>
       <button type="button" class="botao botao-sec" data-acao="usar-pauta">Usar a pauta da convocação</button>
       <ol class="reuniao-itens">${a.pontos.map((_, i) => pontoHtml(a, i)).join('')}</ol>

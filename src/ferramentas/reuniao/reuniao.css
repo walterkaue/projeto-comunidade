@@ -1,7 +1,7 @@
 /* Reunião: tela, ata pronta e impressão. Só esta pasta usa estas classes. */
 
 .reuniao-tela { overflow-wrap: anywhere; }
-.reuniao-tela h2 { font-size: 1.375rem; line-height: 1.25; margin: 1.25rem 0 0.5rem; }
+.reuniao-tela h2, .reuniao-tela h3 { font-size: 1.375rem; line-height: 1.25; margin: 1.25rem 0 0.5rem; }
 .reuniao-tela h3 { font-size: 1.125rem; margin: 1.5rem 0 0.5rem; }
 .reuniao-intro { margin: 0 0 1rem; }
 
@@ -15,10 +15,9 @@
 .reuniao-itens { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.75rem; }
 .item { display: grid; gap: 6px; padding: 0.75rem; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); min-width: 0; }
 .item .campo-rotulo { margin-top: 0.25rem; }
-.item-botoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.25rem; }
-.item-botoes .botao { margin: 0; padding: 0.5rem; }
+.item-botoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr)); gap: 0.5rem; margin-top: 0.25rem; }
+.item-botoes .botao { margin: 0; padding: 0.5rem; overflow-wrap: normal; }
 .item-botoes .botao:disabled { opacity: 0.5; cursor: default; }
-.item-ponto .item-botoes { grid-template-columns: repeat(3, 1fr); }
 
 .reuniao-botoes { display: grid; gap: 0.5rem; margin: 0.75rem 0; }
 .reuniao-botoes .botao { margin: 0; }

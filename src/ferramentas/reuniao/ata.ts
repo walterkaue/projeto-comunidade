@@ -190,5 +190,5 @@ export function htmlDaAta(a: Ata): string {
         .map((e) => `<tr><td>${esc(e.oque)}</td><td>${esc(e.quem)}</td><td>${esc(e.ate)}</td></tr>`)
         .join('')}</tbody></table></section>`
     : '';
-  return `<header><p class="ata-tipo">Ata de reunião</p><h2 class="ata-org">${esc(l.organizacao)}</h2><dl class="ata-dados">${dados}</dl></header>${presentes}${pontos}${enc}<p class="ata-aviso">${esc(AVISO_DO_MODELO)}</p>`;
+  return `<header><p class="ata-tipo">Ata de reunião</p><h3 class="ata-org">${esc(l.organizacao)}</h3><dl class="ata-dados">${dados}</dl></header>${presentes}${pontos}${enc}<p class="ata-aviso">${esc(AVISO_DO_MODELO)}</p>`;
 }
