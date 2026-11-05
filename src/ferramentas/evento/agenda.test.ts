@@ -75,7 +75,7 @@ describe('Google Agenda', () => {
     expect(url.searchParams.get('text')).toBe('Mutirão de limpeza');
     expect(url.searchParams.get('dates')).toBe('20261114T083000/20261114T120000');
     expect(url.searchParams.get('location')).toBe(e.local);
-    expect(url.searchParams.get('details')).toBe('Traga luvas; sacos, e água.\nTem café.\n\nOrganização: Associação de moradores');
+    expect(url.searchParams.get('details')).toBe('Traga luvas; sacos, e água.\nTem café.\n\nQuem chama, segundo quem criou o link: Associação de moradores');
     expect([...url.searchParams.keys()]).toEqual(['action', 'text', 'dates', 'location', 'details']);
   });
   it('texto com & # = não cria parâmetros novos', () => {
@@ -108,7 +108,7 @@ describe('arquivo .ics', () => {
     expect(linhas).toContain('DTSTAMP:20261105T123456Z');
     expect(linhas).toContain('SUMMARY:Mutirão de limpeza');
     expect(linhas).toContain('LOCATION:Praça central\\, Rua das Flores\\, 120');
-    expect(linhas).toContain('DESCRIPTION:Traga luvas\\; sacos\\, e água.\\nTem café.\\n\\nOrganização: Associação de moradores');
+    expect(linhas).toContain('DESCRIPTION:Traga luvas\\; sacos\\, e água.\\nTem café.\\n\\nQuem chama\\, segundo quem criou o link: Associação de moradores');
     expect(linhas.find((l) => l.startsWith('UID:'))).toMatch(/^UID:[0-9a-f]{8}-20261114@comunidade$/);
   });
 

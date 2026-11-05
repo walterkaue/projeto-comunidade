@@ -24,7 +24,7 @@ export const denunciar: Pagina = {
           'seu nome e um meio de resposta, se quiser ser respondido.',
         ],
         'Pedidos sobre direito autoral e uso de marca também entram por aqui.',
-        'Quer tirar do ar um link que você criou? O site não sabe quem criou cada link. Conte onde e quando você mandou o link (um print da conversa ajuda) ou escreva do e-mail da organização que aparece no evento. Sem isso, não removemos: qualquer pessoa poderia pedir a remoção do link de outra.',
+        'Quer tirar do ar um link que você criou? O site não sabe quem criou cada link. Mande um print em que você aparece mandando o link, com a data (apague no print o nome e o número das outras pessoas), ou escreva do e-mail que a organização já usa em público. Sem isso, não removemos: qualquer pessoa poderia pedir a remoção do link de outra.',
       ],
     },
     {

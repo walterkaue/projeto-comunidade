@@ -82,7 +82,8 @@ export function horariosDaAgenda(e: Pick<Evento, 'data' | 'inicio' | 'fim'>): { 
 
 /** O que vai como descrição na agenda: o texto do evento e, se houver, a organização. */
 function descricaoDaAgenda(e: Evento): string {
-  return [e.descricao, e.organizacao ? `Organização: ${e.organizacao}` : ''].filter(Boolean).join('\n\n');
+  // Mesma frase da página (auditoria 05/11/2026, M6): o site não confere quem chama.
+  return [e.descricao, e.organizacao ? `Quem chama, segundo quem criou o link: ${e.organizacao}` : ''].filter(Boolean).join('\n\n');
 }
 
 // ---------- Google Agenda ----------

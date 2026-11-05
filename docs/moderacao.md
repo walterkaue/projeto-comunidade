@@ -25,7 +25,7 @@
 > Auditoria 05/11/2026, achado M8. Sem conta, ninguém consegue provar que criou um link. Um adversário pode dizer "este evento é meu" para derrubar a convocação de outra organização.
 
 - **Se o conteúdo fere uma regra**, trate como denúncia comum (`--motivo regra-<número>`), não importa quem pediu.
-- **Se não fere regra**, só remova com algum indício de que a pessoa criou o link. Por exemplo: ela mostra onde mandou o link primeiro (print da conversa, com data), escreve do e-mail conhecido da organização que aparece no evento, ou o pedido vem com dado pessoal dela que está no evento (nome, endereço).
+- **Se não fere regra**, só remova com algum indício de que a pessoa criou o link. Valem só duas coisas: um print em que **quem pede aparece como quem mandou o link** (com data), ou um e-mail vindo do endereço que a organização do evento **já usa em público** (site, rede social), conferido por você fora do e-mail. Não vale o que quem pede só digita: nome, endereço ou outro dado que está no próprio evento qualquer pessoa leu no link. Não peça dado pessoal para "provar".
 - **Na dúvida, não remova.** Responda que quem criou pode só parar de compartilhar e fazer outro link; o site não guarda nada.
 - Quando remover a pedido, use `--motivo pedido`: a tela diz "removido a pedido de quem o criou", não "após denúncia". Na planilha, `tipo` = `pedido de quem criou`.
 - Quem discordar (por exemplo, a organização que de fato criou o link) pede revisão respondendo o e-mail, como em qualquer remoção.

@@ -39,6 +39,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Nenhum robô nem API oficial do WhatsApp**, por princípio: a política da Meta proíbe partidos e campanhas, e a plataforma é aberta a todos. Só links `wa.me` e recursos nativos do WhatsApp. |
 | 05/11/2026 | **Nada de IA dentro do site na Onda 1.** A única IA é a ajuda na triagem de denúncias, fora do site e sob as regras da seção 4.1. |
 | 05/11/2026 | Padrão adotado (pode ser trocado): **prazo de resposta a denúncia** de até 5 dias úteis, e até 48 horas para golpe, ameaça, risco a criança ou dado pessoal exposto. |
+| 05/11/2026 | **Depois da revisão de segurança** (`docs/auditoria/2026-11-05/seguranca.md`): regra nova nas Regras de uso, "fingir ser outra pessoa, organização ou órgão público"; a tela de link removido mostra a regra ferida e como pedir revisão; pedido "é um conteúdo meu" só é atendido com indício de que a pessoa criou o link; o Cards só abre preenchido pelo que outra ferramenta preparou na mesma aba, nunca por dados no link. |
 
 ## 4. Princípios (regras que nunca mudam)
 
@@ -120,7 +121,8 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - Mostra título, data, hora, local (com botão "Ver no mapa" gerado por nós) e descrição; tem "Adicionar à agenda" (.ics e Google) e o card pronto.
 - Proibido: link livre, PIX, telefone, HTML. Tudo exibido como texto puro, com limite de tamanho.
 - Faixa fixa: "Conteúdo criado por quem enviou este link. O [nome] não confere nem guarda este conteúdo. Denunciar".
-- Antes de mostrar, confere se o link está na lista `bloqueados.json`; se estiver, mostra "Este link foi removido após denúncia".
+- Antes de mostrar, confere se o link está na lista `bloqueados.json`; se estiver, mostra "Este link foi removido após denúncia" (ou "a pedido de quem o criou"), com a regra ferida e como pedir revisão por e-mail.
+- Quem chama aparece como "segundo quem criou o link". O card do evento recebe os dados pela memória da aba, nunca pelo link.
 
 ### 7.3 Reunião: convocação, pauta e ata
 - Convocação: gera card e texto da reunião com a pauta numerada, e opcionalmente o link do evento.
