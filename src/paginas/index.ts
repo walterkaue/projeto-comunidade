@@ -8,7 +8,8 @@ import { esc, urlSegura } from '../comum/html';
 import { linkPara, type NomeDaRota } from '../comum/rotas';
 import type { Tela } from '../comum/tela';
 import { apagarDadosDoSite } from './apagar';
-import { mailtoDeDenuncia } from './denuncia';
+import { avisar } from '../comum/aviso';
+import { gmailDeDenuncia, mailtoDeDenuncia, textoParaCopiar } from './denuncia';
 import { paginaEmHtml } from './render';
 import { PAGINAS } from './textos';
 
@@ -20,13 +21,28 @@ const voltar = `<a class="botao botao-sec" href="${linkPara('inicio')}">Voltar a
 
 const botaoDeEmail = (href: string, texto: string) => `<a class="botao" href="${esc(urlSegura(href))}">${esc(texto)}</a>`;
 
+/**
+ * Três jeitos de mandar, porque nem todo aparelho tem aplicativo de e-mail (no computador, o botão de e-mail
+ * muitas vezes não abre nada): aplicativo de e-mail, Gmail no navegador, ou copiar e colar.
+ */
+function jeitosDeEnviar(link: string, idTexto: string): string {
+  return `${botaoDeEmail(mailtoDeDenuncia(link), 'Enviar pelo aplicativo de e-mail')}
+    <a class="botao botao-sec" href="${esc(urlSegura(gmailDeDenuncia(link)))}" target="_blank" rel="noopener noreferrer" aria-label="Enviar pelo Gmail no navegador (abre outro site)">Enviar pelo Gmail no navegador</a>
+    <p>Se nenhum dos dois abrir, copie o texto abaixo e mande de qualquer e-mail para <strong>${esc(EMAIL_CONTATO)}</strong>.</p>
+    <div class="campo">
+      <label class="campo-rotulo" for="${idTexto}">Texto da denúncia</label>
+      <textarea class="campo-entrada campo-area" id="${idTexto}" rows="6" readonly>${esc(textoParaCopiar(link))}</textarea>
+    </div>
+    <button type="button" class="botao botao-sec" data-copiar="${idTexto}">Copiar o texto</button>`;
+}
+
 function caixaDeDenuncia(link: string): string {
   if (!link) return '';
   return `<section class="caixa" aria-labelledby="den-titulo">
     <h2 id="den-titulo">Link que você quer denunciar</h2>
     <p class="link-denunciado">${esc(link)}</p>
-    ${botaoDeEmail(mailtoDeDenuncia(link), 'Enviar denúncia por e-mail')}
-    <p>Vai abrir o seu aplicativo de e-mail, com o link já escrito. Conte o motivo e envie.</p>
+    <p>O e-mail já vai com o link escrito. Conte o motivo e envie.</p>
+    ${jeitosDeEnviar(link, 'den-texto')}
   </section>`;
 }
 
@@ -34,15 +50,16 @@ const avisoDeLinkInvalido = `<p class="caixa" role="note">Não reconhecemos este
 
 const caixaDeDenunciaGeral = () => `<section class="caixa" aria-labelledby="dg-titulo">
     <h2 id="dg-titulo">Escrever a denúncia</h2>
-    ${botaoDeEmail(mailtoDeDenuncia(''), 'Escrever denúncia por e-mail')}
-    <p>Vai abrir o seu aplicativo de e-mail. Conte onde está o conteúdo e o motivo.</p>
+    <p>Conte onde está o conteúdo e o motivo.</p>
+    ${jeitosDeEnviar('', 'dg-texto')}
   </section>`;
 
 const caixaDeContato = () => `<section class="caixa" aria-labelledby="ct-titulo">
     <h2 id="ct-titulo">Nosso e-mail</h2>
     <p class="email">${esc(EMAIL_CONTATO)}</p>
     ${botaoDeEmail(`mailto:${EMAIL_CONTATO}`, 'Escrever um e-mail')}
-    <p>Vai abrir o seu aplicativo de e-mail.</p>
+    <button type="button" class="botao botao-sec" data-copiar-email>Copiar o endereço</button>
+    <p>Se o botão não abrir o seu e-mail, copie o endereço e escreva de onde quiser.</p>
   </section>`;
 
 const caixaDeApagar = () => `<section class="caixa" aria-labelledby="ap-titulo">
@@ -69,6 +86,22 @@ export const tela: Tela = (raiz, rota) => {
     ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !link ? caixaDeDenunciaGeral() : ''}
     ${voltar}
   </main>`;
+
+  const copiar = async (texto: string, ok: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      avisar(ok);
+    } catch {
+      avisar('Não deu para copiar. Toque e segure no texto para selecionar e copiar.');
+    }
+  };
+  raiz.querySelectorAll<HTMLButtonElement>('[data-copiar]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const campo = raiz.querySelector<HTMLTextAreaElement>(`#${b.dataset.copiar}`);
+      if (campo) void copiar(campo.value, 'Texto copiado. Cole no seu e-mail e envie.');
+    });
+  });
+  raiz.querySelector('[data-copiar-email]')?.addEventListener('click', () => void copiar(EMAIL_CONTATO, 'Endereço copiado.'));
 
   const botao = raiz.querySelector<HTMLButtonElement>('[data-apagar]');
   const resultado = raiz.querySelector<HTMLElement>('[data-resultado]');

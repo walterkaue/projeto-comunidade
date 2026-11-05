@@ -79,7 +79,7 @@ describe('peso do pacote inicial', () => {
   // e os namespaces do SVG/XML, que não são pedidos de rede.
   // Também passam os links de saída que o produto pede (docs/produto.md 7.1 e 7.2): abrem só quando a pessoa
   // toca, pelo aviso de saída (src/comum/saida.ts), e nunca são buscados pelo site.
-  const LINKS_DE_SAIDA = /^https:\/\/(wa\.me\/\?text=|www\.google\.com\/maps\/search\/\?api=1&query=|calendar\.google\.com\/calendar\/render\?)/;
+  const LINKS_DE_SAIDA = /^https:\/\/(wa\.me\/\?text=|www\.google\.com\/maps\/search\/\?api=1&query=|calendar\.google\.com\/calendar\/render\?|mail\.google\.com\/mail\/\?)/;
   it('o build não cita outro domínio (privacidade)', () => {
     const permitido = (url: string, linha: string) =>
       /^https?:\/\/www\.w3\.org\//.test(url) ||

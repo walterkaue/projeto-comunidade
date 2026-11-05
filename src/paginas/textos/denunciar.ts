@@ -11,7 +11,7 @@ export const denunciar: Pagina = {
       titulo: 'Como denunciar um evento',
       blocos: [
         'Na página do evento, toque em "Denunciar". Você chega aqui com o link já preenchido.',
-        'Toque em "Enviar denúncia por e-mail" e escreva o motivo.',
+        'Escolha como enviar: pelo aplicativo de e-mail, pelo Gmail no navegador ou copiando o texto. Escreva o motivo e envie.',
       ],
     },
     {
