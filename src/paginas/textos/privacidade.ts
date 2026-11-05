@@ -61,7 +61,10 @@ export const privacidade: Pagina = {
       blocos: [
         'Contamos visitas com o GoatCounter, um serviço sem cookie que não identifica você.',
         'A cada tela aberta, o site manda só o nome da tela (por exemplo, "evento" ou "cards") e o nome do site. Nunca vão os dados do evento, do card, da ata nem o título da página.',
-        'Não mandamos de onde você veio nem o tamanho da tela. O GoatCounter recebe, como qualquer site, o endereço de internet (IP) e o tipo de navegador, e diz que não os guarda.',
+        'Não mandamos de onde você veio nem o tamanho da tela.',
+        'Como qualquer site, o GoatCounter recebe o endereço de internet (IP) e os dados do navegador. Ele não guarda o IP. Guarda a contagem de cada tela e, no máximo, o nome e a versão do navegador, o sistema do aparelho, o país ou a região e o idioma.',
+        'Para não contar a mesma pessoa duas vezes, ele usa o IP e o navegador só na memória, por até 8 horas.',
+        'Os servidores do GoatCounter ficam na Finlândia e na Alemanha.',
       ],
     },
     {
