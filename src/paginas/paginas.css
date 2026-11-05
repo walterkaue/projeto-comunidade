@@ -54,8 +54,6 @@
 .caixa .link-denunciado {
   font-family: ui-monospace, Menlo, Consolas, monospace;
   font-size: 0.875rem;
-  max-height: 8rem;
-  overflow: auto;
   overflow-wrap: anywhere;
   word-break: break-all;
 }

@@ -2,7 +2,7 @@
 // Carregadas sob demanda. Os textos ficam em textos/*.ts.
 
 import './paginas.css';
-import { EMAIL_CONTATO } from '../comum/marca';
+import { EMAIL_CONTATO, NOME } from '../comum/marca';
 import { lerLinkDenunciado } from '../comum/entreTelas';
 import { esc, urlSegura } from '../comum/html';
 import { linkPara, type NomeDaRota } from '../comum/rotas';
@@ -24,16 +24,23 @@ function caixaDeDenuncia(link: string): string {
   if (!link) return '';
   return `<section class="caixa" aria-labelledby="den-titulo">
     <h2 id="den-titulo">Link que você quer denunciar</h2>
-    <p class="link-denunciado">${esc(link)}</p>
+    <p class="link-denunciado" tabindex="0" aria-label="Link denunciado">${esc(link)}</p>
     ${botaoDeEmail(mailtoDeDenuncia(link), 'Enviar denúncia por e-mail')}
     <p>Vai abrir o seu aplicativo de e-mail, com o link já escrito. Conte o motivo e envie.</p>
   </section>`;
 }
 
+const caixaDeDenunciaGeral = () => `<section class="caixa" aria-labelledby="dg-titulo">
+    <h2 id="dg-titulo">Escrever a denúncia</h2>
+    ${botaoDeEmail(mailtoDeDenuncia(''), 'Escrever denúncia por e-mail')}
+    <p>Vai abrir o seu aplicativo de e-mail. Conte onde está o conteúdo e o motivo.</p>
+  </section>`;
+
 const caixaDeContato = () => `<section class="caixa" aria-labelledby="ct-titulo">
     <h2 id="ct-titulo">Nosso e-mail</h2>
     <p class="email">${esc(EMAIL_CONTATO)}</p>
     ${botaoDeEmail(`mailto:${EMAIL_CONTATO}`, 'Escrever um e-mail')}
+    <p>Vai abrir o seu aplicativo de e-mail.</p>
   </section>`;
 
 const caixaDeApagar = () => `<section class="caixa" aria-labelledby="ap-titulo">
@@ -47,6 +54,7 @@ const caixaDeApagar = () => `<section class="caixa" aria-labelledby="ap-titulo">
 export const tela: Tela = (raiz, rota) => {
   const pagina = PAGINAS[rota.nome] ?? PAGINAS.sobre;
   if (!pagina) return;
+  document.title = `${pagina.titulo} – ${NOME}`;
   let meio = '';
   if (rota.nome === 'denunciar') {
     const link = lerLinkDenunciado(rota.resto, location.href);
@@ -55,23 +63,25 @@ export const tela: Tela = (raiz, rota) => {
   if (rota.nome === 'contato') meio = caixaDeContato();
   // A caixa de apagar vai depois das seções, na Privacidade.
   const depois = rota.nome === 'privacidade' ? caixaDeApagar() : '';
-  const extra = rota.nome === 'denunciar' ? botaoDeEmail(mailtoDeDenuncia(''), 'Escrever denúncia por e-mail') : '';
   raiz.innerHTML = `<main class="tela pagina">
-    ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !meio ? extra : ''}
+    ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !meio ? caixaDeDenunciaGeral() : ''}
     ${voltar}
   </main>`;
 
   const botao = raiz.querySelector<HTMLButtonElement>('[data-apagar]');
   const resultado = raiz.querySelector<HTMLElement>('[data-resultado]');
+  const plural = (n: number, um: string, varios: string) => `${n} ${n === 1 ? um : varios}`;
   botao?.addEventListener('click', async () => {
-    botao.disabled = true;
+    if (resultado) resultado.textContent = '';
+    botao.setAttribute('aria-disabled', 'true');
     try {
       const r = await apagarDadosDoSite();
-      if (resultado) resultado.textContent = `Pronto. Apagamos ${r.chaves} item(ns) guardado(s) e ${r.caches} cópia(s) do site.`;
+      const msg = `Pronto. Apagamos ${plural(r.chaves, 'item guardado', 'itens guardados')} e ${plural(r.caches, 'cópia do site', 'cópias do site')}.`;
+      if (resultado) resultado.textContent = msg;
     } catch {
       if (resultado) resultado.textContent = 'Não deu para apagar. Tente de novo.';
     } finally {
-      botao.disabled = false;
+      botao.removeAttribute('aria-disabled');
     }
   });
 };
