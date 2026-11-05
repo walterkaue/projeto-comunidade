@@ -232,7 +232,8 @@ export const tela: Tela = (raiz, rota) => {
     whats.value = textoParaWhatsApp(estado.campos);
     alt.value = textoAlternativo(estado.campos, estado.formato, comQr && estado.formato === 'cartaz');
     canvas.setAttribute('aria-label', alt.value);
-    linkWhats.href = linkDoWhatsApp(whats.value);
+    // Sem título o link fica neutro: o aviso de saída só atua em link externo, e o clique pede o título primeiro.
+    linkWhats.href = estado.campos.titulo.trim() ? linkDoWhatsApp(whats.value) : '#';
   }
 
   // ---------- desenho ----------
@@ -298,6 +299,7 @@ export const tela: Tela = (raiz, rota) => {
   // ---------- reações ----------
   function aoMudar(): void {
     lerCampos();
+    if (estado.campos.titulo.trim()) limparErro(form, 'cards-titulo');
     atualizarContadores();
     mostrarOuEsconder();
     atualizarTextos();
@@ -334,14 +336,12 @@ export const tela: Tela = (raiz, rota) => {
     const msg = q('cards-cor-msg');
     if (!r.ok || !r.paleta) {
       msg.textContent = r.mensagem;
-      avisar(r.mensagem);
       return;
     }
     estado.corLivre = r.paleta.destaque;
     estado.paletaLivre = r.paleta;
     amostraLivre.style.background = r.paleta.destaque;
     msg.textContent = r.mensagem;
-    if (r.mensagem) avisar(r.mensagem);
   }
   q('cards-cor').addEventListener('input', () => {
     aplicarCor();
