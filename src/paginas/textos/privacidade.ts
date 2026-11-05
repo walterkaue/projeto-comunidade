@@ -22,14 +22,14 @@ export const privacidade: Pagina = {
       blocos: [
         'Textos, datas, locais e logo dos seus cards são lidos e usados no próprio aparelho. O logo é reduzido ali mesmo e nunca é enviado.',
         'Podemos guardar no aparelho um rascunho ou uma preferência, com nome que começa com "pc:". Sempre há um botão para apagar.',
-        'O site guarda uma cópia de si mesmo no aparelho para funcionar sem internet. Os nomes desses arquivos guardados começam com "pc-".',
+        'O site guarda uma cópia de si mesmo no aparelho para funcionar sem internet. Essa cópia fica guardada em um espaço do navegador com nome que começa com "pc-".',
         'O rascunho da ata fica só na memória da aba aberta. Some quando você fecha a aba. Salve o PDF se quiser guardar.',
       ],
     },
     {
       titulo: 'Links de evento',
       blocos: [
-        'Os dados de um evento vão dentro do link, depois do símbolo #. O servidor não vê o que vem depois do #.',
+        'Os dados de um evento vão dentro do link, depois do símbolo #. O servidor do site não vê o que vem depois do #. Mas, se você denunciar um evento, o link vai por e-mail (veja abaixo).',
         'Esses dados levam só o que você escolheu publicar. Quem receber o link verá esse conteúdo.',
         'Presença e ata nunca entram em link.',
       ],
@@ -52,8 +52,8 @@ export const privacidade: Pagina = {
       titulo: 'Denúncias e e-mails',
       blocos: [
         `Denúncias e mensagens chegam por e-mail, em ${EMAIL_CONTATO}. Esse e-mail passa pelo Gmail, do Google.`,
-        'Ao denunciar, você manda o link, o motivo e o que mais escrever. Seu endereço de e-mail também fica visível para nós.',
-        'Uma inteligência artificial (Gemini, do Google) pode ajudar a separar e resumir as denúncias. Para isso, o texto da denúncia pode ser lido por essa ferramenta.',
+        'Ao denunciar, você manda o link do evento (que leva dentro o conteúdo dele, inclusive dados de outras pessoas, se houver), o motivo e o que mais escrever. Seu endereço de e-mail também fica visível para nós.',
+        'Uma inteligência artificial (Gemini, do Google) pode ajudar a separar e resumir as denúncias. Para isso, o texto da denúncia, com o conteúdo do evento, pode ser lido por essa ferramenta. O Gmail e o Gemini podem guardar dados em outros países.',
         'Quem decide a remoção é sempre uma pessoa.',
         'A lista pública de links recusados guarda só uma impressão digital (um código) de cada link, nunca o conteúdo.',
         'Por quanto tempo guardamos os e-mails: [a definir antes do lançamento].',
