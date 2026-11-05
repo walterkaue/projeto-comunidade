@@ -1,4 +1,9 @@
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   dadosDoLinkDoEvento,
@@ -92,6 +97,17 @@ describe('link de evento do próprio site', () => {
     expect(ehLinkDoEvento('nada', BASE)).toBe(false);
   });
 
+  // Auditoria 05/11/2026, A1: o link da denúncia chega por e-mail a quem modera e não pode levar comando do shell.
+  it('aceita só o formato dos dados (letras sem acento, números, - e _)', () => {
+    const site = 'https://walterkaue.github.io/projeto-comunidade/#/evento/';
+    for (const ruim of ['abc$(comando)', "abc'x", 'abc;x', 'abc|x', 'abc(x)', 'abc%24', 'ab', 'a'.repeat(6001)]) {
+      expect(ehLinkDoEvento(site + ruim, BASE), ruim.slice(0, 20)).toBe(false);
+      expect(lerLinkDenunciado(encodeURIComponent(site + ruim), BASE)).toBe('');
+    }
+    expect(ehLinkDoEvento(`${site}1r${'A'.repeat(5998)}`, BASE)).toBe(true);
+    expect(ehLinkDoEvento(`${site}1r-_Az09`, BASE)).toBe(true);
+  });
+
   it('tira os dados do link', () => {
     expect(dadosDoLinkDoEvento(EVENTO, BASE)).toBe('abc123');
     expect(dadosDoLinkDoEvento('https://exemplo.org/#/evento/abc', BASE)).toBe('');
@@ -141,5 +157,54 @@ describe('script de moderação: link vindo do e-mail', () => {
     const { dadosDoLink } = await import('../../scripts/bloquear.mjs');
     expect(dadosDoLink('https://x.exemplo/p/#/evento/abc\n123 ')).toBe('abc123');
     expect(dadosDoLink('https://x.exemplo/p/#/evento/editar/abc123')).toBe('abc123');
+  });
+});
+
+// Auditoria 05/11/2026, A1: o link vem de e-mail de pessoa desconhecida. Ele nunca vai na linha de comando
+// (o shell executaria um "$(…)" antes de o script ler) e, no arquivo, só passa o formato dos dados.
+describe('script de moderação: o link é dado, não comando', () => {
+  const raiz = fileURLToPath(new URL('../../', import.meta.url));
+  const script = join(raiz, 'scripts', 'bloquear.mjs');
+  const lista = join(raiz, 'public', 'bloqueados.json');
+  // Sem shell: os argumentos chegam ao Node exatamente como estão aqui.
+  const rodar = (...args: string[]) => spawnSync(process.execPath, [script, ...args], { encoding: 'utf8' });
+
+  it('recusa dados com outros sinais, inclusive numa linha a mais', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { dadosDoLink, dadosValidos } = await import('../../scripts/bloquear.mjs');
+    expect(dadosValidos('1rAbc-_09')).toBe(true);
+    expect(dadosValidos(dadosDoLink('https://x.exemplo/p/#/evento/1rAbc\n$(comando)'))).toBe(false);
+    expect(dadosValidos("1r'x")).toBe(false);
+    expect(dadosValidos('ab')).toBe(false);
+  });
+
+  it('separa --arquivo e --forcar; texto solto vira sobra', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { lerArgumentos } = await import('../../scripts/bloquear.mjs');
+    expect(lerArgumentos(['--arquivo', 'link.txt', '--forcar'])).toEqual({ arquivo: 'link.txt', forcar: true, sobra: [] });
+    expect(lerArgumentos(['https://x.exemplo/#/evento/abc']).sobra).toEqual(['https://x.exemplo/#/evento/abc']);
+  });
+
+  it('link na linha de comando: para sem gravar', () => {
+    const antes = readFileSync(lista, 'utf8');
+    const r = rodar('https://walterkaue.github.io/projeto-comunidade/#/evento/abc123');
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain('--arquivo');
+    expect(readFileSync(lista, 'utf8')).toBe(antes);
+  });
+
+  it('arquivo com "$(…)" no link: para sem gravar', () => {
+    const pasta = mkdtempSync(join(tmpdir(), 'bloquear-'));
+    const arquivo = join(pasta, 'link.txt');
+    writeFileSync(arquivo, 'https://walterkaue.github.io/projeto-comunidade/#/evento/1rAbc$(comando)\n');
+    const antes = readFileSync(lista, 'utf8');
+    try {
+      const r = rodar('--arquivo', arquivo);
+      expect(r.status).toBe(1);
+      expect(r.stderr).toContain('Nada foi gravado');
+      expect(readFileSync(lista, 'utf8')).toBe(antes);
+    } finally {
+      rmSync(pasta, { recursive: true, force: true });
+    }
   });
 });

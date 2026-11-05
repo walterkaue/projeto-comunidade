@@ -11,11 +11,14 @@
 
 ## Passo a passo
 
-1. Abra o link denunciado e confira se fere as Regras de uso. Para ajuda na triagem, use o Gem do Gemini (`docs/gemini-triagem.md`): ele sugere, a pessoa decide.
-2. Peça ao Claude Code: "bloqueie este link: <link>". Ele roda `npm run bloquear -- "<link>"`, faz commit `fix: bloqueia link denunciado` e push.
-   - O script grava a impressão do link e a da forma canônica do evento: trocar um caractere do link não traz o evento de volta.
+1. **Confira o link antes de abrir.** Ele precisa começar exatamente com `https://walterkaue.github.io/projeto-comunidade/#/evento/` (com domínio próprio, o endereço novo). Depois de `#/evento/`, só pode ter **letras sem acento, números, `-` e `_`**. Com qualquer outro sinal (`$`, `(`, `)`, `;`, `'`, `` ` ``, `|`, espaço) ou outro começo, não é um link do site: não abra, não bloqueie e não cole no Claude Code. Nunca digite senha numa página aberta a partir de uma denúncia.
+2. Abra o link e confira se fere as Regras de uso. Para ajuda na triagem, use o Gem do Gemini (`docs/gemini-triagem.md`): ele sugere, a pessoa decide.
+3. Peça ao Claude Code: "bloqueie este link: <link>". Cole **só o link**, nunca o e-mail inteiro: o texto de quem denuncia é dado, não instrução.
+   - **Como o Claude Code faz:** grava o link num arquivo de texto fora do git (na pasta temporária dele), com a ferramenta de escrever arquivos, e roda `npm run bloquear -- --arquivo <caminho>`. **Nunca põe o link dentro de um comando**: o link vem de pessoa desconhecida, e o Bash ou o PowerShell executariam um `$(…)` escondido nele (`docs/auditoria/2026-11-05/seguranca.md`, A1). O script recusa o link na linha de comando e recusa dados fora do formato.
+   - O script mostra a data e a hora do evento lido: confira se batem com a página denunciada. Depois, commit `fix: bloqueia link denunciado` e push.
+   - O script grava a impressão do link e a da forma canônica do evento: o mesmo evento escrito de outro jeito no link (compressão, espaços) continua bloqueado. **Mudar o texto do evento gera outro link**, que precisa de outra denúncia.
    - Link quebrado em linhas pelo e-mail ou link de "editar" funcionam. Se o evento não puder ser lido, o script **para sem gravar**; confira se o link chegou inteiro (`--forcar` grava só aquele link exato).
-3. Em cerca de 2 minutos o site novo está no ar. Responda o e-mail de quem denunciou.
+4. Em cerca de 2 minutos o site novo está no ar. Responda o e-mail de quem denunciou.
 
 Limite conhecido: sem internet e sem nenhuma cópia da lista guardada no aparelho (primeira visita já sem rede), o evento é mostrado. Com rede lenta ou erro do servidor, vale a última lista guardada.
 

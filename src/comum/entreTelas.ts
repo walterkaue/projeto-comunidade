@@ -88,6 +88,13 @@ export function lerDadosDoCard(resto: string, base: string): DadosDoCard {
 const pastaDoSite = (pathname: string) => pathname.replace(/index\.html$/, '');
 
 /**
+ * Os dados de um link de evento só têm letras sem acento, números, "-" e "_" (base64url, ver
+ * src/ferramentas/evento/formato.ts; 6000 = DADOS_MAXIMO de lá). Qualquer outro sinal ("$", "(", "'", ";")
+ * fica de fora: o link da denúncia vai por e-mail até quem modera e não pode levar comando do shell.
+ */
+const DADOS_DO_EVENTO = /^#\/evento\/[A-Za-z0-9_-]{3,6000}$/;
+
+/**
  * O link é de um evento DESTE site? Mesmo endereço (origem e pasta) que `base` e "#/evento/<dados>".
  * Serve para o QR do cartaz e para a denúncia: nunca se aceita link de outro lugar.
  */
@@ -105,7 +112,7 @@ export function ehLinkDoEvento(link: string, base: string): boolean {
     u.origin === b.origin &&
     pastaDoSite(u.pathname) === pastaDoSite(b.pathname) &&
     u.search === '' &&
-    /^#\/evento\/[^/\s]+$/.test(u.hash)
+    DADOS_DO_EVENTO.test(u.hash)
   );
 }
 
