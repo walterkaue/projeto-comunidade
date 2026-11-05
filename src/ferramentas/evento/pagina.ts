@@ -14,6 +14,7 @@ import { dataPorExtenso, gerarIcs, hrefExterno, horarioPorExtenso, linkDoGoogleA
 import { MENSAGEM_DO_PROBLEMA } from './formato';
 import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
 import { textosDoRemovido } from './removido';
+import { semIndexar } from './semindexar';
 import type { Evento } from './validar';
 
 const NOVO = linkPara('evento');
@@ -53,7 +54,7 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
 
   raiz.innerHTML = `<main class="tela evento">
     <aside class="evento-faixa" aria-label="Aviso sobre este conteúdo">
-      <p id="ev-faixa">Conteúdo criado por quem enviou este link. O ${esc(NOME)} não confere nem guarda este conteúdo.</p>
+      <p id="ev-faixa">Conteúdo criado por quem enviou este link. O ${esc(NOME)} não confere nem guarda este conteúdo. Nunca faça pagamento pedido por um evento.</p>
       <a class="evento-denunciar" href="${denuncia}">Denunciar</a>
     </aside>
 
@@ -124,6 +125,7 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
 
 /** Tela `#/evento/<dados>`. Nunca lança erro: link ruim, bloqueado ou falha viram mensagem. */
 export function telaPagina(raiz: HTMLElement, dados: string): Limpeza {
+  const liberarIndexacao = semIndexar(document);
   let aberta = true;
   const vivo = () => aberta;
   // O roteador põe o foco no h1 logo depois desta chamada; o conteúdo vem a seguir.
@@ -148,5 +150,6 @@ export function telaPagina(raiz: HTMLElement, dados: string): Limpeza {
 
   return () => {
     aberta = false;
+    liberarIndexacao();
   };
 }
