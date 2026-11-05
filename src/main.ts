@@ -30,8 +30,10 @@ const TELAS: Record<Parte, Tela | Carregador> = {
 const raiz = document.getElementById('app')!;
 const rodapeComum = document.getElementById('rodape-comum');
 
-// Rodapé com Sobre, Termos, Regras e "Como denunciar" em toda tela (quem chega por um link de evento no
-// WhatsApp precisa achar as regras sem voltar ao início). A página inicial tem o próprio rodapé.
+// Rodapé com Sobre, Termos, Regras e "Como denunciar" nas páginas institucionais, na ata e na página de um
+// evento (quem chega por um link no WhatsApp precisa achar as regras sem voltar ao início). Fica escondido no
+// início (que tem o próprio rodapé) e em todo o fluxo (passos, Pronto, editar e endereços antigos): lá a
+// pessoa está criando algo e o rodapé só atrapalha.
 if (rodapeComum) {
   rodapeComum.innerHTML = `<nav aria-label="Informações"><ul>
     <li><a href="${linkPara('inicio')}">Início</a></li>
@@ -95,7 +97,7 @@ function abrir(): void {
   const rota = lerRota(location.hash);
   const alvo = TELAS[parteDaRota(rota)];
   const minha = ++navegacao;
-  if (rodapeComum) rodapeComum.hidden = rota.nome === 'inicio';
+  if (rodapeComum) rodapeComum.hidden = rota.nome === 'inicio' || parteDaRota(rota) === 'fluxo';
   if (alvo === telaInicio) {
     mostrar(telaInicio, rota);
     return;
