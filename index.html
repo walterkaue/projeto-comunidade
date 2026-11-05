@@ -6,6 +6,10 @@
     <title>Projeto Comunidade</title>
     <meta name="description" content="Ferramentas gratuitas para organizações comunitárias e sociais. Tudo feito no aparelho, sem cadastro." />
     <meta name="theme-color" content="#1d232a" />
+    <!-- Nada sai do aparelho: o navegador só deixa o site falar consigo mesmo (testes/privacidade.test.ts).
+         Ao ligar as métricas (src/comum/metricas.ts), acrescente o endereço de contagem em connect-src. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' data: blob:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
 
     <!-- PWA e ícones: caminhos relativos (funcionam em /projeto-comunidade/ e na raiz). -->
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />

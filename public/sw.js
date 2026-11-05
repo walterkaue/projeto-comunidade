@@ -107,7 +107,9 @@ const ESPERA_DA_REDE_MS = 4000;
 async function redePrimeiro(req) {
   const cache = await caches.open(CACHE_PAGINA);
   const daRede = fetch(req).then(async (resp) => {
-    if (resp.ok) await cache.put(PAGINA, resp.clone());
+    // Só guarda como "a página" o próprio app (escopo ou index.html em HTML), nunca o og.png ou o manifest aberto direto.
+    const ehOApp = [caminho('./').pathname, caminho('index.html').pathname].includes(new URL(req.url).pathname);
+    if (resp.ok && ehOApp && (resp.headers.get('content-type') ?? '').includes('text/html')) await cache.put(PAGINA, resp.clone());
     return resp;
   });
   daRede.catch(() => {}); // se a guardada já respondeu, a falha da rede não importa

@@ -84,6 +84,11 @@ export function ligarAvisoDeSaida(doc: Document = document): () => void {
     e.preventDefault();
     abrirFolha(link.href, doc);
   };
+  // auxclick: clique do meio ("abrir em nova aba") também passa pelo aviso.
   doc.addEventListener('click', aoClicar, true);
-  return () => doc.removeEventListener('click', aoClicar, true);
+  doc.addEventListener('auxclick', aoClicar, true);
+  return () => {
+    doc.removeEventListener('click', aoClicar, true);
+    doc.removeEventListener('auxclick', aoClicar, true);
+  };
 }

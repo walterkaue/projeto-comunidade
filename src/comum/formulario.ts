@@ -76,7 +76,7 @@ export function campoTexto(c: CampoTexto): string {
   return `<div class="campo">
   ${rotuloHtml(c)}
   ${dicaHtml(c)}
-  <input class="campo-entrada" type="${tipo}" id="${esc(c.id)}" name="${esc(c.id)}" value="${esc(c.valor ?? '')}"${maximo}${comuns(c)}>
+  <input class="campo-entrada" type="${esc(tipo)}" id="${esc(c.id)}" name="${esc(c.id)}" value="${esc(c.valor ?? '')}"${maximo}${comuns(c)}>
   ${erroHtml(c.id)}
 </div>`;
 }
@@ -86,7 +86,7 @@ export function campoAreaDeTexto(c: CampoAreaDeTexto): string {
   return `<div class="campo">
   ${rotuloHtml(c)}
   ${dicaHtml(c)}
-  <textarea class="campo-entrada campo-area" id="${esc(c.id)}" name="${esc(c.id)}" rows="${c.linhas ?? 4}"${maximo}${comuns(c)}>${esc(c.valor ?? '')}</textarea>
+  <textarea class="campo-entrada campo-area" id="${esc(c.id)}" name="${esc(c.id)}" rows="${esc(String(c.linhas ?? 4))}"${maximo}${comuns(c)}>${esc(c.valor ?? '')}</textarea>
   ${erroHtml(c.id)}
 </div>`;
 }
