@@ -1,19 +1,11 @@
 // Ferramenta 2: evento em um link. Carregada sob demanda (src/main.ts).
-//   #/evento                  → formulário
-//   #/evento/editar/<dados>   → formulário já preenchido com um evento (para criar outro parecido)
-//   #/evento/<dados>          → página do evento
-// Os dados ficam depois do # e nunca vão para servidor. Formato em formato.ts, regras em validar.ts.
+//   #/evento/<dados>          → página do evento (links que já circulam abrem igual)
+// Criar o evento ("#/evento") e "criar outro a partir deste" ("#/evento/editar/<dados>") agora são o fluxo único
+// (src/ferramentas/fluxo, docs/produto.md 7.6), que usa a validação (validar.ts), o formato (formato.ts) e a
+// conferência da lista de bloqueio (abrir.ts) daqui. Os dados ficam depois do # e nunca vão para servidor.
 
 import type { Tela } from '../../comum/tela';
-import { telaCriar } from './criar';
 import './evento.css';
 import { telaPagina } from './pagina';
 
-const EDITAR = 'editar/';
-
-export const tela: Tela = (raiz, rota) => {
-  const resto = rota.resto;
-  if (!resto) return telaCriar(raiz);
-  if (resto.startsWith(EDITAR)) return telaCriar(raiz, resto.slice(EDITAR.length));
-  return telaPagina(raiz, resto);
-};
+export const tela: Tela = (raiz, rota) => telaPagina(raiz, rota.resto);

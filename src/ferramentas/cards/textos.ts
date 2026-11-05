@@ -1,4 +1,4 @@
-// Textos gerados dos campos: data por extenso, texto para o WhatsApp e texto alternativo (puro, sem DOM).
+// Textos gerados dos campos: data por extenso, texto alternativo (o texto para o WhatsApp é do fluxo: src/ferramentas/fluxo/estado.ts) (puro, sem DOM).
 
 import { NOME } from '../../comum/marca';
 import { DEF_FORMATOS, DEF_MODELOS, type CamposDoCard, type Formato } from './modelos';
@@ -36,26 +36,6 @@ export function onde(c: Pick<CamposDoCard, 'local' | 'modelo'>): string {
   return DEF_MODELOS[c.modelo].usaLocal ? c.local.trim() : '';
 }
 
-/** Tira asteriscos e sublinhados do texto digitado, para não quebrar o negrito do WhatsApp. */
-const semMarcas = (s: string) => s.replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
-
-/** Texto pronto para colar no WhatsApp, com *negrito* do próprio WhatsApp. */
-export function textoParaWhatsApp(c: CamposDoCard): string {
-  const linhas: string[] = [];
-  const titulo = semMarcas(c.titulo);
-  if (titulo) linhas.push(`*${titulo}*`);
-  const q = quando(c);
-  if (q) linhas.push(`📅 ${q}`);
-  const o = semMarcas(onde(c));
-  if (o) linhas.push(`📍 ${o}`);
-  const texto = semMarcas(c.texto);
-  if (texto) linhas.push('', texto);
-  const org = semMarcas(c.organizacao);
-  if (org) linhas.push('', `_${org}_`);
-  if (c.link) linhas.push('', `Mais detalhes: ${c.link}`);
-  return linhas.join('\n').trim();
-}
-
 /** Texto alternativo da imagem, para quem não enxerga. */
 export function textoAlternativo(c: CamposDoCard, formato: Formato, comQr = false): string {
   const fim = (s: string) => (/[.!?…]$/.test(s) ? s : `${s}.`);
@@ -69,13 +49,6 @@ export function textoAlternativo(c: CamposDoCard, formato: Formato, comQr = fals
   if (c.organizacao.trim()) partes.push(`Organização: ${fim(c.organizacao.trim())}`);
   if (comQr) partes.push('Tem um código QR que abre a página do evento.');
   return partes.join(' ');
-}
-
-/** Link para abrir o WhatsApp com o texto pronto (a pessoa escolhe a conversa lá). */
-export function linkDoWhatsApp(texto: string): string {
-  // Link comum (<a href>) que a pessoa toca; o aviso de saída (src/comum/saida.ts) avisa antes de abrir.
-  // testes/peso.test.ts libera só este prefixo no build.
-  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
 }
 
 export const RODAPE = `Feito com ${NOME}`;

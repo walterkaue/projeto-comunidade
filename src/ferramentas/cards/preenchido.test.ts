@@ -1,6 +1,6 @@
 // Auditoria 05/11/2026, achado M5: um link "#/cards/titulo=…" mostrava texto de terceiro no nosso domínio, sem
-// a faixa "conteúdo de quem enviou", sem "Denunciar" e sem a lista de bloqueio. Agora o Cards só abre preenchido
-// pelo que o Evento ou a Reunião prepararam na mesma aba (prepararCard / pegarCardPreparado).
+// a faixa "conteúdo de quem enviou", sem "Denunciar" e sem a lista de bloqueio. O card só abre preenchido pelo
+// que outra tela preparou na mesma aba (prepararCard / pegarCardPreparado), hoje lido pelo fluxo único.
 
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -12,12 +12,10 @@ const pasta = dirname(fileURLToPath(import.meta.url));
 const semComentarios = (s: string) => s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
 
 describe('o Cards não lê dados do link', () => {
-  it('a tela só olha o resto da rota para abrir a galeria', () => {
+  it('a tela dos cards só abre a galeria e não olha o endereço', () => {
     const codigo = semComentarios(readFileSync(join(pasta, 'index.ts'), 'utf8'));
-    expect(codigo.match(/rota\.resto/g)).toEqual(['rota.resto']);
-    expect(codigo).toMatch(/rota\.resto === 'galeria'/);
-    expect(codigo).toMatch(/pegarCardPreparado\(\)/);
-    expect(codigo).not.toMatch(/URLSearchParams|location\.hash/);
+    expect(codigo).not.toMatch(/rota\.resto|URLSearchParams|location\.hash/);
+    expect(codigo).toMatch(/telaGaleria\(raiz\)/);
   });
 
   it('o contrato entre as ferramentas não tem mais leitura nem montagem de link do Cards', () => {

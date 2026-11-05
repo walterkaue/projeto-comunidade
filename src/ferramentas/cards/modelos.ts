@@ -62,7 +62,6 @@ export interface CamposDoCard {
   link: string;
 }
 
-export const CARD_VAZIO: CamposDoCard = { modelo: 'reuniao', titulo: '', data: '', hora: '', local: '', texto: '', organizacao: '', link: '' };
 
 /** Corta cada campo no limite (por letra). */
 export function aplicarLimites(c: CamposDoCard): CamposDoCard {

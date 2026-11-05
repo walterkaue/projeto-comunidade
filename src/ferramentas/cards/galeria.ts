@@ -16,7 +16,7 @@ export function telaGaleria(raiz: HTMLElement): () => void {
   raiz.innerHTML = `<main class="tela cards-galeria">
     <h1 tabindex="-1">Galeria dos cards</h1>
     <p>Todos os modelos, formatos e paletas, em miniatura, para revisão visual.</p>
-    <p><a href="${esc(linkPara('cards'))}">Voltar aos cards</a></p>
+    <p><a href="${esc(linkPara('inicio'))}">Voltar ao início</a></p>
     <div id="galeria-lista"></div>
   </main>`;
   const lista = raiz.querySelector<HTMLElement>('#galeria-lista')!;

@@ -3,9 +3,9 @@ import { passaContraste } from '../../comum/cor';
 import { acharPartidario } from '../../../testes/neutralidade.test';
 import { exemplo, ORGANIZACOES, proximoSabado, QUANTOS_EXEMPLOS } from './exemplos';
 import { tamanhoReduzido, recusaDoArquivo } from './logo';
-import { aplicarLimites, CARD_VAZIO, escalaDoFormato, FORMATOS, MODELOS_DE_CARD, TAMANHO_MAXIMO } from './modelos';
+import { aplicarLimites, escalaDoFormato, FORMATOS, MODELOS_DE_CARD, TAMANHO_MAXIMO } from './modelos';
 import { aplicarCorLivre, PALETAS, paresDeContraste } from './paletas';
-import { dataPorExtenso, horaPorExtenso, linkDoWhatsApp, textoAlternativo, textoParaWhatsApp } from './textos';
+import { dataPorExtenso, horaPorExtenso, textoAlternativo } from './textos';
 
 describe('paletas', () => {
   it('toda paleta passa 4,5:1 em todos os pares de texto', () => {
@@ -51,32 +51,13 @@ describe('textos', () => {
     expect(horaPorExtenso('19:30')).toBe('19h30');
     expect(horaPorExtenso('25:00')).toBe('');
   });
-  const base = { ...CARD_VAZIO, modelo: 'reuniao' as const, titulo: 'Assembleia', data: '2026-03-14', hora: '19:00', local: 'Salão', texto: 'Pauta', organizacao: 'Associação' };
-  it('texto do WhatsApp usa *negrito* e tira marcas digitadas', () => {
-    const t = textoParaWhatsApp({ ...base, titulo: 'A *grande* reunião' });
-    expect(t.split('\n')[0]).toBe('*A grande reunião*');
-    expect(t).toContain('📅 sábado, 14 de março, às 19h');
-    expect(t).toContain('📍 Salão');
-    expect(t).toContain('_Associação_');
-  });
-  it('aviso não usa hora nem local', () => {
-    const t = textoParaWhatsApp({ ...base, modelo: 'aviso' });
-    expect(t).not.toContain('📍');
-    expect(t).not.toContain('19h');
-  });
-  it('inclui o link só quando existe', () => {
-    expect(textoParaWhatsApp(base)).not.toContain('Mais detalhes');
-    expect(textoParaWhatsApp({ ...base, link: 'https://x/#/evento/a' })).toContain('Mais detalhes: https://x/#/evento/a');
-  });
+  const base = { link: '', modelo: 'reuniao' as const, titulo: 'Assembleia', data: '2026-03-14', hora: '19:00', local: 'Salão', texto: 'Pauta', organizacao: 'Associação' };
   it('texto alternativo descreve os campos e o QR', () => {
     const a = textoAlternativo(base, 'cartaz', true);
     expect(a).toMatch(/^Card de reunião ou assembleia, formato Cartaz A4\./);
     expect(a).toContain('Título: Assembleia.');
     expect(a).toContain('código QR');
     expect(a).not.toContain('..');
-  });
-  it('link do WhatsApp codifica o texto', () => {
-    expect(linkDoWhatsApp('a b&c')).toBe('https://wa.me/?text=a%20b%26c');
   });
 });
 
@@ -86,7 +67,7 @@ describe('modelos e limites', () => {
     expect(FORMATOS).toHaveLength(3);
   });
   it('corta cada campo no limite', () => {
-    const r = aplicarLimites({ ...CARD_VAZIO, titulo: 'a'.repeat(200), texto: 'b'.repeat(500) });
+    const r = aplicarLimites({ modelo: 'aviso', data: '', hora: '', local: '', organizacao: '', link: '', titulo: 'a'.repeat(200), texto: 'b'.repeat(500) });
     expect(r.titulo).toHaveLength(TAMANHO_MAXIMO.titulo);
     expect(r.texto).toHaveLength(140);
   });
