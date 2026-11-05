@@ -18,7 +18,7 @@
 1. **Kauê testa no celular** e mostra para 5 a 8 organizações (roteiro em `docs/onda-1.md`, seção 8.7).
 2. **Advogado:** documento de consulta no Claude Docs (com os textos de Termos, Privacidade e Regras). Pendentes na Política de Privacidade: responsável pelos dados e prazo de guarda dos e-mails ("[a definir antes do lançamento]"). Aprovado, `LANCAMENTO_PUBLICO = true` em `src/comum/marca.ts`.
 3. **Triagem das denúncias com o Gemini:** preparar as instruções a partir das Regras de uso (a pessoa decide a remoção).
-4. **Métricas** (antes de divulgar): conta do GoatCounter do Kauê; servir o `count.js` como cópia local, pôr o endereço de contagem no `connect-src` da CSP, preencher `METRICAS_ID` e citar na Política de Privacidade.
+4. **Métricas** (antes de divulgar): conta do GoatCounter criada em 05/11/2026 (`projetocomunidade`; falta o Kauê confirmar o e-mail). O código já está pronto e desligado (`src/comum/metricas.ts`: imagem de 1 pixel, sem script de fora, só a tela aberta). Para ligar: `METRICAS_ID = 'projetocomunidade'` em `marca.ts`, `https://projetocomunidade.goatcounter.com` no `img-src` da CSP (`index.html`) e aviso na Política de Privacidade.
 5. **Nome e domínio** (Kauê, semana de 09/11/2026): trocar a `og:image` no `index.html` e configurar em Settings → Pages → Custom domain (com Actions não há arquivo CNAME; ver `docs/onda-1.md`, 8.5). Com domínio próprio, rever o rascunho da ata no aparelho.
 6. **Ícone e nome definitivos:** `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html`, `scripts/gerar-icones.mjs`; rodar `npm run icones`.
 7. **Onda 2:** guia da Lei de Acesso à Informação, idade mínima antes de quizzes e jogos (depende do advogado).

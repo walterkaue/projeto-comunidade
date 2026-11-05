@@ -12,6 +12,7 @@ export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
 /**
  * Métricas de visita, sem cookie. Vazio = desligado: nenhum script de fora é carregado.
  * Só o script de métricas pode falar com outro site (ver testes/privacidade.test.ts).
+ * Conta criada: 'projetocomunidade'. Como ligar: src/comum/metricas.ts.
  */
 export const METRICAS_ID = '';
 

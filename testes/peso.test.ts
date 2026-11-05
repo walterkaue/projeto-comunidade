@@ -84,6 +84,7 @@ describe('peso do pacote inicial', () => {
     const permitido = (url: string, linha: string) =>
       /^https?:\/\/www\.w3\.org\//.test(url) ||
       LINKS_DE_SAIDA.test(url) ||
+      /^https:\/\/[^/]*\.goatcounter\.com\/count/.test(url) ||
       (/property="og:image"/.test(linha) && url.startsWith('https://walterkaue.github.io/'));
     const arquivos = [
       ...readdirSync(join(saida, 'assets')).map((a) => join('assets', a)),

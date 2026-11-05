@@ -15,6 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { METRICAS_ID } from '../src/comum/marca';
 import { RAIZ, arquivosEm, relativo } from './arquivos';
 
 const EXCECAO_METRICAS = 'src/comum/metricas.ts';
@@ -140,6 +141,19 @@ describe('privacidade: nenhuma chamada para fora do site', () => {
     expect(csp).toMatch(/default-src 'self'/);
     expect(csp).toMatch(/connect-src 'self'( data:)?( blob:)?;/);
     expect(csp).toMatch(/script-src 'self';/);
+  });
+
+  it('a CSP só libera a contagem de visitas quando as métricas estão ligadas', () => {
+    const html = readFileSync(join(RAIZ, 'index.html'), 'utf8');
+    const csp = /http-equiv="Content-Security-Policy"\s+content="([^"]+)"/.exec(html)?.[1] ?? '';
+    const imgSrc = /img-src ([^;]+);/.exec(csp)?.[1] ?? '';
+    if (METRICAS_ID) {
+      expect(imgSrc.split(' ')).toContain(`https://${METRICAS_ID}.goatcounter.com`);
+    } else {
+      expect(csp).not.toMatch(/goatcounter|zgo\.at/);
+    }
+    // Nunca pelo connect-src nem pelo script-src: a contagem é só uma imagem.
+    expect(csp).not.toMatch(/(connect|script)-src[^;]*goatcounter/);
   });
 
   it(`nenhum arquivo do site fala com outro domínio (${lista.length} arquivos)`, () => {
