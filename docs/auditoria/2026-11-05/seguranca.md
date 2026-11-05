@@ -27,7 +27,12 @@ O ponto mais sério está **fora do site**: no fluxo de moderação, o link que 
 | A1 | Corrigido: o script lê o link só de arquivo (`--arquivo`) e recusa dados fora do formato; a página de denúncia só aceita o formato real; procedimento e `CLAUDE.md` atualizados | `5b98cef` |
 | M1 | Corrigido: corretor ortográfico desligado em todos os campos da reunião | `2e9e71d` |
 | M2, M3 | Corrigidos no procedimento e nas instruções do Gem. **Falta o Kauê colar as instruções novas no Gem** (`docs/gemini-triagem.md`, seção 4) | `5231e74` |
-| M4 a M9, baixos | Abertos (Sessão 7) | — |
+| M4 | Corrigido no texto da Política (com "no máximo", para continuar certo se o Kauê desligar algo no painel). **Falta o Kauê escolher no GoatCounter o que coletar** | `d6d794c` |
+| M5 | Corrigido: o Cards só abre preenchido pela memória da aba (`prepararCard` / `pegarCardPreparado`); link `#/cards/…` de fora abre vazio | `37a029b` |
+| M6 | Corrigido: regra 9 ("Fingir ser outra pessoa, organização ou órgão público") numa lista única (`src/comum/regras.ts`), nos Termos, na denúncia, no Gem e na planilha; a página diz "Quem chama, segundo quem criou o link" | `4cb8f79` |
+| M7, M8 | Corrigidos: `bloqueados.json` guarda o motivo (`regra-N` ou `pedido`), o script exige `--motivo`, a tela mostra a regra ferida e como pedir revisão; regra para o pedido "é meu" em `docs/moderacao.md` | `542f613` |
+| M9 | Sem mudança de código possível no github.io. **Depende do Kauê:** domínio próprio antes da divulgação e, até lá, desligar o Pages do `auxiliar-ia` se não for usado | — |
+| Baixos | B1 corrigido junto com A1 (`docs/moderacao.md`); os outros seguem abertos | — |
 
 ## O que bloqueia o beta
 

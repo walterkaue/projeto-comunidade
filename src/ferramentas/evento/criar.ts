@@ -157,7 +157,7 @@ export function telaCriar(raiz: HTMLElement, aEditar?: string): Limpeza {
       if (r.estado === 'ok') {
         desenhar(raiz, r.evento, vivo, 'Dados do evento carregados. Mude o que quiser e gere um novo link.');
       } else if (r.estado === 'bloqueado') {
-        desenhar(raiz, {}, vivo, 'Este link foi removido após denúncia e não pode ser usado como modelo.');
+        desenhar(raiz, {}, vivo, 'Este link foi removido e não pode ser usado como modelo.');
       } else {
         desenhar(raiz, {}, vivo, 'Não deu para abrir os dados desse link. Preencha o formulário do começo.');
       }
