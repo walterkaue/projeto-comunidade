@@ -6,7 +6,7 @@ import './reuniao.css';
 import { avisar } from '../../comum/aviso';
 import { ehLinkDoEvento, TAMANHO_MAXIMO } from '../../comum/entreTelas';
 import { compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
-import { campoAreaDeTexto, campoTexto, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
+import { ATRIBUTOS_SEM_CORRETOR, campoAreaDeTexto, campoTexto, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
 import type { Tela } from '../../comum/tela';
 import {
@@ -43,6 +43,9 @@ export const tela: Tela = (raiz) => {
   ligarAvisoDeSaidaDaAta();
   const base = document.createElement('main');
   base.className = 'tela reuniao-tela';
+  // Corretor ortográfico desligado na tela toda (os campos também levam o atributo): o corretor "avançado"
+  // do Chrome e o do Edge mandam o texto para fora, e a lista de presença não pode sair do aparelho.
+  base.spellcheck = false;
   raiz.replaceChildren(base);
 
   base.innerHTML = `<h1 tabindex="-1">Reunião: convocação, pauta e ata</h1>
@@ -229,7 +232,7 @@ export const tela: Tela = (raiz) => {
     const card = enderecoDoCard(c, link);
     const saida = painel.querySelector<HTMLElement>('#conv-saida')!;
     saida.innerHTML = `<h3 tabindex="-1">Texto para o WhatsApp</h3>
-      ${campoAreaDeTexto({ id: 'conv-texto', rotulo: 'Texto pronto', dica: 'Você pode mudar o texto antes de copiar ou enviar.', valor: texto, linhas: 14 })}
+      ${campoAreaDeTexto({ id: 'conv-texto', rotulo: 'Texto pronto', dica: 'Você pode mudar o texto antes de copiar ou enviar.', valor: texto, linhas: 14, semCorretor: true })}
       <div class="reuniao-botoes">
         <button type="button" class="botao" data-acao="copiar-conv">Copiar texto</button>
         <button type="button" class="botao botao-sec" data-acao="compartilhar-conv">Compartilhar texto</button>
@@ -292,7 +295,7 @@ export const tela: Tela = (raiz) => {
       .map(
         (t, i) => `<li class="item">
           <label class="campo-rotulo" for="conv-pauta-${i}">Item ${i + 1}</label>
-          <input class="campo-entrada" type="text" autocomplete="off" id="conv-pauta-${i}" data-lista="pauta" data-i="${i}" maxlength="120" value="${esc(t)}"${i === 0 ? ' aria-describedby="conv-pauta-erro"' : ''}>
+          <input class="campo-entrada" type="text" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="conv-pauta-${i}" data-lista="pauta" data-i="${i}" maxlength="120" value="${esc(t)}"${i === 0 ? ' aria-describedby="conv-pauta-erro"' : ''}>
           ${botoesDoItem('pauta', i, c.pauta.length, `item ${i + 1}`)}
         </li>`,
       )
@@ -300,10 +303,10 @@ export const tela: Tela = (raiz) => {
     return `<section aria-labelledby="titulo-conv">
       <h2 id="titulo-conv" tabindex="-1">Convocação</h2>
       <p>Preencha e gere o texto para o WhatsApp. Se quiser, faça também o card da convocação.</p>
-      ${campoTexto({ id: 'conv-organizacao', rotulo: 'Organização', obrigatorio: true, valor: c.organizacao, maximo: 80, autocomplete: 'off' })}
+      ${campoTexto({ id: 'conv-organizacao', rotulo: 'Organização', obrigatorio: true, valor: c.organizacao, maximo: 80, autocomplete: 'off', semCorretor: true })}
       ${campoTexto({ id: 'conv-data', rotulo: 'Data', tipo: 'date', obrigatorio: true, valor: c.data })}
       ${campoTexto({ id: 'conv-hora', rotulo: 'Hora', tipo: 'time', obrigatorio: true, valor: c.hora })}
-      ${campoTexto({ id: 'conv-local', rotulo: 'Local', obrigatorio: true, valor: c.local, maximo: 120, autocomplete: 'off' })}
+      ${campoTexto({ id: 'conv-local', rotulo: 'Local', obrigatorio: true, valor: c.local, maximo: 120, autocomplete: 'off', semCorretor: true })}
       <fieldset class="campo campo-grupo" id="conv-pauta" aria-describedby="conv-pauta-dica conv-pauta-erro">
         <legend class="campo-rotulo">Pauta <span class="campo-obrig">(obrigatório)</span></legend>
         <p class="campo-dica" id="conv-pauta-dica">Um assunto por item. Use Subir e Descer para mudar a ordem.</p>
@@ -311,7 +314,7 @@ export const tela: Tela = (raiz) => {
         <button type="button" class="botao botao-sec" id="acrescentar-pauta" data-acao="acrescentar" data-lista="pauta">Acrescentar item</button>
         <p class="campo-erro" id="conv-pauta-erro" hidden></p>
       </fieldset>
-      ${campoTexto({ id: 'conv-link', rotulo: 'Link de um evento (se tiver)', tipo: 'url', valor: c.link, dica: 'Só vale o link de um evento feito neste site.', autocomplete: 'off' })}
+      ${campoTexto({ id: 'conv-link', rotulo: 'Link de um evento (se tiver)', tipo: 'url', valor: c.link, dica: 'Só vale o link de um evento feito neste site.', autocomplete: 'off', semCorretor: true })}
       <div class="reuniao-botoes">
         <button type="button" class="botao" data-acao="gerar-conv">Gerar o texto</button>
         <button type="button" class="botao botao-sec" data-acao="limpar-conv">Limpar</button>
@@ -326,11 +329,11 @@ export const tela: Tela = (raiz) => {
     const n = i + 1;
     return `<li class="item item-ponto">
       <label class="campo-rotulo" for="ata-pontos-${i}-titulo">Ponto ${n}: assunto</label>
-      <input class="campo-entrada" type="text" autocomplete="off" id="ata-pontos-${i}-titulo" data-lista="pontos" data-i="${i}" data-k="titulo" maxlength="120" value="${esc(p.titulo)}">
+      <input class="campo-entrada" type="text" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="ata-pontos-${i}-titulo" data-lista="pontos" data-i="${i}" data-k="titulo" maxlength="120" value="${esc(p.titulo)}">
       <label class="campo-rotulo" for="ata-pontos-${i}-discutido">Ponto ${n}: o que foi discutido</label>
-      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off" id="ata-pontos-${i}-discutido" data-lista="pontos" data-i="${i}" data-k="discutido" maxlength="${MAXIMOS.texto}">${esc(p.discutido)}</textarea>
+      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="ata-pontos-${i}-discutido" data-lista="pontos" data-i="${i}" data-k="discutido" maxlength="${MAXIMOS.texto}">${esc(p.discutido)}</textarea>
       <label class="campo-rotulo" for="ata-pontos-${i}-decidido">Ponto ${n}: o que foi decidido</label>
-      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off" id="ata-pontos-${i}-decidido" data-lista="pontos" data-i="${i}" data-k="decidido" maxlength="${MAXIMOS.texto}">${esc(p.decidido)}</textarea>
+      <textarea class="campo-entrada campo-area" rows="3" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="ata-pontos-${i}-decidido" data-lista="pontos" data-i="${i}" data-k="decidido" maxlength="${MAXIMOS.texto}">${esc(p.decidido)}</textarea>
       ${botoesDoItem('pontos', i, a.pontos.length, `o ponto ${n}`)}
     </li>`;
   }
@@ -340,7 +343,7 @@ export const tela: Tela = (raiz) => {
     const n = i + 1;
     const campo = (k: string, rotulo: string, tipo: string, valor: string, max = 120) =>
       `<label class="campo-rotulo" for="ata-encaminhamentos-${i}-${k}">${rotulo} (encaminhamento ${n})</label>
-      <input class="campo-entrada" type="${tipo}" autocomplete="off" id="ata-encaminhamentos-${i}-${k}" data-lista="encaminhamentos" data-i="${i}" data-k="${k}"${tipo === 'text' ? ` maxlength="${max}"` : ''} value="${esc(valor)}">`;
+      <input class="campo-entrada" type="${tipo}" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="ata-encaminhamentos-${i}-${k}" data-lista="encaminhamentos" data-i="${i}" data-k="${k}"${tipo === 'text' ? ` maxlength="${max}"` : ''} value="${esc(valor)}">`;
     return `<li class="item item-ponto">
       ${campo('oque', 'O quê', 'text', e.oque, 200)}
       ${campo('quem', 'Quem', 'text', e.quem)}
@@ -356,14 +359,15 @@ export const tela: Tela = (raiz) => {
       <div class="reuniao-aviso" role="note">
         <p><strong>O rascunho some ao fechar.</strong> A ata fica só na memória desta aba. Ao terminar, salve o PDF ou copie o texto.</p>
         <p>A lista de presença pode mostrar a que grupos as pessoas pertencem. Por isso ela nunca vira link e não sai deste aparelho.</p>
+        <p>O corretor ortográfico do navegador fica desligado aqui. O teclado do celular ainda pode aprender as palavras digitadas.</p>
       </div>
       <p class="reuniao-nota">A ata é um modelo. Ela não substitui o que o estatuto da organização exige.</p>
-      ${campoTexto({ id: 'ata-organizacao', rotulo: 'Organização', obrigatorio: true, valor: a.organizacao, maximo: 80, autocomplete: 'off' })}
+      ${campoTexto({ id: 'ata-organizacao', rotulo: 'Organização', obrigatorio: true, valor: a.organizacao, maximo: 80, autocomplete: 'off', semCorretor: true })}
       ${campoTexto({ id: 'ata-data', rotulo: 'Data', tipo: 'date', obrigatorio: true, valor: a.data })}
-      ${campoTexto({ id: 'ata-local', rotulo: 'Local', valor: a.local, maximo: 120, autocomplete: 'off' })}
+      ${campoTexto({ id: 'ata-local', rotulo: 'Local', valor: a.local, maximo: 120, autocomplete: 'off', semCorretor: true })}
       ${campoTexto({ id: 'ata-inicio', rotulo: 'Hora de início', tipo: 'time', valor: a.inicio })}
       ${campoTexto({ id: 'ata-fim', rotulo: 'Hora do fim', tipo: 'time', valor: a.fim })}
-      ${campoAreaDeTexto({ id: 'ata-presentes', rotulo: 'Presentes', dica: 'Um nome por linha.', valor: a.presentes, autocomplete: 'off', linhas: 6, maximo: MAXIMOS.presentes })}
+      ${campoAreaDeTexto({ id: 'ata-presentes', rotulo: 'Presentes', dica: 'Um nome por linha.', valor: a.presentes, autocomplete: 'off', semCorretor: true, linhas: 6, maximo: MAXIMOS.presentes })}
       <h3>Pauta e decisões</h3>
       <button type="button" class="botao botao-sec" data-acao="usar-pauta">Usar a pauta da convocação</button>
       <ol class="reuniao-itens">${a.pontos.map((_, i) => pontoHtml(a, i)).join('')}</ol>

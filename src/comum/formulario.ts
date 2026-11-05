@@ -14,7 +14,15 @@ interface Base {
   valor?: string;
   obrigatorio?: boolean;
   autocomplete?: string;
+  /**
+   * Desliga o corretor ortográfico do navegador. O corretor "avançado" do Chrome e o do Edge mandam o texto
+   * digitado para o Google ou a Microsoft: use em campo com dado que não pode sair do aparelho (ata, presença).
+   */
+  semCorretor?: boolean;
 }
+
+/** Atributos que desligam o corretor ortográfico (spellcheck) e a correção automática do iPhone (autocorrect). */
+export const ATRIBUTOS_SEM_CORRETOR = ' spellcheck="false" autocorrect="off"';
 
 export interface CampoTexto extends Base {
   maximo?: number;
@@ -66,6 +74,7 @@ function comuns(b: Base): string {
   return (
     `${b.obrigatorio ? ' aria-required="true"' : ''}` +
     `${b.autocomplete ? ` autocomplete="${esc(b.autocomplete)}"` : ''}` +
+    `${b.semCorretor ? ATRIBUTOS_SEM_CORRETOR : ''}` +
     descritoPor(b)
   );
 }

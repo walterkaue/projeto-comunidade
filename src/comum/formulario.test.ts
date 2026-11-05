@@ -54,6 +54,15 @@ describe('campoAreaDeTexto', () => {
   });
 });
 
+// Auditoria 05/11/2026, M1: o corretor "avançado" do navegador manda o texto para o Google ou a Microsoft.
+describe('semCorretor', () => {
+  it('desliga o corretor só quando pedido', () => {
+    expect(campoTexto({ id: 'a', rotulo: 'A', semCorretor: true })).toContain('spellcheck="false" autocorrect="off"');
+    expect(campoAreaDeTexto({ id: 'b', rotulo: 'B', semCorretor: true })).toContain('spellcheck="false" autocorrect="off"');
+    expect(campoTexto({ id: 'c', rotulo: 'C' })).not.toContain('spellcheck');
+  });
+});
+
 describe('campoEscolha', () => {
   const h = campoEscolha({
     id: 'tipo',
