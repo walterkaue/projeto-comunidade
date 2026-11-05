@@ -129,7 +129,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - O card do evento recebe os dados pela memória da aba, nunca pelo link.
 
 ### 7.3 Reunião: convocação, pauta e ata
-- Convocação: gera card e texto da reunião com a pauta numerada, e opcionalmente o link do evento.
+- Convocação: gera card e texto da reunião com a pauta numerada e o link do evento. Desde o fluxo único (7.6), a convocação é a porta "Chamar para uma reunião" e o texto sempre leva o link, com a frase "O link leva título, dia, hora, local e a pauta. Quem receber pode repassar." na tela Pronto.
 - Ata: modelo guiado (data, local, presentes, pauta, o que foi decidido, encaminhamentos com responsável e prazo), com rascunho **só na aba aberta** enquanto o site estiver no endereço do GitHub (seção 3).
 - Saída da ata: imprimir ou salvar em PDF (pelo próprio navegador, sem biblioteca pesada) e copiar o texto. A ata **não** vira link.
 
