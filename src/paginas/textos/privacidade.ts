@@ -73,7 +73,7 @@ export const privacidade: Pagina = {
         'O nome e o e-mail de quem denunciou não são passados à inteligência artificial. A ferramenta é usada com o histórico desligado, para que esses textos não sirvam para treiná-la.',
         'Quem decide a remoção é sempre uma pessoa.',
         'A lista pública de links recusados guarda só uma impressão digital (um código) de cada link, nunca o conteúdo.',
-        'Por quanto tempo guardamos os e-mails: [a definir antes do lançamento].',
+        'Por quanto tempo guardamos os e-mails: por enquanto, sem prazo definido. Quando revisarmos esse prazo, esta página avisa. Você pode pedir a qualquer momento que apaguemos o seu (veja "Seus direitos").',
       ],
     },
     {

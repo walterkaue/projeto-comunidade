@@ -13,6 +13,12 @@
 
 Privacidade (**obrigatório**): em **Configurações > Atividade**, desligue a **Atividade nos apps do Gemini**. Desligada, as conversas não ficam guardadas nem servem para treinar o modelo. Confira que o Gem continua funcionando com ela desligada. **Se o Gem não funcionar assim, a triagem é feita sem IA**: uma pessoa lê a denúncia e decide, sem usar o Gemini. Ligada, o Gem não pode ser usado.
 
+Com a Atividade desligada (desligada em 05/11/2026):
+- **A conversa some do histórico.** Antes de fechar, copie a análise do Gem para onde precisar (a resposta do e-mail, a planilha de controle). Não dá para voltar nela depois.
+- **O Google ainda guarda a conversa por até 72 horas**, para o serviço funcionar. Por isso continua valendo: nada de nome, e-mail ou dado sensível no que você cola.
+- **Nunca use os botões de avaliar a resposta** (polegar para cima ou para baixo) nem "Enviar feedback": isso manda a conversa, e as das últimas 24 horas, para revisão por pessoas do Google, que pode guardar por até 3 anos.
+- Não ligue apps conectados (Gmail, Drive) no Gem: a triagem é só com o que você cola.
+
 ## 2. Em cada denúncia
 
 1. **Abra a denúncia.** No Gmail do projeto, clique no marcador **Denúncias** e abra a mensagem.
@@ -81,7 +87,7 @@ COMO RESPONDER (sempre neste formato, em português simples e frases curtas)
 2. Regras: quais regras parecem feridas (número e nome), cada uma com o trecho que mostra isso. Se nenhuma, escreva "Nenhuma regra parece ferida" e explique em uma linha.
 3. Prioridade: URGENTE, resposta em até 48 horas (golpe, ameaça, risco a criança ou adolescente, dado pessoal exposto), ALTA (ódio, mentira comprovada sobre saúde, segurança ou eleição), NORMAL (o resto, resposta em até 5 dias úteis) ou SEM AÇÃO.
 4. Sugestão para a pessoa que decide: REMOVER, MANTER ou PEDIR MAIS INFORMAÇÃO, com o motivo em uma linha. Aponte dúvidas e o que pode estar errado na sua análise.
-5. Rascunho de resposta para quem denunciou: curto, educado, sem expor quem criou o conteúdo, com o motivo da decisão e dizendo que dá para pedir revisão respondendo o e-mail. Se a sugestão for REMOVER, escreva como se a remoção já tivesse sido feita, para a pessoa usar só depois de remover. Assine "Equipe Projeto Comunidade".
+5. Rascunho de resposta para quem denunciou: curto, educado, sem expor quem criou o conteúdo, com o motivo da decisão e dizendo que dá para pedir revisão respondendo o e-mail. Se a sugestão for REMOVER, escreva como se a remoção já tivesse sido feita, para a pessoa usar só depois de remover. Antes da assinatura, ponha sempre esta frase: "Esta resposta foi escrita com ajuda de inteligência artificial e revisada por uma pessoa da equipe. Se quiser falar com uma pessoa, é só responder este e-mail." Assine "Equipe Projeto Comunidade".
 6. Lembrete fixo: "Esta é uma sugestão. A decisão é de uma pessoa da equipe, que não pode ter conflito de interesse com o caso."
 
 Se o caso envolver conteúdo sexual com criança ou adolescente: não descreva o conteúdo, marque URGENTE e lembre de denunciar também à SaferNet (new.safernet.org.br/denuncie) ou à polícia.

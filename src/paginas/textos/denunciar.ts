@@ -37,7 +37,7 @@ export const denunciar: Pagina = {
           'Respondemos por e-mail. Se não quiser resposta, diga no texto.',
         ],
         `Respondemos em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis. Em caso de golpe, ameaça, risco a criança ou dado pessoal exposto, em até ${PRAZO_URGENTE_HORAS} horas.`,
-        'A resposta traz o motivo da decisão.',
+        'A resposta traz o motivo da decisão. Ela é escrita com ajuda de inteligência artificial e revisada por uma pessoa. Se quiser falar com uma pessoa, é só responder o e-mail.',
         'Quem denunciou, ou quem foi denunciado, pode pedir revisão: basta responder o e-mail e dizer por quê. Quando houver mais de uma pessoa moderando, outra pessoa decide a revisão.',
         'Vamos publicar um relatório a cada seis meses, com o número de denúncias, remoções, revisões e prazos cumpridos, sem dados pessoais.',
       ],
