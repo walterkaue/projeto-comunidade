@@ -17,7 +17,7 @@
 
 1. **Kauê testa no celular** e mostra para 5 a 8 organizações (roteiro em `docs/onda-1.md`, seção 8.7).
 2. **Advogado:** documento de consulta no Claude Docs (com os textos de Termos, Privacidade e Regras). Pendentes na Política de Privacidade: responsável pelos dados e prazo de guarda dos e-mails ("[a definir antes do lançamento]"). Aprovado, `LANCAMENTO_PUBLICO = true` em `src/comum/marca.ts`.
-3. **Triagem das denúncias com o Gemini:** preparar as instruções a partir das Regras de uso (a pessoa decide a remoção).
+3. **Triagem das denúncias com o Gemini:** instruções prontas em `docs/gemini-triagem.md` (criar o Gem, filtro no Gmail, uso em cada denúncia). Falta o Kauê criar o Gem.
 4. **Métricas:** ligadas em 05/11/2026 (GoatCounter `projetocomunidade`, painel em https://projetocomunidade.goatcounter.com). Código em `src/comum/metricas.ts`; para desligar, `METRICAS_ID = ''` em `marca.ts` e tirar o endereço do `img-src` da CSP (o teste de privacidade confere os dois juntos).
 5. **Nome e domínio** (Kauê, semana de 09/11/2026): trocar a `og:image` no `index.html` e configurar em Settings → Pages → Custom domain (com Actions não há arquivo CNAME; ver `docs/onda-1.md`, 8.5). Com domínio próprio, rever o rascunho da ata no aparelho.
 6. **Ícone e nome definitivos:** `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html`, `scripts/gerar-icones.mjs`; rodar `npm run icones`.

@@ -11,7 +11,7 @@
 
 ## Passo a passo
 
-1. Abra o link denunciado e confira se fere as Regras de uso.
+1. Abra o link denunciado e confira se fere as Regras de uso. Para ajuda na triagem, use o Gem do Gemini (`docs/gemini-triagem.md`): ele sugere, a pessoa decide.
 2. Peça ao Claude Code: "bloqueie este link: <link>". Ele roda `npm run bloquear -- "<link>"`, faz commit `fix: bloqueia link denunciado` e push.
    - O script grava a impressão do link e a da forma canônica do evento: trocar um caractere do link não traz o evento de volta.
    - Link quebrado em linhas pelo e-mail ou link de "editar" funcionam. Se o evento não puder ser lido, o script **para sem gravar**; confira se o link chegou inteiro (`--forcar` grava só aquele link exato).
