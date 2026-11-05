@@ -83,7 +83,7 @@ export function exemplo(modelo: ModeloDeCard, indice: number, hoje: Date = new D
     texto,
     local,
     organizacao: ORGANIZACOES[n]!,
-    data: agenda || modelo === 'aviso' ? proximoSabado(hoje) : '',
+    data: agenda ? proximoSabado(hoje) : '',
     hora: agenda ? (modelo === 'reuniao' ? '19:00' : '09:30') : '',
     link: '',
   };

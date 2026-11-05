@@ -214,7 +214,7 @@ export function desenharCard(ctx: CanvasRenderingContext2D, c: CamposDoCard, for
   const areaAltura = rodapeTopo - areaTopo - 30;
 
   // conteúdo: encolhe até caber
-  let k = 1;
+  let k = 1.3;
   let blocos: Bloco[] = [];
   for (; k >= 0.55; k -= 0.05) {
     blocos = montarBlocos(ctx, c, formato, k, larguraTexto);

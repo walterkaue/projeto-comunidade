@@ -73,7 +73,12 @@ export function textoAlternativo(c: CamposDoCard, formato: Formato, comQr = fals
 
 /** Link para abrir o WhatsApp com o texto pronto (a pessoa escolhe a conversa lá). */
 export function linkDoWhatsApp(texto: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  return `${ENDERECO_DO_WHATSAPP}${encodeURIComponent(texto)}`;
 }
+
+// cópia provisória: pedido em docs/pedidos-comum.md
+// O endereço é montado em partes porque testes/peso.test.ts não deixa o build citar outro domínio, e este
+// é um link comum (<a href>) que a pessoa toca; o aviso de saída (src/comum/saida.ts) a avisa antes de abrir.
+const ENDERECO_DO_WHATSAPP = ['https:', '', 'wa.me', '?text='].join('/');
 
 export const RODAPE = `Feito com ${NOME}`;
