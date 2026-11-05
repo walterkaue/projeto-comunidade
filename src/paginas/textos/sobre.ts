@@ -10,7 +10,7 @@ export const sobre: Pagina = {
       titulo: 'O que é',
       blocos: [
         'É uma plataforma gratuita, aberta a qualquer pessoa e a qualquer organização: associação de moradores, coletivo cultural, escola, igreja, sindicato, ONG, grupo de bairro, partido.',
-        'Hoje tem três ferramentas: cards e convites para o WhatsApp, evento em um link e reunião com pauta e ata.',
+        'Hoje dá para chamar para uma reunião, divulgar um evento, dar um aviso, contar uma conquista e agradecer: em 1 minuto sai a imagem, o texto e o link para o WhatsApp. Depois da reunião, dá para fazer a ata.',
         'Tudo é feito no seu aparelho. Não pedimos cadastro nem senha.',
       ],
     },

@@ -11,7 +11,8 @@ html {
   position: fixed;
   left: 16px;
   right: 16px;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  /* Tela com barra fixa embaixo (o fluxo define --altura-barra-fixa): o aviso fica acima dela, sem cobrir os botões. */
+  bottom: calc(var(--altura-barra-fixa, 0px) + 16px + env(safe-area-inset-bottom, 0px));
   z-index: 60;
   max-width: 480px;
   margin: 0 auto;

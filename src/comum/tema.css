@@ -14,7 +14,7 @@
   --foco: #0b57d0;
   --erro: #a8241b;
   --raio: 12px;
-  --toque: 48px;
+  --toque: 52px;
   --fonte: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light dark;
 }
@@ -38,6 +38,11 @@
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* Elemento com o atributo hidden some sempre, mesmo com classe que muda o display (ex.: .botao { display: flex }). */
+[hidden] {
+  display: none !important;
 }
 
 html {
@@ -129,6 +134,8 @@ a {
   text-align: left;
   min-height: 5.5rem;
   padding: 1rem 1.25rem;
+  gap: 0.25rem;
+  overflow-wrap: anywhere;
 }
 
 .botao-titulo {
@@ -141,12 +148,32 @@ a {
 
 /* ---------- inicial ---------- */
 
+.inicio-nome {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
 .inicio-lema {
   color: var(--tinta-suave);
   margin: 0 0 1rem;
 }
 
-.inicio-ferramentas,
+.inicio-portas {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.inicio-portas .botao {
+  margin: 0;
+}
+
+.inicio-ata {
+  margin-top: 1.5rem;
+}
+
+.inicio-portas,
 .rodape ul {
   list-style: none;
   margin: 0;
@@ -173,7 +200,9 @@ a {
 .rodape a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: var(--toque);
+  min-width: var(--toque);
   color: var(--tinta-suave);
 }
 
