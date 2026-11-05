@@ -1,0 +1,425 @@
+/* Fluxo único: passos 1 a 3 e tela Pronto. Celular primeiro (360 px); toque, nunca hover.
+   Usa os tokens de src/comum/tema.css (claro e escuro). Nomes começam com "fluxo-". */
+
+.fluxo {
+  min-width: 0;
+}
+
+.fluxo .botao,
+.fluxo .campo-radio,
+.fluxo .campo-radio label {
+  min-height: 52px;
+}
+
+/* Só para leitor de tela (separadores dentro do título). */
+.fluxo-so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fluxo-verbo {
+  display: block;
+  margin: 0 0 0.25rem;
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+.fluxo-pronto-titulo {
+  display: block;
+}
+
+.fluxo h1 {
+  margin-bottom: 0.5rem;
+}
+
+.fluxo-passo,
+.fluxo-nome {
+  display: block;
+}
+
+.fluxo-passo {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--tinta-suave);
+}
+
+.fluxo-dica {
+  margin: 0 0 1rem;
+  color: var(--tinta-suave);
+}
+
+/* Nota fixa (dados de um link, exemplo ainda não trocado): não some sozinha. */
+.fluxo-nota {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.fluxo-form {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.fluxo-form .botao {
+  margin: 0 0 1rem;
+}
+
+/* ---------- miniatura fixa no topo (passos 1 e 2) ---------- */
+.fluxo-mini {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  min-height: 7rem;
+  margin: -1.5rem -1rem 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--borda);
+  background: var(--papel);
+}
+
+/* Altura em rem (acompanha o texto), com teto em px para o texto 200% não comer a tela. */
+.fluxo-mini-canvas {
+  display: block;
+  height: min(6rem, 96px);
+  width: auto;
+  max-width: 60%;
+  object-fit: contain;
+  border: 1px solid var(--borda-campo);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.fluxo-mini .fluxo-ver {
+  width: auto;
+  margin: 0;
+  padding-inline: 1.25rem;
+}
+
+.fluxo-dialogo {
+  width: min(92vw, 36rem);
+  max-height: 92dvh;
+  padding: 1rem;
+  border: 2px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--papel);
+  color: var(--tinta);
+}
+
+.fluxo-dialogo::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.fluxo-dialogo h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+.fluxo-dialogo-canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 62dvh;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+/* ---------- passo 2 ---------- */
+.fluxo-atalhos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.fluxo-atalhos {
+  margin: 0.5rem 0;
+}
+
+.fluxo-form .fluxo-atalho {
+  width: auto;
+  flex: 1 1 auto;
+  margin: 0;
+  padding-inline: 1rem;
+}
+
+.fluxo-extenso {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--tinta-suave);
+  font-weight: 700;
+}
+
+/* ---------- passo 3 ---------- */
+.fluxo-moldura {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+}
+
+.fluxo-moldura canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60dvh;
+  width: auto;
+  height: auto;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+}
+
+.fluxo-estado {
+  margin: 0 0 0.5rem;
+  color: var(--erro);
+  font-weight: 700;
+}
+
+/* Região de estado vazia fica na página sem altura (nunca display: none: o leitor de tela perde o aviso). */
+.fluxo-estado:empty {
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.fluxo-estado-neutro {
+  color: var(--tinta-suave);
+}
+
+.fluxo-opcao label {
+  gap: 12px;
+}
+
+.campo-radio .fluxo-rotulo-duplo {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding-block: 0.5rem;
+}
+
+.fluxo-opcao-nome {
+  display: block;
+  font-weight: 700;
+}
+
+.fluxo-opcao-expl {
+  display: block;
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.fluxo-amostra {
+  flex: none;
+  width: 40px;
+  height: 28px;
+  border: 2px solid var(--borda-campo);
+  border-radius: 6px;
+}
+
+.fluxo-mais {
+  margin: 0 0 1rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+}
+
+.fluxo-mais summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 1rem;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+
+.fluxo-mais summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Sinal visível de que abre e fecha: + fechado, − aberto (cor do texto: contraste alto). */
+.fluxo-mais summary::after {
+  content: '+';
+  flex: none;
+  color: var(--tinta);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.fluxo-mais[open] summary::after {
+  content: '\2212';
+}
+
+.fluxo-mais-corpo {
+  padding: 0 1rem 0.5rem;
+}
+
+.fluxo-cor {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 4px;
+  border: 2px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--superficie);
+}
+
+.fluxo-logo-nome {
+  margin: 0.5rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- barra fixa embaixo ---------- */
+.fluxo-barra {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 1rem -1rem 0;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--borda);
+  background: var(--papel);
+}
+
+.fluxo-barra .botao {
+  flex: 1 1 8rem;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Faixas fixas: o foco nunca fica escondido embaixo delas (WCAG 2.4.11). previa.ts mede as alturas de verdade
+   (--altura-mini e --altura-barra); os valores depois da vírgula valem se a medida não vier. */
+html:has(.fluxo-mini) {
+  scroll-padding-top: calc(var(--altura-mini, 7rem) + 0.75rem);
+}
+
+html:has(.fluxo-barra) {
+  /* sem o recuo da borda do aparelho: o aviso (.aviso-vivo) soma esse recuo à parte */
+  --altura-barra-fixa: var(--altura-barra, calc(52px + 1.5rem + 1px));
+  scroll-padding-bottom: calc(var(--altura-barra-fixa) + 0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Tela baixa (celular deitado, teclado aberto): faixas soltas, para sobrar espaço para o campo. */
+@media (max-height: 500px) {
+  .fluxo-mini,
+  .fluxo-barra {
+    position: static;
+  }
+
+  html:has(.fluxo-mini) {
+    scroll-padding-top: 0;
+  }
+
+  html:has(.fluxo-barra) {
+    --altura-barra-fixa: 0px;
+    scroll-padding-bottom: 0;
+  }
+}
+
+/* ---------- Pronto ---------- */
+.fluxo-saidas,
+.fluxo-acoes {
+  display: grid;
+  gap: 0;
+}
+
+.fluxo-saidas {
+  margin-top: 0.5rem;
+}
+
+.fluxo-saidas [hidden] {
+  display: none;
+}
+
+.fluxo-acoes {
+  margin-top: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 12px;
+}
+
+.fluxo-acoes .botao {
+  width: 100%;
+}
+
+.fluxo-ata {
+  margin-top: 1.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--borda);
+}
+
+.fluxo-ata h2 {
+  margin: 1rem 0 0;
+  font-size: 1.25rem;
+}
+
+.fluxo-ata .campo-dica {
+  margin-top: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fluxo *,
+  .fluxo *::before,
+  .fluxo *::after {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- impressão: só o cartaz (a folha A4 é posta por pronto.ts na hora de imprimir) ---------- */
+.fluxo-cartaz-impressao {
+  display: none;
+}
+
+@media print {
+  body.fluxo-imprimindo > *:not(#app) {
+    display: none !important;
+  }
+
+  body.fluxo-imprimindo .fluxo > *:not(.fluxo-cartaz-impressao) {
+    display: none !important;
+  }
+
+  body.fluxo-imprimindo #app,
+  body.fluxo-imprimindo .fluxo {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+    min-height: 0;
+  }
+
+  body.fluxo-imprimindo .fluxo-cartaz-impressao {
+    display: block;
+  }
+
+  body.fluxo-imprimindo .fluxo-cartaz-impressao img {
+    display: block;
+    width: 210mm;
+    height: 297mm;
+    object-fit: contain;
+  }
+}
