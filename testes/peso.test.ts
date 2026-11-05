@@ -3,7 +3,7 @@
 // (script de entrada, modulepreload e folhas de estilo). As ferramentas baixam sob demanda e não contam,
 // mas o teste confere que elas NÃO entraram no pacote inicial.
 
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -72,5 +72,25 @@ describe('peso do pacote inicial', () => {
     // nenhum módulo delas pode estar no pacote inicial, nem por import estático.
     expect(modulosIniciais.some((m) => m.endsWith('/src/main.ts'))).toBe(true);
     expect(modulosIniciais.filter((m) => /\/src\/(ferramentas\/|paginas\/index\.ts)/.test(m))).toEqual([]);
+  });
+
+  // Privacidade, conferida no que vai para o ar (inclui as dependências, como o uqr): nenhum endereço de
+  // outro domínio, a não ser a og:image (o WhatsApp exige endereço absoluto; o navegador não a baixa)
+  // e os namespaces do SVG/XML, que não são pedidos de rede.
+  it('o build não cita outro domínio (privacidade)', () => {
+    const permitido = (url: string, linha: string) =>
+      /^https?:\/\/www\.w3\.org\//.test(url) || (/property="og:image"/.test(linha) && url.startsWith('https://walterkaue.github.io/'));
+    const arquivos = [
+      ...readdirSync(join(saida, 'assets')).map((a) => join('assets', a)),
+      ...readdirSync(saida).filter((a) => /\.(html|js|webmanifest|json|css)$/.test(a)),
+    ].filter((a) => /\.(html|js|webmanifest|json|css)$/.test(a));
+    const achados = arquivos.flatMap((a) =>
+      readFileSync(join(saida, a), 'utf8')
+        .split('\n')
+        .flatMap((linha) => [...linha.matchAll(/https?:\/\/[^\s'"`)<>]+/g)].map((m) => ({ url: m[0], linha })))
+        .filter(({ url, linha }) => !permitido(url, linha))
+        .map(({ url }) => `${a}: ${url}`),
+    );
+    expect(achados).toEqual([]);
   });
 });
