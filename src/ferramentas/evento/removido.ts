@@ -11,21 +11,29 @@ export interface TextosDoRemovido {
   paragrafos: string[];
 }
 
+/** Regras sobre criança e adolescente: o texto delas nunca aparece na tela (vai uma frase geral). Tratadas por
+ * número, para valer mesmo antes de a regra 10 existir em src/comum/regras.ts. */
+export const REGRAS_DE_PROTECAO_A_CRIANCAS = [8, 10];
+
 export function textosDoRemovido(motivo: MotivoDaRemocao): TextosDoRemovido {
-  const revisao = `Criou este link e discorda? Escreva para ${EMAIL_CONTATO}, mande o link e peça revisão. Uma pessoa responde.`;
+  const revisao = `Criou este link e discorda? Escreva para ${EMAIL_CONTATO}, mande o link e peça revisão. Uma pessoa responde em até 5 dias úteis.`;
   if (motivo.tipo === 'pedido') {
     return {
       titulo: 'Este link foi removido a pedido de quem o criou',
       paragrafos: ['Ele não está mais disponível.', revisao],
     };
   }
-  const regra = motivo.tipo === 'regra' ? textoDaRegra(motivo.regra) : '';
+  let decisao = '';
+  if (motivo.tipo === 'regra') {
+    if (REGRAS_DE_PROTECAO_A_CRIANCAS.includes(motivo.regra)) {
+      decisao = 'Removemos este link porque, na nossa análise, ele fere as Regras de uso de proteção a crianças e adolescentes.';
+    } else {
+      const regra = textoDaRegra(motivo.regra);
+      if (regra) decisao = `Removemos este link porque, na nossa análise, ele fere esta regra de uso: ${regra}`;
+    }
+  }
   return {
     titulo: 'Este link foi removido após denúncia',
-    paragrafos: [
-      'Ele não está mais disponível.',
-      ...(regra ? [`Regra de uso que ele fere: ${regra}`] : []),
-      revisao,
-    ],
+    paragrafos: ['Ele não está mais disponível.', ...(decisao ? [decisao] : []), revisao],
   };
 }
