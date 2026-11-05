@@ -66,9 +66,9 @@ function cabecalho(d: DadosDoFluxo, passo: PassoNumerado): string {
     ${aviso}`;
 }
 
-const BARRA = `<div class="fluxo-barra">
+const BARRA = (rotulo = 'Continuar'): string => `<div class="fluxo-barra">
       <button type="button" class="botao botao-sec" id="fluxo-voltar">Voltar</button>
-      <button type="submit" form="fluxo-form" class="botao" id="fluxo-continuar">Continuar</button>
+      <button type="submit" form="fluxo-form" class="botao" id="fluxo-continuar">${esc(rotulo)}</button>
     </div>`;
 
 /** Mostra os erros do passo (do último ao primeiro, para o foco ficar no primeiro). Devolve se havia erro. */
@@ -92,8 +92,7 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
-  return `<button type="button" class="botao botao-sec" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>
-      ${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
+  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
       ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
@@ -132,10 +131,11 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
     ${htmlDaMiniatura()}
     ${cabecalho(d, passo)}
+    ${passo === 1 ? `<p class="fluxo-apagar-linha"><button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button></p>` : ''}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
     </form>
-    ${BARRA}
+    ${BARRA()}
   </main>`;
 
   const q = <T extends HTMLElement>(id: string) => raiz.querySelector<T>(`[id="${id}"]`)!;
@@ -261,20 +261,23 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
 
 function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const nivel = nivelDoAparelho();
+  // Formato: três botões lado a lado (radios de verdade, com o input escondido de forma acessível).
   const formatos = FORMATOS.map((f) => {
     const id = `fluxo-formato-${f}`;
-    return `<div class="campo-radio fluxo-opcao">
+    return `<div class="fluxo-seg-item">
         <input type="radio" id="${id}" name="fluxo-formato" value="${f}"${f === d.formato ? ' checked' : ''}>
-        <label class="fluxo-rotulo-duplo" for="${id}"><span class="fluxo-opcao-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-opcao-expl">${esc(EXPLICACAO_DO_FORMATO[f])}</span></label>
+        <label for="${id}"><span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-so-leitor">. ${esc(EXPLICACAO_DO_FORMATO[f])}</span></label>
       </div>`;
   }).join('');
+  // Cor: bolinhas de 48 px; o nome fica só para o leitor de tela.
   const paletas = PALETAS.map((p) => {
     const id = `fluxo-paleta-${p.id}`;
-    return `<div class="campo-radio fluxo-opcao">
+    return `<div class="fluxo-bola-item">
         <input type="radio" id="${id}" name="fluxo-paleta" value="${esc(p.id)}"${p.id === d.paletaId ? ' checked' : ''}>
-        <label for="${id}"><span class="fluxo-amostra" data-paleta="${esc(p.id)}" aria-hidden="true"></span>${esc(p.nome)}</label>
+        <label for="${id}"><span class="fluxo-amostra" data-paleta="${esc(p.id)}" aria-hidden="true"></span><span class="fluxo-so-leitor">${esc(p.nome)}</span></label>
       </div>`;
   }).join('');
+  const nomeDaCor = (id: string): string => (id === 'livre' ? 'Cor livre' : paletaPorId(id).nome);
 
   raiz.innerHTML = `<main class="tela fluxo">
     ${cabecalho(d, 3)}
@@ -285,11 +288,12 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     <form class="fluxo-form" id="fluxo-form" novalidate>
       <fieldset class="campo campo-grupo" id="fluxo-formato">
         <legend class="campo-rotulo">Onde vai mandar?</legend>
-        ${formatos}
+        <div class="fluxo-seg">${formatos}</div>
+        <p class="fluxo-formato-expl" id="fluxo-formato-expl">${esc(EXPLICACAO_DO_FORMATO[d.formato])}</p>
       </fieldset>
       <fieldset class="campo campo-grupo" id="fluxo-cor">
-        <legend class="campo-rotulo">Cor</legend>
-        ${paletas}
+        <legend class="campo-rotulo">Cor: <span id="fluxo-cor-nome">${esc(nomeDaCor(d.paletaId))}</span></legend>
+        <div class="fluxo-bolas">${paletas}</div>
         <p class="campo-dica" id="fluxo-cor-aviso"${d.paletaId === 'livre' ? '' : ' hidden'}>Você escolheu uma cor livre, em Mais opções.</p>
       </fieldset>
       <details class="fluxo-mais">
@@ -315,7 +319,7 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
         </div>
       </details>
     </form>
-    ${BARRA}
+    ${BARRA('Ficou bom')}
   </main>`;
 
   const q = <T extends HTMLElement>(id: string) => raiz.querySelector<T>(`[id="${id}"]`)!;
@@ -372,9 +376,11 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     const el = e.target as HTMLInputElement;
     if (el.name === 'fluxo-formato') {
       d.formato = el.value as Formato;
+      q('fluxo-formato-expl').textContent = EXPLICACAO_DO_FORMATO[d.formato];
       void desenhar();
     } else if (el.name === 'fluxo-paleta') {
       d.paletaId = el.value;
+      q('fluxo-cor-nome').textContent = nomeDaCor(d.paletaId);
       avisoDaCorLivre();
       void desenhar();
     } else if (el.id === 'fluxo-rodape') {
@@ -391,6 +397,7 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     d.corLivre = (e.target as HTMLInputElement).value;
     d.paletaId = 'livre';
     radios().forEach((r2) => (r2.checked = false));
+    q('fluxo-cor-nome').textContent = nomeDaCor('livre');
     avisoDaCorLivre();
     agendador.agendar();
   });

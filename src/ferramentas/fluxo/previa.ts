@@ -8,6 +8,7 @@ import { escalaDoFormato, type Formato } from '../cards/modelos';
 import { camposDoCard, type DadosDoFluxo } from './estado';
 import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, paletaDoFluxo } from './apoio';
 import { logoAtual } from './memoria';
+import { abreTeclado, tecladoAberto } from './teclado';
 
 let fontesProntas: Promise<unknown> | undefined;
 export function esperarFontes(): Promise<unknown> {
@@ -153,8 +154,64 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
     if (barra) obs.observe(barra);
   }
   medir();
+
+  // Teclado aberto: a barra e a miniatura soltam da tela (classe fluxo-teclado, ver fluxo.css) para não cobrir o campo.
+  const vv = window.visualViewport ?? null;
+  let timerDoCampo: ReturnType<typeof setTimeout> | undefined;
+  let timerDaSaida: ReturnType<typeof setTimeout> | undefined;
+  const campoEmFoco = (): HTMLElement | null => {
+    const a = document.activeElement;
+    return a instanceof HTMLElement && abreTeclado(a.tagName, a instanceof HTMLInputElement ? a.type : '') ? a : null;
+  };
+  const atualizarTeclado = (): void => {
+    html.classList.toggle(
+      'fluxo-teclado',
+      tecladoAberto({
+        alturaVisivel: vv?.height ?? window.innerHeight,
+        alturaDaJanela: window.innerHeight,
+        campoDeTextoEmFoco: campoEmFoco() !== null,
+      }),
+    );
+  };
+  const mostrarCampo = (): void => {
+    const campo = campoEmFoco();
+    if (campo?.isConnected) campo.scrollIntoView({ block: 'nearest' });
+  };
+  const aoFocar = (e: Event): void => {
+    const alvo = e.target;
+    if (!(alvo instanceof HTMLElement) || !abreTeclado(alvo.tagName, alvo instanceof HTMLInputElement ? alvo.type : '')) return;
+    atualizarTeclado();
+    // Espera o teclado terminar de subir e a área visível se acomodar.
+    clearTimeout(timerDoCampo);
+    timerDoCampo = setTimeout(() => {
+      atualizarTeclado();
+      mostrarCampo();
+    }, 300);
+  };
+  const aoSairDoFoco = (): void => {
+    clearTimeout(timerDaSaida);
+    // O foco passa por "nenhum elemento" entre dois campos: olha de novo depois.
+    timerDaSaida = setTimeout(atualizarTeclado, 100);
+  };
+  const aoRedimensionar = (): void => {
+    atualizarTeclado();
+    if (campoEmFoco()) mostrarCampo();
+  };
+  document.addEventListener('focusin', aoFocar);
+  document.addEventListener('focusout', aoSairDoFoco);
+  vv?.addEventListener('resize', aoRedimensionar);
+  window.addEventListener('resize', aoRedimensionar);
+  atualizarTeclado();
+
   return () => {
     obs?.disconnect();
+    clearTimeout(timerDoCampo);
+    clearTimeout(timerDaSaida);
+    document.removeEventListener('focusin', aoFocar);
+    document.removeEventListener('focusout', aoSairDoFoco);
+    vv?.removeEventListener('resize', aoRedimensionar);
+    window.removeEventListener('resize', aoRedimensionar);
+    html.classList.remove('fluxo-teclado');
     html.style.removeProperty('--altura-mini');
     html.style.removeProperty('--altura-barra');
   };
