@@ -18,7 +18,16 @@ A base está boa. Não achei injeção de HTML ou de script em nenhuma tela. Nen
 
 O ponto mais sério está **fora do site**: no fluxo de moderação, o link que chega por e-mail, escrito por um desconhecido, vai parar numa linha de comando no computador do Kauê (A1). Os outros problemas são de três tipos: textos da Política de Privacidade que não batem com o que acontece, conteúdo de terceiros que aparece no nosso domínio sem a faixa de aviso, e regras da seção 4.1 que ainda faltam na tela.
 
-**Medida imediata, até A1 ser corrigido** (este relatório é público): antes de pedir um bloqueio, confira que, depois de `#/evento/`, o link tem **só letras sem acento, números, `-` e `_`**. Se tiver qualquer outro sinal (`$`, `(`, `)`, `;`, `'`, `` ` ``, `|`, espaço), não bloqueie e não cole o link no Claude Code.
+**Medida imediata, até A1 ser corrigido** (este relatório é público): antes de pedir um bloqueio, confira que, depois de `#/evento/`, o link tem **só letras sem acento, números, `-` e `_`**. Se tiver qualquer outro sinal (`$`, `(`, `)`, `;`, `'`, `` ` ``, `|`, espaço), não bloqueie e não cole o link no Claude Code. (A1 foi corrigido no mesmo dia; a conferência continua no procedimento.)
+
+## Situação das correções (atualizada em 05/11/2026)
+
+| Achado | Situação | Commit |
+|---|---|---|
+| A1 | Corrigido: o script lê o link só de arquivo (`--arquivo`) e recusa dados fora do formato; a página de denúncia só aceita o formato real; procedimento e `CLAUDE.md` atualizados | `5b98cef` |
+| M1 | Corrigido: corretor ortográfico desligado em todos os campos da reunião | `2e9e71d` |
+| M2, M3 | Corrigidos no procedimento e nas instruções do Gem. **Falta o Kauê colar as instruções novas no Gem** (`docs/gemini-triagem.md`, seção 4) | `5231e74` |
+| M4 a M9, baixos | Abertos (Sessão 7) | — |
 
 ## O que bloqueia o beta
 
