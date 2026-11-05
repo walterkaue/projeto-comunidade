@@ -14,3 +14,9 @@ export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
  * Só o script de métricas pode falar com outro site (ver testes/privacidade.test.ts).
  */
 export const METRICAS_ID = '';
+
+/**
+ * Lançamento público (divulgação). Enquanto for false, Termos, Privacidade e Regras de uso mostram a faixa
+ * "Versão provisória, em revisão jurídica". Só vira true depois que o advogado aprovar os textos.
+ */
+export const LANCAMENTO_PUBLICO = false;
