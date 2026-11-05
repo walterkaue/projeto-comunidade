@@ -52,9 +52,9 @@ export const sobre: Pagina = {
           'Os apoiadores devem ser diversos e conhecidos do público.',
           'Apoiar não dá direito de decidir ou de influenciar o conteúdo, as regras ou os destaques.',
           'Nenhuma doação tem destino marcado.',
-        'Recusamos dinheiro e serviço de partido, candidato, pré-candidato, campanha, quem exerce mandato, dirigente partidário e órgão público (a não ser por edital público).', // neutralidade: permitido (regra de financiamento)
-        'A lista pública de apoiadores mostra o valor ou a faixa de cada apoio.',
-        'Nenhum apoiador passa de 20% da receita do ano.',
+          'Recusamos dinheiro e serviço de partido, candidato, pré-candidato, campanha, quem exerce mandato, dirigente partidário e órgão público (a não ser por edital público).', // neutralidade: permitido (regra de financiamento)
+          'A lista pública de apoiadores mostra o valor ou a faixa de cada apoio.',
+          'Nenhum apoiador passa de 20% da receita do ano.',
         ],
       ],
     },
