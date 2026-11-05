@@ -1,0 +1,17 @@
+/* Atkinson Hyperlegible (OFL), só os caracteres do português. Gerado por `npm run fontes`.
+   As urls são relativas a este CSS: o Vite põe hash no nome e reescreve o caminho (base './'),
+   então funcionam em /projeto-comunidade/ e na raiz de um domínio próprio. */
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./fontes/atkinson-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('./fontes/atkinson-700.woff2') format('woff2');
+}
