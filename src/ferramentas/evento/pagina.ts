@@ -86,7 +86,8 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
   $('[data-local]').textContent = e.local;
   if (e.organizacao) {
     const org = $('[data-organizacao]');
-    org.textContent = `Organização: ${e.organizacao}`;
+    // Quem chama é o que quem criou o link escreveu: o site não confere (auditoria 05/11/2026, M6).
+    org.textContent = `Quem chama, segundo quem criou o link: ${e.organizacao}`;
     org.hidden = false;
   }
   if (e.descricao) {

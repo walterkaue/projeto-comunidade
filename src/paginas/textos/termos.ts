@@ -35,6 +35,7 @@ export const termos: Pagina = {
       blocos: [
         'Seguir as Regras de uso.',
         'Não usar o site para golpe, ameaça, ódio, perseguição, mentira comprovada ou violação de direitos de outras pessoas.',
+        'Não fingir ser outra pessoa, organização ou órgão público.',
         'Não colocar dados de outras pessoas sem permissão.',
       ],
     },

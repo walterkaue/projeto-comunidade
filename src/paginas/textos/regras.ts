@@ -1,4 +1,5 @@
 import { EMAIL_CONTATO, NOME } from '../../comum/marca';
+import { REGRAS_DE_USO } from '../../comum/regras';
 import type { Pagina } from './tipos';
 
 export const regras: Pagina = {
@@ -14,18 +15,8 @@ export const regras: Pagina = {
     },
     {
       titulo: 'O que não pode',
-      blocos: [
-        [
-          'Ofensa, humilhação ou perseguição a pessoa ou grupo.',
-          'Discurso de ódio, racismo e outras formas de discriminação.',
-          'Ameaça e incentivo à violência.',
-          'Mentira comprovada, principalmente sobre saúde, segurança ou eleição.',
-          'Golpe, ou pedido de dinheiro ou de dado pessoal por meio de engano.',
-          'Dados de outras pessoas sem permissão: telefone, endereço, foto, lista de presença.',
-          'Conteúdo que viole direito autoral ou use marca de outra pessoa sem direito.',
-          'Conteúdo sexual envolvendo crianças ou adolescentes.',
-        ],
-      ],
+      // A lista mora em src/comum/regras.ts (a tela de link removido mostra a regra ferida).
+      blocos: [REGRAS_DE_USO],
     },
     {
       titulo: 'O que é mentira comprovada',

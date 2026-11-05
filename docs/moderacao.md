@@ -35,8 +35,8 @@ Quem decide e com que regras ainda é pergunta aberta (`docs/produto.md`, seçã
 |---|---|
 | `numero` | Número em sequência. |
 | `recebida_em` | Data em que o e-mail chegou (AAAA-MM-DD). |
-| `tipo` | `golpe`, `ameaça`, `risco a criança`, `dado pessoal`, `ódio`, `ofensa`, `mentira comprovada`, `direito autoral`, `outro` ou `sem regra ferida`. |
-| `regra_ferida` | Número da regra de `regras.ts` (1 a 8), ou vazio. |
+| `tipo` | `golpe`, `ameaça`, `risco a criança`, `dado pessoal`, `ódio`, `ofensa`, `mentira comprovada`, `direito autoral`, `personificação`, `pedido de quem criou`, `outro` ou `sem regra ferida`. |
+| `regra_ferida` | Número da regra de `src/comum/regras.ts` (1 a 9), ou vazio. |
 | `prioridade` | `urgente` (golpe, ameaça, risco a criança, dado pessoal exposto), `alta` ou `normal`. |
 | `prazo_limite` | Urgente: recebida + 48 horas (`PRAZO_URGENTE_HORAS`). Outras: recebida + 5 dias úteis (`PRAZO_DENUNCIA_DIAS_UTEIS`). |
 | `respondida_em` | Data e hora da resposta. |

@@ -1,7 +1,7 @@
 # Triagem de denúncias com o Gemini
 
 > Decisão de 05/11/2026 (`docs/produto.md`, seção 3): a IA ajuda a separar e resumir, **quem decide é uma pessoa**.
-> As regras abaixo copiam as Regras de uso do site (`src/paginas/textos/regras.ts`). Mudou a regra no site, mude aqui e no Gem.
+> As regras abaixo copiam as Regras de uso do site (`src/comum/regras.ts`; um teste confere o começo de cada uma). Mudou a regra no site, mude aqui e no Gem.
 
 ## 1. Criar o Gem (uma vez, uns 5 minutos)
 
@@ -68,7 +68,7 @@ Urgente (ameaça, risco a criança, golpe em andamento): faça a remoção na ho
 
 ## 4. Instruções para colar no Gem
 
-Mudou este bloco? Atualize o Gem: em **gemini.google.com**, menu da esquerda, **Gems** > passe o mouse em **Triagem de denúncias – Projeto Comunidade** > **Editar** (lápis). Apague o texto do campo **Instruções**, cole o bloco inteiro abaixo e clique em **Atualizar** (ou **Salvar**). Última mudança: 05/11/2026 (dados pessoais e rascunho sem link, auditoria M2 e M3).
+Mudou este bloco? Atualize o Gem: em **gemini.google.com**, menu da esquerda, **Gems** > passe o mouse em **Triagem de denúncias – Projeto Comunidade** > **Editar** (lápis). Apague o texto do campo **Instruções**, cole o bloco inteiro abaixo e clique em **Atualizar** (ou **Salvar**). Última mudança: 05/11/2026 (dados pessoais e rascunho sem link, auditoria M2 e M3; regra 9, auditoria M6).
 
 ```
 Você ajuda a equipe do Projeto Comunidade a fazer a triagem de denúncias. O Projeto Comunidade é um site gratuito e apartidário com ferramentas para organizações comunitárias, sociais, religiosas, sindicais e partidárias: cards e convites para WhatsApp, página de evento por link e modelo de reunião e ata. O conteúdo de uma página de evento é escrito por quem criou o link; o site não confere esse conteúdo e não o guarda.
@@ -90,6 +90,7 @@ REGRAS DE USO DO SITE (o que não pode)
 6. Dados de outras pessoas sem permissão: telefone, endereço, foto, lista de presença.
 7. Conteúdo que viole direito autoral ou use marca de outra pessoa sem direito.
 8. Conteúdo sexual envolvendo crianças ou adolescentes.
+9. Fingir ser outra pessoa, organização ou órgão público (por exemplo, convocação ou aviso falso em nome de um sindicato, de uma igreja ou da prefeitura).
 Não fere regra: convocar reunião, ato, culto, assembleia ou evento de qualquer organização, inclusive partido; opinião política dita com respeito; crítica a governo, empresa ou autoridade sem ofensa nem mentira comprovada.
 
 O QUE VOCÊ RECEBE
