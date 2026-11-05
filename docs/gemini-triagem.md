@@ -15,15 +15,26 @@ Privacidade (**obrigatório**): em **Configurações > Atividade**, desligue a *
 
 ## 2. Em cada denúncia
 
-1. Abra o e-mail da denúncia (assunto "Denúncia de conteúdo").
-2. Abra o link denunciado no navegador. Se for um evento, a página mostra o conteúdo como texto.
-3. No Gem, cole **só**:
-   - o motivo que a pessoa escreveu;
-   - o texto da página denunciada (selecione tudo na página e copie).
-   **Não cole** o nome nem o e-mail de quem denunciou: o Gem não precisa disso.
-4. Leia a análise do Gem. **Você decide.**
-5. Se for remover: aqui no Claude Code, peça "bloqueie este link: <link>". Em uns 2 minutos o link passa a mostrar "Este link foi removido após denúncia".
-6. Responda a quem denunciou (o Gem sugere o texto; revise antes de mandar).
+1. **Abra a denúncia.** No Gmail do projeto, clique no marcador **Denúncias** e abra a mensagem.
+2. **Abra a página denunciada.** No e-mail, clique no link logo abaixo de "Link denunciado:". Se ele não estiver clicável, selecione o link inteiro (começa em `https://walterkaue.github.io/` e vai até o fim da linha), copie com **Ctrl+C**, cole na barra de endereço com **Ctrl+V** e tecle **Enter**.
+   - Se a página mostrar "Este link foi removido após denúncia", ele já foi bloqueado: só responda a pessoa.
+   - Se mostrar "tem conteúdo que o site não aceita", o próprio site já recusa o link: responda que ele não é exibido.
+3. **Copie o texto da página.** Clique em qualquer lugar da página, tecle **Ctrl+A** (seleciona tudo) e **Ctrl+C** (copia). No celular: toque e segure num texto, **Selecionar tudo**, **Copiar**.
+4. **Abra o Gem.** Em gemini.google.com, menu da esquerda, **Gems** > **Triagem de denúncias – Projeto Comunidade**.
+5. **Monte a mensagem** na caixa do Gem, neste formato:
+
+   ```
+   Motivo da denúncia:
+   (cole aqui só o motivo que a pessoa escreveu no e-mail)
+
+   Texto da página denunciada:
+   (cole aqui com Ctrl+V)
+   ```
+
+   **Não cole** o nome nem o e-mail de quem denunciou: o Gem não precisa disso. Tecle **Enter** para enviar.
+6. **Leia a análise e decida.** O Gem só sugere; **você decide**.
+7. **Se for remover:** volte ao e-mail, copie o link denunciado e peça aqui no Claude Code: "bloqueie este link: (cole o link)". Em uns 2 minutos o link passa a mostrar "Este link foi removido após denúncia". Abra o link de novo para conferir.
+8. **Responda a quem denunciou.** No Gmail, clique em **Responder**, cole o rascunho que o Gem sugeriu, revise e envie. Se a decisão foi manter, ajuste o texto para dizer isso.
 
 Urgente (ameaça, risco a criança, golpe em andamento): faça a remoção na hora. Em caso de abuso sexual de criança ou adolescente, não copie o conteúdo para lugar nenhum além do necessário e denuncie também em **new.safernet.org.br/denuncie** ou à polícia.
 
