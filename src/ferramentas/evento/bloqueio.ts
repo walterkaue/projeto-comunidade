@@ -8,7 +8,7 @@ import { estaBloqueado, impressaoDoLink } from '../../comum/entreTelas';
 
 export const ESPERA_DA_LISTA_MS = 8000;
 
-/** Lê a lista do próprio site. Rejeita se não vier (rede, 404, JSON ruim ou demora demais). */
+/** Lê a lista do próprio site. Se a rede falhar ou demorar, tenta a última cópia guardada no aparelho. */
 export async function lerListaDoSite(): Promise<unknown> {
   const controle = new AbortController();
   const prazo = setTimeout(() => controle.abort(), ESPERA_DA_LISTA_MS);
@@ -16,8 +16,23 @@ export async function lerListaDoSite(): Promise<unknown> {
     const resp = await fetch('./bloqueados.json', { cache: 'no-cache', signal: controle.signal });
     if (!resp.ok) throw new Error('lista indisponível');
     return await resp.json();
+  } catch (erro) {
+    const guardada = await listaGuardada();
+    if (guardada !== undefined) return guardada;
+    throw erro;
   } finally {
     clearTimeout(prazo);
+  }
+}
+
+/** A cópia da lista que o service worker guardou (undefined se não houver). */
+async function listaGuardada(): Promise<unknown> {
+  try {
+    if (typeof caches === 'undefined') return undefined;
+    const resp = await caches.match(new URL('./bloqueados.json', location.href).href);
+    return resp ? await resp.json() : undefined;
+  } catch {
+    return undefined;
   }
 }
 

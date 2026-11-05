@@ -36,7 +36,7 @@ describe('link do card preenchido', () => {
       modelo: 'comicio',
       data: '21/11/2026',
       hora: '25:00',
-      titulo: 'x'.repeat(200),
+      titulo: 'palavra '.repeat(30),
       link: 'https://outro.exemplo/#/evento/abc',
       texto: '  linha\num  ',
     }).toString();
@@ -46,12 +46,35 @@ describe('link do card preenchido', () => {
     expect(d.hora).toBeUndefined();
     expect(d.link).toBeUndefined();
     expect(d.titulo).toHaveLength(80);
+    expect(d.titulo?.endsWith('…')).toBe(true);
     expect(d.texto).toBe('linha um');
   });
 
   it('não lança com lixo', () => {
     expect(lerDadosDoCard('%E0%A4%A', BASE)).toEqual({});
     expect(lerDadosDoCard('', BASE)).toEqual({});
+  });
+});
+
+describe('link do card com golpe', () => {
+  const golpe = '#/cards/modelo=aviso&titulo=Doação%20urgente&texto=PIX%20chave%20golpe%40mail.com%20ou%20ligue%2011987654321';
+  it('descarta o campo de texto recusado e mantém o resto', () => {
+    const d = lerDadosDoCard(golpe.slice('#/cards/'.length), BASE);
+    expect(d.modelo).toBe('aviso');
+    expect(d.titulo).toBe('Doação urgente');
+    expect(d.texto).toBeUndefined();
+  });
+  it('filtra título, local e organização também', () => {
+    const resto = new URLSearchParams({
+      titulo: 'Zap 98765 e 4321',
+      local: 'golpe.bet',
+      organizacao: 'Evento verificado pelo site',
+      texto: 'Reunião dia 21/11 às 19h',
+    }).toString();
+    expect(lerDadosDoCard(resto, BASE)).toEqual({ texto: 'Reunião dia 21/11 às 19h' });
+  });
+  it('quem monta o link com texto livre não é filtrado na ida (só na leitura)', () => {
+    expect(linkDoCard({ texto: 'qualquer coisa 11987654321' })).toContain('texto=');
   });
 });
 
@@ -109,5 +132,14 @@ describe('script de moderação', () => {
     expect(dadosDoLink(EVENTO)).toBe('abc123');
     expect(dadosDoLink('https://exemplo.org/')).toBe('');
     expect(impressao('abc123')).toBe(await impressaoDoLink('abc123'));
+  });
+});
+
+describe('script de moderação: link vindo do e-mail', () => {
+  it('junta link quebrado em linhas e aceita o de edição', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { dadosDoLink } = await import('../../scripts/bloquear.mjs');
+    expect(dadosDoLink('https://x.exemplo/p/#/evento/abc\n123 ')).toBe('abc123');
+    expect(dadosDoLink('https://x.exemplo/p/#/evento/editar/abc123')).toBe('abc123');
   });
 });

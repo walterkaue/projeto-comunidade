@@ -9,6 +9,7 @@
 // - Lista de links removidos (public/bloqueados.json): guarda só a impressão (SHA-256) dos dados do
 //   evento, nunca o conteúdo. impressaoDoLink(resto) e estaBloqueado(impressao, json).
 
+import { motivoDeRecusa } from './conteudo';
 import { linkPara } from './rotas';
 import { letras } from './texto';
 
@@ -71,7 +72,9 @@ export function lerDadosDoCard(resto: string, base: string): DadosDoCard {
   if (modelo && (MODELOS_DE_CARD as readonly string[]).includes(modelo)) d.modelo = modelo as ModeloDeCard;
   for (const k of TEXTOS) {
     const v = limpar(p.get(k) ?? '', TAMANHO_MAXIMO[k]);
-    if (v) d[k] = v;
+    // Quem altera o link na mão passa pela mesma conferência do evento: golpe não aparece no nosso domínio.
+    // (Quem digita direto no Cards continua livre: só o que vem pelo link é filtrado.)
+    if (v && motivoDeRecusa(v) === null) d[k] = v;
   }
   const data = p.get('data');
   if (data && DATA.test(data)) d.data = data;

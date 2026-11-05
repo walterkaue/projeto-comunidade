@@ -12,6 +12,14 @@
   overflow-wrap: anywhere;
 }
 
+/* Acento empilhado ("zalgo") não pode sair do texto e cobrir a faixa de aviso: o que passa da caixa é cortado. */
+.evento h1,
+.evento dd,
+.evento p {
+  overflow: clip;
+  overflow-clip-margin: 0.25em;
+}
+
 .evento-regra {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;

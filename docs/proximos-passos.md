@@ -7,34 +7,27 @@
 
 | Área | Estado em 05/11/2026 |
 |---|---|
-| Código | Fundação pronta na `main`: Vite 8, TypeScript estrito, Vitest, rotas por `#`, base relativa. 13 arquivos de teste e 101 testes passando, incluindo os de regra (peso, neutralidade, privacidade) |
-| Publicação | No ar em https://walterkaue.github.io/projeto-comunidade/ desde 05/11/2026, publicado pelo GitHub Actions (testes antes do build). Conferido no navegador em 360 px: telas abrem, o app fica guardado no aparelho para abrir sem rede, sem erro no console |
-| Tamanho | 4,9 KB gzip de JS + CSS inicial (limite do teste: 80 KB). Fontes: 24 KB (Atkinson Hyperlegible 400 e 700, cortadas para o português). Cabe com folga nos ~150 KB da primeira tela pedidos no `produto.md` (7.5) |
-| Conteúdo | `docs/produto.md` com o texto do produto (versão 0.3). Ferramentas ainda vazias ("em construção"). Páginas institucionais sem texto |
-
-## O que a fundação entrega
-
-- **Peças comuns prontas e testadas** em `src/comum/`: contraste WCAG (`cor.ts`), quebra e corte de texto para canvas (`texto.ts`), cadeia de compartilhar com "Baixar imagem" (`compartilhar.ts`), aviso falado (`aviso.ts`), QR no canvas (`qr.ts`), aviso de link externo (`saida.ts`), aparelho fraco e economia de dados (`nivel.ts`), campos de formulário acessíveis (`formulario.ts`), escape e `urlSegura` (`html.ts`).
-- **PWA:** instalável, guarda o app inteiro na instalação (lista gerada no build), tela offline, usa a página guardada se a rede demorar mais de 4 s.
-- **Privacidade no navegador:** CSP no `index.html` (o site só fala consigo mesmo) e `no-referrer`.
-- **Revisão:** `revisor` e `revisor-privacidade-neutralidade` passaram pela fundação; os achados graves e médios foram corrigidos.
+| Código | **Onda 1 pronta na `main`**: Cards e convites, Evento em um link, Reunião (convocação, pauta e ata) e as seis páginas institucionais. 28 arquivos de teste, 436 testes passando, incluindo os de regra (peso, neutralidade, privacidade) |
+| Publicação | No ar em https://walterkaue.github.io/projeto-comunidade/, publicado pelo GitHub Actions. Conferido em 360 px: evento → página → card preenchido com QR → denúncia com o link; sem rolagem lateral, sem erro no console |
+| Tamanho | Cerca de 7 KB gzip na primeira visita (HTML, JS e CSS iniciais; limite do teste: 80 KB), mais 24 KB de fontes. Cada ferramenta baixa só quando abre (a maior, Cards, tem 12 KB gzip) |
+| Revisão | Cada sessão passou pelos três revisores; o conjunto também (geral, acessibilidade, privacidade e neutralidade). Achados graves, altos e médios corrigidos |
+| Moderação | Denúncia por e-mail; `npm run bloquear` grava a impressão do link e da forma canônica do evento (`docs/moderacao.md`) |
 
 ## Próximos passos
 
-1. **Sessões paralelas da Onda 1** (cada uma em worktree próprio, só na própria pasta, testes dentro dela; o que precisar de `src/comum` vira pedido em `docs/pedidos-comum.md`). O escopo de cada uma está no `produto.md`, seção 7. Detalhes extras no plano do Chat (`docs/onda-1.md`, seção 7); onde ele discorda do `produto.md` (ex.: rascunho da ata no `localStorage`), vale o `produto.md`. Combinados entre as ferramentas: `src/comum/entreTelas.ts`. Moderação: `docs/moderacao.md`.
-   - **Cards e convites para WhatsApp** — `src/ferramentas/cards/` (7.1). 5 modelos, 3 formatos (Status, Conversa, Cartaz A4 com QR), 6 paletas neutras e cor livre checada com `cor.ts`; logo reduzido no aparelho e nunca enviado; compartilhar, "Baixar imagem", copiar texto, `wa.me` e imprimir; texto alternativo gerado dos campos; rodapé "feito com…" removível. Exemplos com organizações fictícias e neutras.
-   - **Evento em um link** — `src/ferramentas/evento/` (7.2). Dados compactados depois do `#`; atualizar o link com `history.replaceState`; sem link livre, PIX, telefone ou HTML (o `urlSegura` aceita `tel:`, então o evento não pode usar link vindo dos dados: só "Ver no mapa" e "Adicionar à agenda" montados por nós); faixa fixa "conteúdo de quem enviou" com Denunciar; conferir `bloqueados.json` (relativo ao site) antes de mostrar; QR com `qr.ts`; link malformado mostra aviso, não quebra.
-   - **Reunião** — `src/ferramentas/reuniao/` (7.3). Convocação com pauta numerada para compartilhar; ata guiada, impressa ou salva em PDF pelo navegador, e copiar texto; presença e ata nunca em link. Rascunho da ata só na memória da aba aberta (some ao fechar; decidido em 05/11/2026), com aviso para salvar o PDF antes de sair e botão de apagar.
-   - **Páginas institucionais** — `src/paginas/` (7.4). Sobre, Termos, Privacidade, Regras de uso, Como denunciar e **Contato** (essa rota ainda não existe: pedido em `docs/pedidos-comum.md` para `rotas.ts`, `main.ts` e o rodapé), com faixa "em revisão jurídica", linguagem simples e neutra e o e-mail de `marca.ts`.
-2. **Sessão para atender `docs/pedidos-comum.md`** depois das quatro. Depois, `revisor`, `revisor-acessibilidade` e `revisor-privacidade-neutralidade` olham o conjunto.
-3. **Ligar as métricas** (decisão do Kauê): escolher um serviço sem cookie (sugestão no código: GoatCounter), servir o script como cópia local, acrescentar o endereço de contagem ao `connect-src` da CSP e preencher `METRICAS_ID` em `src/comum/marca.ts`.
-4. **Domínio próprio:** trocar o endereço da `og:image` no `index.html`, criar `public/CNAME`, configurar em Settings → Pages → Custom domain e o DNS no painel do registro do domínio (o Kauê clica). Com domínio próprio, o armazenamento deixa de ser dividido com outros projetos.
-5. **Ícone e nome definitivos:** trocar em `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html` e `scripts/gerar-icones.mjs`; rodar `npm run icones`.
-6. **Conferir a lista oficial de partidos do TSE** em `testes/siglas-partidos.txt` (foi montada de memória).
+1. **Kauê testa no celular** e mostra para 5 a 8 organizações (roteiro em `docs/onda-1.md`, seção 8.7).
+2. **Advogado:** documento de consulta no Claude Docs (com os textos de Termos, Privacidade e Regras). Pendentes na Política de Privacidade: responsável pelos dados e prazo de guarda dos e-mails ("[a definir antes do lançamento]"). Aprovado, `LANCAMENTO_PUBLICO = true` em `src/comum/marca.ts`.
+3. **Triagem das denúncias com o Gemini:** preparar as instruções a partir das Regras de uso (a pessoa decide a remoção).
+4. **Métricas** (antes de divulgar): conta do GoatCounter do Kauê; servir o `count.js` como cópia local, pôr o endereço de contagem no `connect-src` da CSP, preencher `METRICAS_ID` e citar na Política de Privacidade.
+5. **Nome e domínio** (Kauê, semana de 09/11/2026): trocar a `og:image` no `index.html` e configurar em Settings → Pages → Custom domain (com Actions não há arquivo CNAME; ver `docs/onda-1.md`, 8.5). Com domínio próprio, rever o rascunho da ata no aparelho.
+6. **Ícone e nome definitivos:** `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html`, `scripts/gerar-icones.mjs`; rodar `npm run icones`.
+7. **Onda 2:** guia da Lei de Acesso à Informação, idade mínima antes de quizzes e jogos (depende do advogado).
 
 ## Pendências pequenas da revisão (não bloqueiam)
 
-- `cortarTexto` e `quebrarTexto` contam por ponto de código: emoji composto (família, bandeira) pode ser partido no meio. Resolver com `Intl.Segmenter` quando o card precisar.
 - O teste de neutralidade não confere cor de partido em paletas e modelos prontos: a sessão dos cards e o `revisor-privacidade-neutralidade` olham isso à mão.
 - `public/offline.html` usa `onclick` em linha. Hoje não tem CSP própria; se ganhar, trocar por um listener.
 - Aviso de saída não pega o toque longo "abrir em nova aba" do celular (só clique e clique do meio).
+- "Oficial" e "verificado" só são recusados no evento quando ligados ao site ou ao conteúdo ("evento verificado", "oficial do site"); "Equipe da Comunidade" ainda passa (o nome curto só é recusado como campo inteiro).
+- "Doação via transferência TED." sem número passa: sem valor ou número não dá para separar de texto comum.
+- Sem internet e sem nenhuma cópia da lista guardada (primeira visita já sem rede), um evento bloqueado aparece.

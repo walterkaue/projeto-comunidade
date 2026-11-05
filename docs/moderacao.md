@@ -13,6 +13,10 @@
 
 1. Abra o link denunciado e confira se fere as Regras de uso.
 2. Peça ao Claude Code: "bloqueie este link: <link>". Ele roda `npm run bloquear -- "<link>"`, faz commit `fix: bloqueia link denunciado` e push.
+   - O script grava a impressão do link e a da forma canônica do evento: trocar um caractere do link não traz o evento de volta.
+   - Link quebrado em linhas pelo e-mail ou link de "editar" funcionam. Se o evento não puder ser lido, o script **para sem gravar**; confira se o link chegou inteiro (`--forcar` grava só aquele link exato).
 3. Em cerca de 2 minutos o site novo está no ar. Responda o e-mail de quem denunciou.
+
+Limite conhecido: sem internet e sem nenhuma cópia da lista guardada no aparelho (primeira visita já sem rede), o evento é mostrado. Com rede lenta ou erro do servidor, vale a última lista guardada.
 
 Quem decide e com que regras ainda é pergunta aberta (`docs/produto.md`, seção 6).

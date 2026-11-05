@@ -1,5 +1,7 @@
 // Moderação: tira do ar um link de evento denunciado.
-// Uso: npm run bloquear -- "https://…/#/evento/…"
+// Uso: npm run bloquear -- "https://…/#/evento/…"   (aceita também o link de "editar/" e link quebrado em linhas)
+// Se o evento não puder ser lido, o script PARA sem gravar (o bloqueio não pegaria): confira o link. Para gravar
+// mesmo assim só a impressão do link exato, use --forcar.
 // Grava em public/bloqueados.json só impressões (SHA-256), nunca o conteúdo:
 // - a dos dados do link como vieram;
 // - a da forma canônica do evento (src/ferramentas/evento/formato.ts, dadosCanonicos), para que trocar um
@@ -16,8 +18,11 @@ const FORMATO = fileURLToPath(new URL('../src/ferramentas/evento/formato.ts', im
 const MARCA = '#/evento/';
 
 export function dadosDoLink(link) {
-  const i = link.indexOf(MARCA);
-  return i < 0 ? '' : link.slice(i + MARCA.length).trim();
+  // E-mail costuma quebrar link comprido em linhas: junta tudo antes de ler.
+  const junto = link.replace(/\s+/g, '');
+  const i = junto.indexOf(MARCA);
+  if (i < 0) return '';
+  return junto.slice(i + MARCA.length).replace(/^editar\//, '');
 }
 
 export const impressao = (dados) => createHash('sha256').update(dados).digest('hex');
@@ -32,14 +37,19 @@ export async function impressoesDosDados(dados) {
   return { impressoes: [...lidas], leuOEvento: leitura.ok };
 }
 
-async function bloquear(link) {
+async function bloquear(link, forcar) {
   const dados = dadosDoLink(link);
   if (!dados) {
     console.error('Isso não parece um link de evento (falta "#/evento/").');
     process.exit(1);
   }
   const { impressoes, leuOEvento } = await impressoesDosDados(dados);
-  if (!leuOEvento) console.log('Aviso: o evento não pôde ser lido; bloqueio só deste link exato.');
+  if (!leuOEvento && !forcar) {
+    console.error('O evento deste link não pôde ser lido, então o bloqueio não pegaria. Nada foi gravado.');
+    console.error('Confira se o link está inteiro. Para gravar mesmo assim só este link exato, use --forcar.');
+    process.exit(1);
+  }
+  if (!leuOEvento) console.log('Aviso: o evento não pôde ser lido; bloqueio só deste link exato (--forcar).');
   const lista = JSON.parse(readFileSync(ARQUIVO, 'utf8'));
   const novas = impressoes.filter((i) => !lista.bloqueados.includes(i));
   if (novas.length === 0) {
@@ -52,4 +62,6 @@ async function bloquear(link) {
 }
 
 const executadoDireto = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (executadoDireto && process.argv[2]) await bloquear(process.argv[2]);
+const argumentos = process.argv.slice(2);
+const link = argumentos.filter((a) => a !== '--forcar').join('');
+if (executadoDireto && link) await bloquear(link, argumentos.includes('--forcar'));

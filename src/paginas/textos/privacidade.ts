@@ -42,6 +42,19 @@ export const privacidade: Pagina = {
       ],
     },
     {
+      titulo: 'Botões que abrem outro site',
+      blocos: [
+        'Alguns botões abrem outro site ou aplicativo. Antes de sair, o site avisa. Só o que você tocar é enviado:',
+        [
+          '"Ver no mapa": o local do evento vai para o Google Maps.',
+          '"Abrir no Google Agenda": título, data, hora, local, descrição e organização do evento vão para o Google.',
+          '"Abrir no WhatsApp": o texto do card (e o link do evento, se houver) vai para o WhatsApp, da Meta.',
+          '"Enviar denúncia por e-mail": abre o seu aplicativo de e-mail com o link denunciado já escrito.',
+        ],
+        'Esses serviços têm as próprias regras de privacidade. O arquivo da agenda (.ics) e as imagens são feitos no aparelho e não passam por outro site.',
+      ],
+    },
+    {
       titulo: 'Métricas de visita',
       blocos: [
         'Hoje não medimos visitas.',

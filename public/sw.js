@@ -149,13 +149,24 @@ async function cacheEAtualiza(req) {
   return guardada ?? nova;
 }
 
+// Lista de bloqueio: a da rede, se vier boa a tempo; senão (rede lenta, 404 ou erro durante um deploy), a
+// última guardada. Nunca devolve resposta ruim quando há uma cópia boa: um link removido não pode voltar.
 async function redeOuGuardada(req) {
   const cache = await caches.open(CACHE_ARQUIVOS);
-  try {
-    const resp = await fetch(req, { cache: 'no-cache' });
+  const daRede = fetch(req, { cache: 'no-cache' }).then(async (resp) => {
     if (resp.ok) await cache.put(req, resp.clone());
     return resp;
+  });
+  daRede.catch(() => {});
+  const demorou = new Promise((ok) => setTimeout(ok, ESPERA_DA_REDE_MS, null));
+  try {
+    const resp = await Promise.race([daRede, demorou]);
+    if (resp && resp.ok) return resp;
   } catch {
-    return (await cache.match(req)) ?? Response.error();
+    // sem rede: cai na guardada
   }
+  const guardada = await cache.match(req);
+  if (guardada) return guardada;
+  // Sem cópia guardada: espera a rede de verdade (pode ainda chegar).
+  return daRede.catch(() => Response.error());
 }

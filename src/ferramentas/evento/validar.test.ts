@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { dadosCanonicos } from './formato';
 import { LIMITES, dataValida, horaValida, limparTexto, motivoDeRecusa, validarEvento, type Evento } from './validar';
 
 const bom: Evento = {
@@ -193,5 +194,28 @@ describe('limparTexto', () => {
   it('em campo de uma linha, quebra vira espaço', () => {
     expect(limparTexto('a\nb')).toBe('a b');
     expect(limparTexto('a\nb', true)).toBe('a\nb');
+  });
+});
+
+describe('endurecimento da conferência (conteúdo.ts)', () => {
+  it('recusa evento que se passa pela plataforma, com mensagem própria', () => {
+    const r = com({ organizacao: 'Projeto Comunidade' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.erros.organizacao).toMatch(/não pode dizer que é do site nem que foi conferido/);
+    expect(com({ titulo: 'Evento oficial' }).ok).toBe(false);
+  });
+  it('texto legítimo passa no formulário', () => {
+    expect(com({ titulo: 'Mutirão de limpeza da praça', local: 'Praça Central, Rua das Flores, 120 - Centro', organizacao: 'Associação de moradores do Bairro Novo' }).ok).toBe(true);
+  });
+});
+
+describe('forma canônica', () => {
+  it('"Reunião" composto, decomposto ou com ZWJ no meio dá os mesmos dados', () => {
+    const formas = ['Reunião', 'Reunião', 'Reuni‍ão'].map((titulo) => {
+      const r = com({ titulo });
+      if (!r.ok) throw new Error('recusado');
+      return dadosCanonicos(r.evento);
+    });
+    expect(new Set(formas).size).toBe(1);
   });
 });
