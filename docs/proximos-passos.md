@@ -9,8 +9,12 @@
 |---|---|
 | Código | Fundação pronta na `main`: Vite 8, TypeScript estrito, Vitest, rotas por `#`, base relativa. 13 arquivos de teste e 101 testes passando, incluindo os de regra (peso, neutralidade, privacidade) |
 | Publicação | No ar em https://walterkaue.github.io/projeto-comunidade/ desde 05/11/2026, publicado pelo GitHub Actions (testes antes do build). Conferido no navegador em 360 px: telas abrem, o app fica guardado no aparelho para abrir sem rede, sem erro no console |
-| Tamanho | 4,9 KB gzip de JS + CSS inicial (limite: 80 KB). Fontes: 24 KB (Atkinson Hyperlegible 400 e 700, cortadas para o português) |
-| Conteúdo | Ferramentas ainda vazias ("em construção"). Páginas institucionais sem texto. `docs/produto.md` ainda sem o texto do produto |
+| Tamanho | 4,9 KB gzip de JS + CSS inicial (limite do teste: 80 KB). Fontes: 24 KB (Atkinson Hyperlegible 400 e 700, cortadas para o português). Cabe com folga nos ~150 KB da primeira tela pedidos no `produto.md` (7.5) |
+| Conteúdo | `docs/produto.md` com o texto do produto (versão 0.3). Ferramentas ainda vazias ("em construção"). Páginas institucionais sem texto |
+
+## Decisão pendente (Kauê)
+
+- **Rascunho da ata no aparelho.** O `produto.md` (7.3) pede rascunho da ata salvo "só neste aparelho", com botão "Apagar do aparelho". O `CLAUDE.md` proíbe guardar ata no `localStorage` enquanto o site estiver em `walterkaue.github.io`, porque esse armazenamento é dividido com os outros projetos do mesmo endereço. Até decidir, a sessão da Reunião guarda o rascunho só na memória da aba (some ao fechar) e oferece o PDF.
 
 ## O que a fundação entrega
 
@@ -21,17 +25,16 @@
 
 ## Próximos passos
 
-1. **Colar o texto do produto** em `docs/produto.md`, sem mudar nada, num commit `docs: texto do produto`. Até lá, valem as regras do `CLAUDE.md`.
-2. **Sessões paralelas da Onda 1** (cada uma em worktree próprio, só na própria pasta, testes dentro dela; o que precisar de `src/comum` vira pedido em `docs/pedidos-comum.md`):
-   - **Cards e convites para WhatsApp** — `src/ferramentas/cards/`. Card em canvas com `texto.ts` e `cor.ts`; compartilhar e "Baixar imagem" com `compartilhar.ts`; modelos com organizações fictícias e neutras.
-   - **Evento em um link** — `src/ferramentas/evento/`. Dados depois do `#`, só o que a pessoa escolheu publicar; atualizar o link com `history.replaceState`; todo link vindo dos dados passa por `urlSegura`; QR com `qr.ts`; link malformado mostra aviso, não quebra.
-   - **Reunião** — `src/ferramentas/reuniao/`. Convocação e pauta para compartilhar; ata em PDF gerado no aparelho; presença e ata nunca em link nem em `localStorage` enquanto o site estiver no github.io.
-   - **Páginas institucionais** — `src/paginas/`. Sobre, Termos, Privacidade, Regras de uso e Como denunciar, em linguagem simples e neutra, com o e-mail de `marca.ts`.
-3. **Sessão para atender `docs/pedidos-comum.md`** depois das quatro. Depois, `revisor`, `revisor-acessibilidade` e `revisor-privacidade-neutralidade` olham o conjunto.
-4. **Ligar as métricas** (decisão do Kauê): escolher um serviço sem cookie (sugestão no código: GoatCounter), servir o script como cópia local, acrescentar o endereço de contagem ao `connect-src` da CSP e preencher `METRICAS_ID` em `src/comum/marca.ts`.
-5. **Domínio próprio:** trocar o endereço da `og:image` no `index.html`, criar `public/CNAME`, configurar em Settings → Pages → Custom domain e o DNS no painel do registro do domínio (o Kauê clica). Com domínio próprio, o armazenamento deixa de ser dividido com outros projetos.
-6. **Ícone e nome definitivos:** trocar em `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html` e `scripts/gerar-icones.mjs`; rodar `npm run icones`.
-7. **Conferir a lista oficial de partidos do TSE** em `testes/siglas-partidos.txt` (foi montada de memória).
+1. **Sessões paralelas da Onda 1** (cada uma em worktree próprio, só na própria pasta, testes dentro dela; o que precisar de `src/comum` vira pedido em `docs/pedidos-comum.md`). O escopo de cada uma está no `produto.md`, seção 7:
+   - **Cards e convites para WhatsApp** — `src/ferramentas/cards/` (7.1). 5 modelos, 3 formatos (Status, Conversa, Cartaz A4 com QR), 6 paletas neutras e cor livre checada com `cor.ts`; logo reduzido no aparelho e nunca enviado; compartilhar, "Baixar imagem", copiar texto, `wa.me` e imprimir; texto alternativo gerado dos campos; rodapé "feito com…" removível. Exemplos com organizações fictícias e neutras.
+   - **Evento em um link** — `src/ferramentas/evento/` (7.2). Dados compactados depois do `#`; atualizar o link com `history.replaceState`; sem link livre, PIX, telefone ou HTML (o `urlSegura` aceita `tel:`, então o evento não pode usar link vindo dos dados: só "Ver no mapa" e "Adicionar à agenda" montados por nós); faixa fixa "conteúdo de quem enviou" com Denunciar; conferir `bloqueados.json` (relativo ao site) antes de mostrar; QR com `qr.ts`; link malformado mostra aviso, não quebra.
+   - **Reunião** — `src/ferramentas/reuniao/` (7.3). Convocação com pauta numerada para compartilhar; ata guiada, impressa ou salva em PDF pelo navegador, e copiar texto; presença e ata nunca em link. Rascunho: ver "Decisão pendente".
+   - **Páginas institucionais** — `src/paginas/` (7.4). Sobre, Termos, Privacidade, Regras de uso, Como denunciar e **Contato** (essa rota ainda não existe: pedido em `docs/pedidos-comum.md` para `rotas.ts`, `main.ts` e o rodapé), com faixa "em revisão jurídica", linguagem simples e neutra e o e-mail de `marca.ts`.
+2. **Sessão para atender `docs/pedidos-comum.md`** depois das quatro. Depois, `revisor`, `revisor-acessibilidade` e `revisor-privacidade-neutralidade` olham o conjunto.
+3. **Ligar as métricas** (decisão do Kauê): escolher um serviço sem cookie (sugestão no código: GoatCounter), servir o script como cópia local, acrescentar o endereço de contagem ao `connect-src` da CSP e preencher `METRICAS_ID` em `src/comum/marca.ts`.
+4. **Domínio próprio:** trocar o endereço da `og:image` no `index.html`, criar `public/CNAME`, configurar em Settings → Pages → Custom domain e o DNS no painel do registro do domínio (o Kauê clica). Com domínio próprio, o armazenamento deixa de ser dividido com outros projetos.
+5. **Ícone e nome definitivos:** trocar em `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html` e `scripts/gerar-icones.mjs`; rodar `npm run icones`.
+6. **Conferir a lista oficial de partidos do TSE** em `testes/siglas-partidos.txt` (foi montada de memória).
 
 ## Pendências pequenas da revisão (não bloqueiam)
 
