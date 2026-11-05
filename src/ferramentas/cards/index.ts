@@ -5,7 +5,7 @@
 import './cards.css';
 import { avisar } from '../../comum/aviso';
 import { baixarImagem, canvasParaArquivo, compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
-import { lerDadosDoCard } from '../../comum/entreTelas';
+import { pegarCardPreparado } from '../../comum/entreTelas';
 import { campoAreaDeTexto, campoEscolha, campoTexto, grupoDeOpcoes, limparErro, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
 import { NOME } from '../../comum/marca';
@@ -51,7 +51,9 @@ export const tela: Tela = (raiz, rota) => {
   if (rota.resto === 'galeria') return telaGaleria(raiz);
 
   const leve = nivelDoAparelho() === 'leve';
-  const inicial = lerDadosDoCard(rota.resto, location.href);
+  // Preenchido só pelo que o Evento ou a Reunião prepararam nesta aba. Dados no link ("#/cards/titulo=…")
+  // não preenchem nada: texto de terceiro não aparece aqui sem faixa nem lista de bloqueio (auditoria, M5).
+  const inicial = pegarCardPreparado();
 
   const estado = {
     campos: aplicarLimites({ ...CARD_VAZIO, ...inicial } as CamposDoCard),

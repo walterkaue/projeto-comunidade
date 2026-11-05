@@ -1,8 +1,10 @@
-// Combinados entre as ferramentas (puro, sem DOM). Cada ferramenta é feita numa sessão separada; estas
+// Combinados entre as ferramentas (sem DOM). Cada ferramenta é feita numa sessão separada; estas
 // funções são o contrato entre elas, para uma abrir a outra já preenchida sem importar o código da outra.
 //
-// - Evento e Reunião abrem o Cards preenchido:   linkDoCard(dados)  → "#/cards/modelo=evento&titulo=…"
-//   e o Cards lê com lerDadosDoCard(rota.resto, location.href).
+// - Evento e Reunião abrem o Cards preenchido PELA MEMÓRIA DA ABA, nunca pelo link: no toque do botão,
+//   prepararCard(dados, location.href) e navegam para "#/cards"; o Cards lê uma vez com pegarCardPreparado().
+//   Link "#/cards/…" vindo de fora não preenche nada: texto de terceiro não aparece no nosso domínio sem a
+//   faixa de aviso e sem a lista de bloqueio (auditoria 05/11/2026, M5).
 // - Um link de evento só é aceito se for do próprio site: ehLinkDoEvento(link, location.href).
 // - O botão "Denunciar" do evento abre a página de denúncia com o link: linkDeDenuncia(link),
 //   e a página lê com lerLinkDenunciado(rota.resto, location.href).
@@ -44,44 +46,43 @@ const limpar = (s: string, max: number) => {
   return partes.length <= max ? partes.join('') : `${partes.slice(0, max - 1).join('').trimEnd()}…`;
 };
 
-/** Endereço relativo do Cards já preenchido: "#/cards/modelo=evento&titulo=…". */
-export function linkDoCard(d: DadosDoCard): string {
-  const p = new URLSearchParams();
-  if (d.modelo && (MODELOS_DE_CARD as readonly string[]).includes(d.modelo)) p.set('modelo', d.modelo);
-  for (const k of TEXTOS) {
-    const v = d[k];
-    if (v) p.set(k, limpar(v, TAMANHO_MAXIMO[k]));
-  }
-  if (d.data && DATA.test(d.data)) p.set('data', d.data);
-  if (d.hora && HORA.test(d.hora)) p.set('hora', d.hora);
-  // Link cortado viraria QR quebrado: comprido demais, fica de fora.
-  if (d.link && d.link.length <= TAMANHO_MAXIMO.link) p.set('link', d.link);
-  return linkPara('cards', p.toString());
-}
+/** Endereço do Cards. Os dados vão pela memória da aba (prepararCard), nunca no link. */
+export const ENDERECO_DO_CARDS = linkPara('cards');
 
-/** Lê o que veio em "#/cards/…". Campo inválido some; nunca lança erro. */
-export function lerDadosDoCard(resto: string, base: string): DadosDoCard {
-  let p: URLSearchParams;
-  try {
-    p = new URLSearchParams(resto);
-  } catch {
-    return {};
-  }
+/**
+ * Confere os dados que uma ferramenta passa ao Cards. Campo inválido some, o comprido é cortado, texto com
+ * link, telefone, PIX ou que finge ser do site some (mesma conferência do evento), e o link só fica se for de
+ * evento deste site. Puro; nunca lança erro.
+ */
+export function conferirDadosDoCard(entrada: DadosDoCard, base: string): DadosDoCard {
   const d: DadosDoCard = {};
-  const modelo = p.get('modelo');
-  if (modelo && (MODELOS_DE_CARD as readonly string[]).includes(modelo)) d.modelo = modelo as ModeloDeCard;
+  const modelo = entrada.modelo;
+  if (modelo && (MODELOS_DE_CARD as readonly string[]).includes(modelo)) d.modelo = modelo;
   for (const k of TEXTOS) {
-    const v = limpar(p.get(k) ?? '', TAMANHO_MAXIMO[k]);
-    // Quem altera o link na mão passa pela mesma conferência do evento: golpe não aparece no nosso domínio.
-    // (Quem digita direto no Cards continua livre: só o que vem pelo link é filtrado.)
+    const bruto = entrada[k];
+    const v = typeof bruto === 'string' ? limpar(bruto, TAMANHO_MAXIMO[k]) : '';
     if (v && motivoDeRecusa(v) === null) d[k] = v;
   }
-  const data = p.get('data');
-  if (data && DATA.test(data)) d.data = data;
-  const hora = p.get('hora');
-  if (hora && HORA.test(hora)) d.hora = hora;
-  const link = p.get('link');
-  if (link && link.length <= TAMANHO_MAXIMO.link && ehLinkDoEvento(link, base)) d.link = link;
+  if (typeof entrada.data === 'string' && DATA.test(entrada.data)) d.data = entrada.data;
+  if (typeof entrada.hora === 'string' && HORA.test(entrada.hora)) d.hora = entrada.hora;
+  // Link cortado viraria QR quebrado: comprido demais, fica de fora.
+  const link = entrada.link;
+  if (typeof link === 'string' && link.length <= TAMANHO_MAXIMO.link && ehLinkDoEvento(link, base)) d.link = link;
+  return d;
+}
+
+// Dados à espera do Cards. Só na memória desta aba: some ao recarregar e nunca vira link.
+let preparado: DadosDoCard | undefined;
+
+/** Guarda (já conferidos) os dados para o Cards abrir preenchido. Chame no toque do botão que leva ao Cards. */
+export function prepararCard(d: DadosDoCard, base: string): void {
+  preparado = conferirDadosDoCard(d, base);
+}
+
+/** O Cards pega os dados preparados uma vez só; depois disso, abrir o Cards de novo começa vazio. */
+export function pegarCardPreparado(): DadosDoCard {
+  const d = preparado ?? {};
+  preparado = undefined;
   return d;
 }
 

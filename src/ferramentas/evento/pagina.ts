@@ -4,7 +4,7 @@
 
 import { avisar } from '../../comum/aviso';
 import { baixarImagem } from '../../comum/compartilhar';
-import { linkDeDenuncia, linkDoCard } from '../../comum/entreTelas';
+import { ENDERECO_DO_CARDS, linkDeDenuncia, prepararCard } from '../../comum/entreTelas';
 import { esc } from '../../comum/html';
 import { NOME } from '../../comum/marca';
 import { linkPara } from '../../comum/rotas';
@@ -12,7 +12,7 @@ import type { Limpeza } from '../../comum/tela';
 import { abrirEvento } from './abrir';
 import { dataPorExtenso, gerarIcs, hrefExterno, horarioPorExtenso, linkDoGoogleAgenda, linkDoMapa, nomeDoArquivoIcs } from './agenda';
 import { MENSAGEM_DO_PROBLEMA } from './formato';
-import { enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
+import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
 import type { Evento } from './validar';
 
 const NOVO = linkPara('evento');
@@ -36,16 +36,6 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
   // Sempre o endereço limpo do site + o hash do evento (sem "?…" de quem abriu por um link com rastreio).
   const link = `${enderecoDoSite()}${location.hash}`;
   const denuncia = esc(linkDeDenuncia(link));
-  const card = linkDoCard({
-    modelo: 'evento',
-    titulo: e.titulo,
-    data: e.data,
-    hora: e.inicio,
-    local: e.local,
-    texto: e.descricao,
-    organizacao: e.organizacao,
-    link,
-  });
 
   raiz.innerHTML = `<main class="tela evento">
     <aside class="evento-faixa" aria-label="Aviso sobre este conteúdo">
@@ -79,7 +69,7 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
 
     <section class="evento-secao" aria-labelledby="ev-h-mais">
       <h2 id="ev-h-mais">Mais</h2>
-      <a class="botao botao-sec" href="${esc(card)}">Fazer o card deste evento</a>
+      <a class="botao botao-sec" href="${esc(ENDERECO_DO_CARDS)}" data-fazer-card>Fazer o card deste evento</a>
       <a class="botao botao-sec" href="${esc(linkPara('evento', `editar/${dados}`))}">Criar outro evento a partir deste</a>
       <a class="botao botao-sec" href="${denuncia}">Denunciar este evento</a>
       <a class="botao botao-sec" href="${esc(linkPara('inicio'))}">Conhecer o ${esc(NOME)}</a>
@@ -109,6 +99,8 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
     baixarImagem(new Blob([gerarIcs(e)], { type: 'text/calendar;charset=utf-8' }), nomeDoArquivoIcs(e.titulo));
     avisar('Arquivo da agenda baixado. Abra-o para adicionar o evento.');
   });
+  // O card vai pela memória da aba, no toque (nunca no link: auditoria 05/11/2026, M5).
+  $('[data-fazer-card]').addEventListener('click', () => prepararCard(dadosDoCardDoEvento(e, link), location.href));
   ligarCompartilhar($<HTMLButtonElement>('[data-compartilhar]'), () => ({ link, evento: e }));
   ligarQr($<HTMLButtonElement>('[data-qr]'), $('[data-qr-area]'), () => link, vivo);
 

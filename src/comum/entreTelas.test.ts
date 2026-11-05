@@ -6,46 +6,56 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
+  conferirDadosDoCard,
   dadosDoLinkDoEvento,
+  ENDERECO_DO_CARDS,
   ehLinkDoEvento,
   estaBloqueado,
   impressaoDoLink,
-  lerDadosDoCard,
   lerLinkDenunciado,
   linkDeDenuncia,
-  linkDoCard,
+  pegarCardPreparado,
+  prepararCard,
 } from './entreTelas';
 
 const BASE = 'https://walterkaue.github.io/projeto-comunidade/#/cards';
 const EVENTO = 'https://walterkaue.github.io/projeto-comunidade/#/evento/abc123';
 
-describe('link do card preenchido', () => {
-  it('ida e volta', () => {
-    const dados = {
-      modelo: 'evento' as const,
-      titulo: 'Mutirão da praça',
-      data: '2026-11-21',
-      hora: '09:00',
-      local: 'Praça Central & arredores',
-      texto: 'Traga luva.',
-      organizacao: 'Associação de Moradores',
-      link: EVENTO,
-    };
-    const link = linkDoCard(dados);
-    expect(link.startsWith('#/cards/')).toBe(true);
-    expect(lerDadosDoCard(link.slice('#/cards/'.length), BASE)).toEqual(dados);
+describe('card preenchido pela memória da aba', () => {
+  const dados = {
+    modelo: 'evento' as const,
+    titulo: 'Mutirão da praça',
+    data: '2026-11-21',
+    hora: '09:00',
+    local: 'Praça Central & arredores',
+    texto: 'Traga luva.',
+    organizacao: 'Associação de Moradores',
+    link: EVENTO,
+  };
+
+  it('ida e volta, uma vez só', () => {
+    prepararCard(dados, BASE);
+    expect(pegarCardPreparado()).toEqual(dados);
+    // Abrir o Cards de novo começa vazio.
+    expect(pegarCardPreparado()).toEqual({});
+  });
+
+  it('o endereço do Cards não leva dados', () => {
+    expect(ENDERECO_DO_CARDS).toBe('#/cards');
   });
 
   it('descarta o que não vale e corta o comprido', () => {
-    const resto = new URLSearchParams({
-      modelo: 'comicio',
-      data: '21/11/2026',
-      hora: '25:00',
-      titulo: 'palavra '.repeat(30),
-      link: 'https://outro.exemplo/#/evento/abc',
-      texto: '  linha\num  ',
-    }).toString();
-    const d = lerDadosDoCard(resto, BASE);
+    const d = conferirDadosDoCard(
+      {
+        modelo: 'comicio' as never,
+        data: '21/11/2026',
+        hora: '25:00',
+        titulo: 'palavra '.repeat(30),
+        link: 'https://outro.exemplo/#/evento/abc',
+        texto: '  linha\num  ',
+      },
+      BASE,
+    );
     expect(d.modelo).toBeUndefined();
     expect(d.data).toBeUndefined();
     expect(d.hora).toBeUndefined();
@@ -55,31 +65,24 @@ describe('link do card preenchido', () => {
     expect(d.texto).toBe('linha um');
   });
 
-  it('não lança com lixo', () => {
-    expect(lerDadosDoCard('%E0%A4%A', BASE)).toEqual({});
-    expect(lerDadosDoCard('', BASE)).toEqual({});
+  it('não lança com dado estranho', () => {
+    expect(conferirDadosDoCard({}, BASE)).toEqual({});
+    expect(conferirDadosDoCard({ titulo: 42 as never, link: {} as never }, BASE)).toEqual({});
   });
-});
 
-describe('link do card com golpe', () => {
-  const golpe = '#/cards/modelo=aviso&titulo=Doação%20urgente&texto=PIX%20chave%20golpe%40mail.com%20ou%20ligue%2011987654321';
-  it('descarta o campo de texto recusado e mantém o resto', () => {
-    const d = lerDadosDoCard(golpe.slice('#/cards/'.length), BASE);
-    expect(d.modelo).toBe('aviso');
-    expect(d.titulo).toBe('Doação urgente');
-    expect(d.texto).toBeUndefined();
-  });
-  it('filtra título, local e organização também', () => {
-    const resto = new URLSearchParams({
-      titulo: 'Zap 98765 e 4321',
-      local: 'golpe.bet',
-      organizacao: 'Evento verificado pelo site',
-      texto: 'Reunião dia 21/11 às 19h',
-    }).toString();
-    expect(lerDadosDoCard(resto, BASE)).toEqual({ texto: 'Reunião dia 21/11 às 19h' });
-  });
-  it('quem monta o link com texto livre não é filtrado na ida (só na leitura)', () => {
-    expect(linkDoCard({ texto: 'qualquer coisa 11987654321' })).toContain('texto=');
+  it('filtra o texto como o evento (link, telefone, PIX, nome do site)', () => {
+    const d = conferirDadosDoCard(
+      {
+        modelo: 'aviso',
+        titulo: 'Zap 98765 e 4321',
+        local: 'golpe.bet',
+        organizacao: 'Evento verificado pelo site',
+        texto: 'PIX chave golpe@mail.com ou ligue 11987654321',
+      },
+      BASE,
+    );
+    expect(d).toEqual({ modelo: 'aviso' });
+    expect(conferirDadosDoCard({ texto: 'Reunião dia 21/11 às 19h' }, BASE)).toEqual({ texto: 'Reunião dia 21/11 às 19h' });
   });
 });
 

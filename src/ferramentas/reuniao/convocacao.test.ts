@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { lerDadosDoCard } from '../../comum/entreTelas';
+import { conferirDadosDoCard } from '../../comum/entreTelas';
 import { dataPorExtenso, horaEmTexto } from './data';
 import {
   convocacaoVazia,
-  enderecoDoCard,
+  dadosDoCardDaConvocacao,
   faltasDaConvocacao,
   moverItem,
   pautaPreenchida,
@@ -75,9 +75,7 @@ describe('texto da convocação', () => {
 
 describe('card da convocação', () => {
   it('abre o Cards no modelo reunião, com os dados', () => {
-    const end = enderecoDoCard(c);
-    expect(end.startsWith('#/cards/')).toBe(true);
-    const d = lerDadosDoCard(end.slice('#/cards/'.length), 'https://x.org/');
+    const d = conferirDadosDoCard(dadosDoCardDaConvocacao(c), 'https://x.org/');
     expect(d.modelo).toBe('reuniao');
     expect(d.organizacao).toBe(c.organizacao);
     expect(d.data).toBe('2026-11-12');
@@ -88,9 +86,9 @@ describe('card da convocação', () => {
   it('leva o link do evento só se for do site', () => {
     const base = 'https://x.org/projeto/';
     const bom = 'https://x.org/projeto/#/evento/abc';
-    const d = lerDadosDoCard(enderecoDoCard(c, bom).slice('#/cards/'.length), base);
+    const d = conferirDadosDoCard(dadosDoCardDaConvocacao(c, bom), base);
     expect(d.link).toBe(bom);
-    const ruim = lerDadosDoCard(enderecoDoCard(c, 'https://golpe.com/#/evento/abc').slice('#/cards/'.length), base);
+    const ruim = conferirDadosDoCard(dadosDoCardDaConvocacao(c, 'https://golpe.com/#/evento/abc'), base);
     expect(ruim.link).toBeUndefined();
   });
 });

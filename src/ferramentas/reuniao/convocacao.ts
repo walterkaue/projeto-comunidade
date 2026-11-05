@@ -1,6 +1,6 @@
 // Convocação da reunião (puro, sem DOM): modelo, pauta e texto para o WhatsApp.
 
-import { linkDoCard, TAMANHO_MAXIMO } from '../../comum/entreTelas';
+import { TAMANHO_MAXIMO, type DadosDoCard } from '../../comum/entreTelas';
 import { letras } from '../../comum/texto';
 import { dataPorExtenso, horaEmTexto, umaLinha } from './data';
 
@@ -88,9 +88,9 @@ export function cardEncurtado(c: Convocacao): boolean {
   return letras(t).length > TAMANHO_MAXIMO.texto || letras(umaLinha(c.organizacao)).length > TAMANHO_MAXIMO.organizacao;
 }
 
-/** Endereço do card da convocação (o Cards abre já preenchido). */
-export function enderecoDoCard(c: Convocacao, linkDoEvento = ''): string {
-  return linkDoCard({
+/** Dados do card da convocação (o Cards recebe pela memória da aba: prepararCard em src/comum/entreTelas.ts). */
+export function dadosDoCardDaConvocacao(c: Convocacao, linkDoEvento = ''): DadosDoCard {
+  return {
     modelo: 'reuniao',
     titulo: 'Convocação para reunião',
     data: c.data,
@@ -99,5 +99,5 @@ export function enderecoDoCard(c: Convocacao, linkDoEvento = ''): string {
     texto: textoDoCard(c),
     organizacao: c.organizacao,
     link: linkDoEvento || undefined,
-  });
+  };
 }

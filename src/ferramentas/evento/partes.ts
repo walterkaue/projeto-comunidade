@@ -3,6 +3,7 @@
 
 import { avisar } from '../../comum/aviso';
 import { compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
+import type { DadosDoCard } from '../../comum/entreTelas';
 import { MARGEM_QR, desenharQr, matrizDoQr } from '../../comum/qr';
 import { dataPorExtenso, horarioPorExtenso } from './agenda';
 import type { Evento } from './validar';
@@ -12,6 +13,20 @@ import type { Evento } from './validar';
  * (ex.: "?fbclid=…") não vai junto no link do evento, no QR nem na denúncia.
  */
 export const enderecoDoSite = (): string => `${location.origin}${location.pathname}`;
+
+/** Dados do card de um evento (o Cards recebe pela memória da aba: prepararCard em src/comum/entreTelas.ts). */
+export function dadosDoCardDoEvento(e: Evento, link: string): DadosDoCard {
+  return {
+    modelo: 'evento',
+    titulo: e.titulo,
+    data: e.data,
+    hora: e.inicio,
+    local: e.local,
+    texto: e.descricao,
+    organizacao: e.organizacao,
+    link,
+  };
+}
 
 /** Texto que acompanha o link ao compartilhar: título, quando e onde. */
 export function textoParaCompartilhar(e: Evento): string {

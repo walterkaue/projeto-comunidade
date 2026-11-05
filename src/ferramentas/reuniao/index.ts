@@ -4,7 +4,7 @@
 
 import './reuniao.css';
 import { avisar } from '../../comum/aviso';
-import { ehLinkDoEvento, TAMANHO_MAXIMO } from '../../comum/entreTelas';
+import { ehLinkDoEvento, ENDERECO_DO_CARDS, prepararCard, TAMANHO_MAXIMO } from '../../comum/entreTelas';
 import { compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
 import { ATRIBUTOS_SEM_CORRETOR, campoAreaDeTexto, campoTexto, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
@@ -21,7 +21,7 @@ import {
 } from './ata';
 import {
   cardEncurtado,
-  enderecoDoCard,
+  dadosDoCardDaConvocacao,
   faltasDaConvocacao,
   MAXIMO_PAUTA,
   moverItem,
@@ -185,6 +185,10 @@ export const tela: Tela = (raiz) => {
           avisar('Convocação limpa.');
         }
         break;
+      case 'fazer-card':
+        // O card vai pela memória da aba, no toque (nunca no link: auditoria 05/11/2026, M5). O link segue normal.
+        prepararCard(dadosDoCardDaConvocacao(rascunho.convocacao, rascunho.convocacao.link.trim()), location.href);
+        break;
       case 'usar-pauta':
         usarPautaDaConvocacao();
         break;
@@ -229,14 +233,13 @@ export const tela: Tela = (raiz) => {
       return;
     }
     const texto = textoDaConvocacao(c, link);
-    const card = enderecoDoCard(c, link);
     const saida = painel.querySelector<HTMLElement>('#conv-saida')!;
     saida.innerHTML = `<h3 tabindex="-1">Texto para o WhatsApp</h3>
       ${campoAreaDeTexto({ id: 'conv-texto', rotulo: 'Texto pronto', dica: 'Você pode mudar o texto antes de copiar ou enviar.', valor: texto, linhas: 14, semCorretor: true })}
       <div class="reuniao-botoes">
         <button type="button" class="botao" data-acao="copiar-conv">Copiar texto</button>
         <button type="button" class="botao botao-sec" data-acao="compartilhar-conv">Compartilhar texto</button>
-        <a class="botao botao-sec" href="${esc(card)}">Fazer o card da convocação</a>
+        <a class="botao botao-sec" href="${esc(ENDERECO_DO_CARDS)}" data-acao="fazer-card">Fazer o card da convocação</a>
       </div>`;
     avisar(`Texto da convocação pronto, logo abaixo.${cardEncurtado(c) ? ' No card, a pauta ou o nome da organização saem mais curtos.' : ''}`);
     saida.querySelector<HTMLElement>('h3')?.focus();

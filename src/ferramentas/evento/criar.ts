@@ -2,7 +2,7 @@
 // as saídas. Nada é guardado no aparelho nem enviado: os dados ficam só dentro do link.
 
 import { avisar } from '../../comum/aviso';
-import { linkDoCard } from '../../comum/entreTelas';
+import { ENDERECO_DO_CARDS, prepararCard } from '../../comum/entreTelas';
 import { campoAreaDeTexto, campoTexto, limparErro, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
 import { NOME } from '../../comum/marca';
@@ -10,7 +10,7 @@ import { linkPara } from '../../comum/rotas';
 import type { Limpeza } from '../../comum/tela';
 import { abrirEvento } from './abrir';
 import { LINK_IDEAL, LINK_MAXIMO, codificar, linkCompleto } from './formato';
-import { enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
+import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
 import { CAMPOS, LIMITES, validarEvento, type Evento } from './validar';
 
 const idDoCampo = (c: (typeof CAMPOS)[number]) => `ev-${c}`;
@@ -45,7 +45,7 @@ function formularioHtml(v: Partial<Evento>, nota: string): string {
       <a class="botao botao-sec" data-ver href="#">Ver a página do evento</a>
       <button class="botao botao-sec" type="button" data-qr aria-expanded="false" aria-controls="ev-qr-area">QR do link</button>
       <div class="evento-qr-area" id="ev-qr-area" data-qr-area hidden></div>
-      <a class="botao botao-sec" data-card href="#">Fazer o card deste evento</a>
+      <a class="botao botao-sec" data-card href="${esc(ENDERECO_DO_CARDS)}">Fazer o card deste evento</a>
     </section>
     <a class="botao botao-sec" href="${esc(linkPara('inicio'))}">Voltar ao início</a>
   </main>`;
@@ -71,6 +71,11 @@ function desenhar(raiz: HTMLElement, inicial: Partial<Evento>, vivo: () => boole
   let atual: { link: string; evento: Evento } = { link: '', evento: {} as Evento };
 
   ligarCompartilhar($<HTMLButtonElement>('[data-compartilhar]'), () => atual);
+  // O card vai pela memória da aba, no toque (nunca no link: auditoria 05/11/2026, M5). O botão só aparece
+  // com o link pronto; sem link, não prepara nada.
+  $('[data-card]').addEventListener('click', () => {
+    if (atual.link) prepararCard(dadosDoCardDoEvento(atual.evento, atual.link), location.href);
+  });
   const reiniciarQr = ligarQr($<HTMLButtonElement>('[data-qr]'), areaQr, () => atual.link, vivo);
 
   let tentativa = 0;
@@ -116,19 +121,6 @@ function desenhar(raiz: HTMLElement, inicial: Partial<Evento>, vivo: () => boole
         ? `O link tem ${link.length} caracteres e ficou comprido: pode ser cortado em algumas conversas. Encurte a descrição para diminuir.`
         : `O link tem ${link.length} caracteres.`;
     $('[data-ver]').setAttribute('href', linkPara('evento', dados));
-    $('[data-card]').setAttribute(
-      'href',
-      linkDoCard({
-        modelo: 'evento',
-        titulo: r.evento.titulo,
-        data: r.evento.data,
-        hora: r.evento.inicio,
-        local: r.evento.local,
-        texto: r.evento.descricao,
-        organizacao: r.evento.organizacao,
-        link,
-      }),
-    );
     reiniciarQr();
     pronto.hidden = false;
     pronto.focus();
