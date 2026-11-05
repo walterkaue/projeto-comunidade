@@ -64,15 +64,14 @@
 .ata-aviso { margin-top: 1.5rem !important; font-size: 0.875rem; color: #333; }
 
 /* ---------- impressão: só a ata ---------- */
-@page { size: A4; margin: 2cm; }
-
 @media print {
+  @page { size: A4; margin: 2cm; }
   /* Com a ata pronta na tela, tudo some, menos a folha. */
-  body > *:not(#app) { display: none !important; }
+  body:has(.imprimindo-ata) > *:not(#app) { display: none !important; }
   .reuniao-tela.imprimindo-ata > *:not(#ata-saida) { display: none !important; }
   .reuniao-tela.imprimindo-ata #ata-saida > *:not(.ata-folha) { display: none !important; }
   .reuniao-tela.imprimindo-ata { padding: 0; max-width: none; }
-  html, body, #app { background: #fff !important; }
+  html:has(.imprimindo-ata), body:has(.imprimindo-ata), #app:has(.imprimindo-ata) { background: #fff !important; }
   .reuniao-tela.imprimindo-ata .ata-folha {
     border: 0;
     border-radius: 0;

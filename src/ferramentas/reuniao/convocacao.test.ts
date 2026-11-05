@@ -83,7 +83,7 @@ describe('card da convocação', () => {
     expect(d.data).toBe('2026-11-12');
     expect(d.hora).toBe('19:00');
     expect(d.local).toBe('Salão da escola');
-    expect(d.texto).toContain('1) Mutirão de limpeza');
+    expect(d.texto).toBe('Pauta: Mutirão de limpeza; Contas do mês');
   });
   it('leva o link do evento só se for do site', () => {
     const base = 'https://x.org/projeto/';

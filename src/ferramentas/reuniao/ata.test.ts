@@ -17,7 +17,7 @@ const ata: Ata = {
   local: 'Praça central',
   inicio: '19:00',
   fim: '20:30',
-  presentes: 'Ana\n\n  Bruno  \nana\nCarla',
+  presentes: 'Ana\n\n  Bruno  \nAna\nCarla',
   pontos: [
     { titulo: 'Mutirão', discutido: 'Data e materiais.\n\nQuem leva o quê.', decidido: 'Sábado, 8h.' },
     { titulo: '', discutido: '', decidido: '' },
@@ -47,7 +47,7 @@ describe('modelo da ata', () => {
     expect(pontosDaPauta(['A', ' ', 'B']).map((p) => p.titulo)).toEqual(['A', 'B']);
   });
   it('limpa a lista de presentes', () => {
-    expect(listaDePresentes(ata.presentes)).toEqual(['Ana', 'Bruno', 'Carla']);
+    expect(listaDePresentes(ata.presentes)).toEqual(['Ana', 'Bruno', 'Ana', 'Carla']);
   });
 });
 
@@ -60,15 +60,15 @@ describe('texto da ata', () => {
     expect(t).toContain('Local: Praça central');
   });
   it('conta e lista os presentes', () => {
-    expect(t).toContain('PRESENTES (3)\n- Ana\n- Bruno\n- Carla');
+    expect(t).toContain('PRESENTES (4)\n- Ana\n- Bruno\n- Ana\n- Carla');
   });
   it('põe o que foi discutido e decidido, e pula ponto vazio', () => {
     expect(t).toContain('1. Mutirão\nDiscutido: Data e materiais.\nQuem leva o quê.\nDecidido: Sábado, 8h.');
     expect(t).not.toContain('2. ');
   });
-  it('lista encaminhamentos com quem e prazo, e pula os sem "o quê"', () => {
+  it('lista encaminhamentos com quem e prazo, sem perder o que não tem "o quê"', () => {
     expect(t).toContain('- Comprar sacos de lixo | Quem: Bruno | Até: 14/11/2026');
-    expect(t).not.toContain('Ninguém');
+    expect(t).toContain('- (sem descrição) | Quem: Ninguém');
   });
   it('termina com o aviso de modelo, sem promessa de validade', () => {
     expect(t.endsWith(AVISO_DO_MODELO)).toBe(true);

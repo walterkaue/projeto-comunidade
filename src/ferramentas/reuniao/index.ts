@@ -20,6 +20,7 @@ import {
   type Ata,
 } from './ata';
 import {
+  cardEncurtado,
   enderecoDoCard,
   faltasDaConvocacao,
   MAXIMO_PAUTA,
@@ -136,6 +137,14 @@ export const tela: Tela = (raiz) => {
     } else if (el.id.startsWith('ata-') && (CAMPOS_ATA as readonly string[]).includes(el.id.slice(4))) {
       (rascunho.ata as unknown as Record<string, string>)[el.id.slice(4)] = el.value;
     } else return;
+    if (el.hasAttribute('aria-invalid')) {
+      el.removeAttribute('aria-invalid');
+      const erro = base.querySelector<HTMLElement>(`[id="${el.id}-erro"]`);
+      if (erro) {
+        erro.textContent = '';
+        erro.hidden = true;
+      }
+    }
     // O que já foi gerado deixou de valer.
     limparSaidas();
   });
@@ -226,7 +235,7 @@ export const tela: Tela = (raiz) => {
         <button type="button" class="botao botao-sec" data-acao="compartilhar-conv">Compartilhar texto</button>
         <a class="botao botao-sec" href="${esc(card)}">Fazer o card da convocação</a>
       </div>`;
-    avisar('Texto da convocação pronto, logo abaixo.');
+    avisar(`Texto da convocação pronto, logo abaixo.${cardEncurtado(c) ? ' No card, a pauta ou o nome da organização saem mais curtos.' : ''}`);
     saida.querySelector<HTMLElement>('h3')?.focus();
   }
 

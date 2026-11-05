@@ -1,6 +1,6 @@
 // Convocação da reunião (puro, sem DOM): modelo, pauta e texto para o WhatsApp.
 
-import { linkDoCard } from '../../comum/entreTelas';
+import { linkDoCard, TAMANHO_MAXIMO } from '../../comum/entreTelas';
 import { dataPorExtenso, horaEmTexto, umaLinha } from './data';
 
 export interface Convocacao {
@@ -74,6 +74,19 @@ export function textoDaConvocacao(c: Convocacao, linkDoEvento = ''): string {
   return linhas.join('\n');
 }
 
+/** Pauta em uma linha para o card (cabe até TAMANHO_MAXIMO.texto; passando disso, termina em "…"). */
+export function textoDoCard(c: Convocacao): string {
+  const t = `Pauta: ${pautaPreenchida(c.pauta).join('; ')}`;
+  const letras = Array.from(t);
+  return letras.length <= TAMANHO_MAXIMO.texto ? t : `${letras.slice(0, TAMANHO_MAXIMO.texto - 1).join('')}…`;
+}
+
+/** O card vai mostrar a pauta ou o nome da organização mais curtos que no texto do WhatsApp? */
+export function cardEncurtado(c: Convocacao): boolean {
+  const t = `Pauta: ${pautaPreenchida(c.pauta).join('; ')}`;
+  return Array.from(t).length > TAMANHO_MAXIMO.texto || Array.from(umaLinha(c.organizacao)).length > TAMANHO_MAXIMO.organizacao;
+}
+
 /** Endereço do card da convocação (o Cards abre já preenchido). */
 export function enderecoDoCard(c: Convocacao, linkDoEvento = ''): string {
   return linkDoCard({
@@ -82,7 +95,7 @@ export function enderecoDoCard(c: Convocacao, linkDoEvento = ''): string {
     data: c.data,
     hora: c.hora,
     local: c.local,
-    texto: `Pauta: ${pautaPreenchida(c.pauta).map((p, i) => `${i + 1}) ${p}`).join(' ')}`,
+    texto: textoDoCard(c),
     organizacao: c.organizacao,
     link: linkDoEvento || undefined,
   });

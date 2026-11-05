@@ -46,19 +46,9 @@ export function pontosDaPauta(pauta: readonly string[]): Ponto[] {
   return pautaPreenchida(pauta).map((t) => pontoVazio(t));
 }
 
-/** Nomes dos presentes: um por linha, sem linhas vazias nem repetidas (maiúscula não conta). */
+/** Nomes dos presentes: um por linha, sem linhas vazias. Nomes iguais ficam (podem ser pessoas diferentes). */
 export function listaDePresentes(presentes: string): string[] {
-  const vistos = new Set<string>();
-  const nomes: string[] = [];
-  for (const linha of presentes.split(/\r?\n/)) {
-    const nome = umaLinha(linha);
-    const chave = nome.toLocaleLowerCase('pt-BR');
-    if (nome && !vistos.has(chave)) {
-      vistos.add(chave);
-      nomes.push(nome);
-    }
-  }
-  return nomes;
+  return presentes.split(/\r?\n/).map(umaLinha).filter(Boolean);
 }
 
 /** Há alguma coisa digitada? Serve para o aviso de saída e para o botão Apagar. */
@@ -122,8 +112,8 @@ export function limparAta(a: Ata): AtaLimpa {
         decidido: paragrafos(p.decidido),
       })),
     encaminhamentos: a.encaminhamentos
-      .filter((e) => umaLinha(e.oque))
-      .map((e) => ({ oque: umaLinha(e.oque), quem: umaLinha(e.quem), ate: dataCurta(e.ate) })),
+      .filter((e) => umaLinha(e.oque) || umaLinha(e.quem) || dataCurta(e.ate))
+      .map((e) => ({ oque: umaLinha(e.oque) || '(sem descrição)', quem: umaLinha(e.quem), ate: dataCurta(e.ate) })),
   };
 }
 
