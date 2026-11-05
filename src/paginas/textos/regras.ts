@@ -19,6 +19,12 @@ export const regras: Pagina = {
       blocos: [REGRAS_DE_USO],
     },
     {
+      titulo: 'O que não é removido',
+      blocos: [
+        'Crítica, mesmo dura, a governo, autoridade, candidato ou organização não é ofensa. Quando não for clara a ofensa, mantemos o conteúdo e cumprimos o que a Justiça decidir.', // neutralidade: permitido (regra de moderação sobre crítica)
+      ],
+    },
+    {
       titulo: 'O que é mentira comprovada',
       blocos: [
         'Só conta como comprovada quando há decisão judicial, ou checagem publicada por uma iniciativa de checagem independente (de preferência mais de uma, de linhas editoriais diferentes).',

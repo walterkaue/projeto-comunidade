@@ -1,4 +1,4 @@
-import { NOME, RESPONSAVEL } from '../../comum/marca';
+import { EMAIL_CONTATO, NOME, RESPONSAVEL } from '../../comum/marca';
 import type { Pagina } from './tipos';
 
 export const sobre: Pagina = {
@@ -39,7 +39,7 @@ export const sobre: Pagina = {
     {
       titulo: 'Quem mantém',
       blocos: [
-        `O ${NOME} é mantido de forma voluntária por ${RESPONSAVEL}, pessoa física, enquanto não existe uma associação sem fins lucrativos para isso.`,
+        `O ${NOME} é mantido de forma voluntária por ${RESPONSAVEL}, pessoa física, enquanto não existe uma associação sem fins lucrativos para isso. Contato: ${EMAIL_CONTATO}.`,
         'O projeto não tem fins lucrativos. No futuro, deve ser sustentado por doações.',
       ],
     },
@@ -51,7 +51,10 @@ export const sobre: Pagina = {
         [
           'Os apoiadores devem ser diversos e conhecidos do público.',
           'Apoiar não dá direito de decidir ou de influenciar o conteúdo, as regras ou os destaques.',
-          'Não aceitamos dinheiro nem serviço de partido ou de candidato.', // neutralidade: permitido (regra de financiamento)
+          'Nenhuma doação tem destino marcado.',
+        'Recusamos dinheiro e serviço de partido, candidato, pré-candidato, campanha, quem exerce mandato, dirigente partidário e órgão público (a não ser por edital público).', // neutralidade: permitido (regra de financiamento)
+        'A lista pública de apoiadores mostra o valor ou a faixa de cada apoio.',
+        'Nenhum apoiador passa de 20% da receita do ano.',
         ],
       ],
     },

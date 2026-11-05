@@ -1,4 +1,4 @@
-import { EMAIL_CONTATO, PRAZO_DENUNCIA_DIAS_UTEIS, PRAZO_URGENTE_HORAS } from '../../comum/marca';
+import { EMAIL_CONTATO, PRAZO_DADO_PESSOAL_HORAS, PRAZO_DENUNCIA_DIAS_UTEIS, PRAZO_URGENTE_HORAS } from '../../comum/marca';
 import type { Pagina } from './tipos';
 
 /** Texto fixo da página de denúncia. A caixa com o link denunciado e o botão são desenhados pela página. */
@@ -37,9 +37,17 @@ export const denunciar: Pagina = {
           'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site. A página do link mostra a regra ferida e como pedir revisão.',
           'Respondemos por e-mail. Se não quiser resposta, diga no texto.',
         ],
-        `Respondemos em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis. Em caso de golpe, ameaça, risco a criança ou dado pessoal exposto, em até ${PRAZO_URGENTE_HORAS} horas.`,
+        [
+          'Conteúdo sexual com criança ou adolescente: bloqueamos na hora, assim que lemos, e avisamos as autoridades (SaferNet ou polícia).',
+          `Outro risco a criança ou adolescente, ameaça, golpe em andamento, aviso falso de perigo ou em nome de órgão público: respondemos em até ${PRAZO_URGENTE_HORAS} horas.`,
+          `Dado pessoal exposto: em até ${PRAZO_DADO_PESSOAL_HORAS} horas.`,
+          `Os outros casos: em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis.`,
+        ],
+        'Denúncia feita pela própria vítima, por quem responde por ela, pelo Ministério Público ou por entidade de defesa de crianças e adolescentes tem prioridade.',
+        'Cumprimos ordem judicial no prazo que ela fixar.',
         'A resposta traz o motivo da decisão. Ela é escrita com ajuda de inteligência artificial e revisada por uma pessoa. Se quiser falar com uma pessoa, é só responder o e-mail.',
-        'Quem denunciou, ou quem foi denunciado, pode pedir revisão: basta responder o e-mail e dizer por quê. Quando houver mais de uma pessoa moderando, outra pessoa decide a revisão.',
+        `Quem denunciou, ou quem foi denunciado, pode pedir revisão: basta responder o e-mail e dizer por quê. Respondemos o pedido de revisão em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis. Quando houver mais de uma pessoa moderando, outra pessoa decide a revisão.`,
+        'Se o mesmo conteúdo voltar com outro link, denuncie de novo: cada link é bloqueado separadamente.',
         'Vamos publicar um relatório a cada seis meses, com o número de denúncias, remoções, revisões e prazos cumpridos, sem dados pessoais.',
       ],
     },
