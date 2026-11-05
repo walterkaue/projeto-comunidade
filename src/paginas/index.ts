@@ -30,6 +30,8 @@ function caixaDeDenuncia(link: string): string {
   </section>`;
 }
 
+const avisoDeLinkInvalido = `<p class="caixa" role="note">Não reconhecemos este link como de um evento deste site. Descreva onde está o conteúdo na denúncia.</p>`;
+
 const caixaDeDenunciaGeral = () => `<section class="caixa" aria-labelledby="dg-titulo">
     <h2 id="dg-titulo">Escrever a denúncia</h2>
     ${botaoDeEmail(mailtoDeDenuncia(''), 'Escrever denúncia por e-mail')}
@@ -46,7 +48,7 @@ const caixaDeContato = () => `<section class="caixa" aria-labelledby="ct-titulo"
 const caixaDeApagar = () => `<section class="caixa" aria-labelledby="ap-titulo">
     <h2 id="ap-titulo">Apagar o que o site guardou</h2>
     <p>O endereço deste site é dividido com outros projetos. Por isso o botão apaga só o que é daqui: os rascunhos e preferências com nome "pc:" e a cópia do site para uso sem internet. Não mexe no resto.</p>
-    <p>Depois de apagar, o site precisa de internet na próxima vez que você abrir.</p>
+    <p>Depois de apagar, o site precisa de internet na próxima vez que você abrir. O uso sem internet volta aos poucos, só para o que você abrir.</p>
     <button type="button" class="botao botao-sec" data-apagar>Apagar tudo que este site guardou neste aparelho</button>
     <p class="resultado" role="status" data-resultado></p>
   </section>`;
@@ -56,15 +58,16 @@ export const tela: Tela = (raiz, rota) => {
   if (!pagina) return;
   document.title = `${pagina.titulo} – ${NOME}`;
   let meio = '';
+  let link = '';
   if (rota.nome === 'denunciar') {
-    const link = lerLinkDenunciado(rota.resto, location.href);
-    meio = link ? caixaDeDenuncia(link) : '';
+    link = lerLinkDenunciado(rota.resto, location.href);
+    meio = link ? caixaDeDenuncia(link) : rota.resto ? avisoDeLinkInvalido : '';
   }
   if (rota.nome === 'contato') meio = caixaDeContato();
   // A caixa de apagar vai depois das seções, na Privacidade.
   const depois = rota.nome === 'privacidade' ? caixaDeApagar() : '';
   raiz.innerHTML = `<main class="tela pagina">
-    ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !meio ? caixaDeDenunciaGeral() : ''}
+    ${paginaEmHtml(pagina, meio)}${depois}${rota.nome === 'denunciar' && !link ? caixaDeDenunciaGeral() : ''}
     ${voltar}
   </main>`;
 

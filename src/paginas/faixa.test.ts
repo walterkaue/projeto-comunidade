@@ -35,4 +35,10 @@ describe('faixa de revisão jurídica', () => {
     const achados = fontes(pasta).filter((f) => readFileSync(f, 'utf8').includes(MARCA));
     expect(achados).toEqual([]);
   });
+
+  it('lançamento público: nenhum "[a definir" pode sobrar nos textos', () => {
+    if (!LANCAMENTO_PUBLICO) return;
+    const achados = fontes(join(pasta, 'textos')).filter((f) => readFileSync(f, 'utf8').includes('[a definir'));
+    expect(achados).toEqual([]);
+  });
 });

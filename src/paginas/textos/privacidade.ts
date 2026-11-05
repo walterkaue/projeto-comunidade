@@ -10,7 +10,7 @@ export const privacidade: Pagina = {
       titulo: 'O essencial',
       blocos: [
         [
-          'Nada do que você escreve sai do seu aparelho.',
+          'O que você cria fica no seu aparelho. Só sai se você compartilhar ou enviar.',
           'Sem conta, sem senha e sem cookie.',
           'Sem anúncio e sem venda de dados.',
           'Nunca perguntamos voto, filiação nem opinião política.',
