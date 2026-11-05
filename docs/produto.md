@@ -34,6 +34,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Métricas ligadas já no beta** (troca o padrão "nenhuma métrica no beta"), para achar problemas antes da divulgação. GoatCounter sem cookie, por imagem de 1 pixel e sem script de fora; manda só o nome da tela aberta, nunca os dados do link. Citado na Política de Privacidade. |
 | 05/11/2026 | **Resposta à denúncia** escrita com ajuda de IA leva a frase "escrita com ajuda de inteligência artificial e revisada por uma pessoa" e oferece falar com uma pessoa respondendo o e-mail. |
 | 05/11/2026 | **E-mails de denúncia e contato guardados sem prazo definido**, por enquanto; reavaliar quando o espaço do e-mail virar problema ou se o advogado pedir prazo (LGPD, necessidade). Atividade do Gemini desligada. |
+| 05/11/2026 | **Responsável pelos dados (controlador) é o Kauê, como pessoa física**, até existir a associação. Nome e e-mail do projeto na Política de Privacidade e no Sobre (`RESPONSAVEL` em `src/comum/marca.ts`). |
 | 05/11/2026 | **Benchmark aprovado** (`claude/benchmarks.md`): regras de operação da seção 4.1 e direção das Ondas 2 e 3 na seção 8. |
 | 05/11/2026 | **Nenhum robô nem API oficial do WhatsApp**, por princípio: a política da Meta proíbe partidos e campanhas, e a plataforma é aberta a todos. Só links `wa.me` e recursos nativos do WhatsApp. |
 | 05/11/2026 | **Nada de IA dentro do site na Onda 1.** A única IA é a ajuda na triagem de denúncias, fora do site e sob as regras da seção 4.1. |

@@ -1,4 +1,4 @@
-import { NOME } from '../../comum/marca';
+import { NOME, RESPONSAVEL } from '../../comum/marca';
 import type { Pagina } from './tipos';
 
 export const sobre: Pagina = {
@@ -39,7 +39,7 @@ export const sobre: Pagina = {
     {
       titulo: 'Quem mantém',
       blocos: [
-        '[a definir antes do lançamento]',
+        `O ${NOME} é mantido de forma voluntária por ${RESPONSAVEL}, pessoa física, enquanto não existe uma associação sem fins lucrativos para isso.`,
         'O projeto não tem fins lucrativos. No futuro, deve ser sustentado por doações.',
       ],
     },

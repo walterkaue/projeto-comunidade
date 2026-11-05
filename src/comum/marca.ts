@@ -6,6 +6,12 @@ export const NOME = 'Projeto Comunidade';
 /** Nome curto, para a tela inicial do celular. */
 export const NOME_CURTO = 'Comunidade';
 
+/**
+ * Quem mantém o projeto e responde pelos dados (controlador, LGPD) enquanto não existir a associação.
+ * Decisão do Kauê em 05/11/2026. Quando a associação existir, trocar aqui pelo nome dela.
+ */
+export const RESPONSAVEL = 'Walter Kauê';
+
 /** Único e-mail de contato da plataforma (dúvidas, denúncias, pedidos de remoção). */
 export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
 

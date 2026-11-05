@@ -1,4 +1,4 @@
-import { EMAIL_CONTATO, NOME } from '../../comum/marca';
+import { EMAIL_CONTATO, NOME, RESPONSAVEL } from '../../comum/marca';
 import type { Pagina } from './tipos';
 
 export const privacidade: Pagina = {
@@ -81,7 +81,7 @@ export const privacidade: Pagina = {
       blocos: [
         'Pela lei (LGPD), você pode saber que dados temos sobre você, corrigir, pedir que apaguemos e se opor a um uso.',
         `Como quase nada fica conosco, os dados que podemos ter são os do seu e-mail. Para pedir, escreva para ${EMAIL_CONTATO}.`,
-        `Quem é responsável pelo ${NOME} e pelos seus dados: [a definir antes do lançamento].`,
+        `Quem é responsável pelo ${NOME} e pelos seus dados: ${RESPONSAVEL}, pessoa física que mantém o projeto, enquanto não existe uma associação sem fins lucrativos para isso. Contato: ${EMAIL_CONTATO}.`,
       ],
     },
     {
