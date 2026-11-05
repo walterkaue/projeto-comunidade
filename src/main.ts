@@ -26,6 +26,7 @@ const TELAS: Record<NomeDaRota, Tela | Carregador> = {
   privacidade: paginas,
   regras: paginas,
   denunciar: paginas,
+  contato: paginas,
 };
 
 const raiz = document.getElementById('app')!;

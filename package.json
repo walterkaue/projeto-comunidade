@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run --passWithNoTests",
     "fontes": "node scripts/fontes.mjs",
-    "icones": "node scripts/gerar-icones.mjs"
+    "icones": "node scripts/gerar-icones.mjs",
+    "bloquear": "node scripts/bloquear.mjs"
   },
   "devDependencies": {
     "@fontsource/atkinson-hyperlegible": "^5.2.0",

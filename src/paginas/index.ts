@@ -1,4 +1,4 @@
-// Páginas institucionais (Sobre, Termos, Privacidade, Regras de uso, Como denunciar). Carregadas sob demanda.
+// Páginas institucionais (Sobre, Termos, Privacidade, Regras de uso, Como denunciar, Contato). Carregadas sob demanda.
 // Os textos serão escritos numa sessão própria; por enquanto, todas mostram o aviso de construção.
 
 import { EMAIL_CONTATO } from '../comum/marca';
@@ -12,6 +12,7 @@ export const TITULOS: Partial<Record<NomeDaRota, string>> = {
   privacidade: 'Privacidade',
   regras: 'Regras de uso',
   denunciar: 'Como denunciar',
+  contato: 'Contato',
 };
 
 export const tela: Tela = (raiz, rota) => {

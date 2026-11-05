@@ -24,6 +24,7 @@ export const RODAPE: readonly { rota: NomeDaRota; titulo: string }[] = [
   { rota: 'privacidade', titulo: 'Privacidade' },
   { rota: 'regras', titulo: 'Regras de uso' },
   { rota: 'denunciar', titulo: 'Como denunciar' },
+  { rota: 'contato', titulo: 'Contato' },
 ];
 
 export const telaInicio: Tela = (raiz) => {

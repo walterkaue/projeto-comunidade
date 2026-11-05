@@ -2,7 +2,7 @@
 // Formato: "#/nome" ou "#/nome/resto". O "resto" é da ferramenta (ex.: os dados do evento) e
 // chega como veio, sem decodificar: cada ferramenta lê o seu formato.
 
-export const ROTAS = ['inicio', 'cards', 'evento', 'reuniao', 'sobre', 'termos', 'privacidade', 'regras', 'denunciar'] as const;
+export const ROTAS = ['inicio', 'cards', 'evento', 'reuniao', 'sobre', 'termos', 'privacidade', 'regras', 'denunciar', 'contato'] as const;
 
 export type NomeDaRota = (typeof ROTAS)[number];
 

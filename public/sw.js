@@ -20,7 +20,7 @@ const PREFIXO_FONTES = caminho('fontes/').pathname;
 const PREFIXO_ICONES = caminho('icones/').pathname;
 
 // Arquivos fixos guardados na instalação (a tela offline vai junto com a página).
-const FIXOS = ['manifest.webmanifest', 'favicon.svg', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png'];
+const FIXOS = ['bloqueados.json', 'manifest.webmanifest', 'favicon.svg', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png'];
 
 self.addEventListener('install', (evento) => {
   evento.waitUntil(precarregar().then(() => self.skipWaiting()));
@@ -94,6 +94,11 @@ self.addEventListener('fetch', (evento) => {
     evento.respondWith(cachePrimeiro(req));
     return;
   }
+  // Lista de links removidos após denúncia: sempre a mais nova da rede; sem rede, a última guardada.
+  if (url.pathname === caminho('bloqueados.json').pathname) {
+    evento.respondWith(redeOuGuardada(req));
+    return;
+  }
   // Fontes, ícones e favicon: devolve o que tem e atualiza por trás.
   if (url.pathname.startsWith(PREFIXO_FONTES) || url.pathname.startsWith(PREFIXO_ICONES) || url.pathname === caminho('favicon.svg').pathname) {
     evento.respondWith(cacheEAtualiza(req));
@@ -142,4 +147,15 @@ async function cacheEAtualiza(req) {
     })
     .catch(() => guardada ?? Response.error());
   return guardada ?? nova;
+}
+
+async function redeOuGuardada(req) {
+  const cache = await caches.open(CACHE_ARQUIVOS);
+  try {
+    const resp = await fetch(req, { cache: 'no-cache' });
+    if (resp.ok) await cache.put(req, resp.clone());
+    return resp;
+  } catch {
+    return (await cache.match(req)) ?? Response.error();
+  }
 }
