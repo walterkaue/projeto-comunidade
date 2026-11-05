@@ -1,0 +1,75 @@
+/* Estilo das páginas institucionais (carregado junto com elas, não no pacote inicial). */
+
+.pagina h2 {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  margin: 1.75rem 0 0.5rem;
+}
+
+.pagina p,
+.pagina li {
+  max-width: 38rem;
+  overflow-wrap: anywhere;
+}
+
+.pagina ul {
+  padding-left: 1.5rem;
+}
+
+.pagina li {
+  margin: 0.4rem 0;
+}
+
+.pagina .resumo {
+  color: var(--tinta-suave);
+  margin: 0 0 1rem;
+}
+
+.pagina .versao {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  margin: 0.5rem 0 0;
+}
+
+.faixa-provisoria {
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--tinta);
+  border-radius: var(--raio);
+  background: var(--superficie);
+}
+
+.caixa {
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--superficie);
+}
+
+.caixa h2 {
+  margin-top: 0;
+}
+
+.caixa .link-denunciado {
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 0.875rem;
+  max-height: 8rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.pagina .botao {
+  text-decoration: none;
+}
+
+.pagina .email {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pagina .resultado {
+  min-height: 1.5rem;
+  margin: 0.75rem 0 0;
+}
