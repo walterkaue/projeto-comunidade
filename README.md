@@ -4,6 +4,16 @@ Plataforma gratuita e apartidária para organizações comunitárias, sociais e 
 
 Nome provisório. Endereço publicado: https://walterkaue.github.io/projeto-comunidade/
 
+## O que tem
+
+A entrada é "O que você quer fazer?", com cinco portas: chamar para uma reunião, divulgar um evento, dar um aviso, contar uma conquista e agradecer. Cada porta abre um caminho de 3 passos já preenchido com um exemplo e termina na tela Pronto, com a imagem para o WhatsApp, o texto, o link do evento (reunião e evento) e o cartaz para imprimir. Depois da reunião, dá para fazer a ata (só no aparelho, salva em PDF). Mais as páginas Sobre, Termos, Privacidade, Regras de uso, Como denunciar e Contato.
+
+Onde fica no código:
+
+- `src/ferramentas/fluxo/`: o fluxo único (os passos, a prévia e a tela Pronto).
+- `src/ferramentas/cards/`, `evento/` e `reuniao/`: os motores (desenho do card, formato e validação do link do evento, página do evento, ata).
+- `src/paginas/`: início e páginas institucionais. `src/comum/`: peças compartilhadas.
+
 ## Como rodar
 
 ```

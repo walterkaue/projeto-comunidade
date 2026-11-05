@@ -33,7 +33,8 @@ Várias sessões trabalham ao mesmo tempo, cada uma em seu worktree. Para não h
 - Interface em português do Brasil, em linguagem simples, frases curtas.
 - **Celular primeiro.** Teste sempre em 360 px de largura. Toque, nunca hover. Nada de rolagem horizontal.
 - **Internet fraca:** pense em 3G. Respeite a economia de dados e o aparelho fraco (`src/comum/nivel.ts`).
-- **Acessibilidade WCAG 2.2 AA:** contraste de 4,5:1 (use a conta de `src/comum/cor.ts`), alvo de toque de pelo menos 48 px, rótulo em todo campo, boa leitura em leitor de tela.
+- **Acessibilidade WCAG 2.2 AA:** contraste de 4,5:1 (use a conta de `src/comum/cor.ts`), alvo de toque de pelo menos 48 px (52 px nos botões, `--toque`), rótulo em todo campo, boa leitura em leitor de tela.
+- **Fluxo único** (`docs/produto.md` 7.6): a pessoa entra por "O que você quer fazer?" e segue os passos de `src/ferramentas/fluxo/`. As pastas `cards`, `evento` e `reuniao` são os motores; tela nova de criar algo entra no fluxo, não como ferramenta solta. Os dados do fluxo ficam só na memória da aba (`memoria.ts`), e o endereço leva só o tipo e o passo.
 
 ## Técnica
 

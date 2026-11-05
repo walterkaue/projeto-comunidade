@@ -18,6 +18,8 @@ Nenhum.
 
 ## Pedidos atendidos
 
+No fluxo único (05/11/2026), as mudanças em código compartilhado (`src/comum/rotas.ts`, `src/main.ts`, `src/paginas/inicio.ts`, `tema.css`, `componentes.css`, `index.html`) foram feitas pela própria conversa de integração, sem pedido aberto: rotas `#/fazer` e `#/ata`, despacho por parte, partes já baixadas sem "Carregando…", `[hidden]` global, botões de 52 px, aviso falado acima da barra fixa e `interactive-widget=resizes-content` no viewport.
+
 Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
 
 - WhatsApp, mapa e agenda liberados em `testes/peso.test.ts` (`LINKS_DE_SAIDA`); cópia provisória do Cards removida.

@@ -1,6 +1,8 @@
 # Onda 1 — plano de construção
 
 > 05/11/2026 · Preparado pelo Chat depois da revisão de toda a base e do código público do Guerra de Torcidas. Aqui estão o escopo fechado, o plano em trilhas paralelas, as mensagens prontas para o Claude Code e o passo a passo fora do Code. As decisões que o Kauê ainda precisa confirmar estão na seção 1.
+>
+> **Atualização de 05/11/2026:** este é o plano de construção, guardado como registro. Depois dele veio o **fluxo único** (`docs/produto.md` 7.6): a entrada deixou de ser "três ferramentas" e virou "O que você quer fazer?", com cinco portas, 3 passos e a tela Pronto; a ata ficou em "Depois da reunião" (`#/ata`). As ferramentas continuam as mesmas por dentro (pastas `cards`, `evento` e `reuniao`), e as telas novas moram em `src/ferramentas/fluxo/`. O roteiro das entrevistas (8.7) já está no fluxo novo.
 
 ## 1. O que considerei aprovado e o que falta confirmar
 
@@ -51,7 +53,7 @@
 
 > Esta seção também está no `produto.md` (seção 7), que vai para o repositório como `docs/produto.md`.
 
-**Uma página leve com três ferramentas e as páginas institucionais. Nada de conta, nada de banco.**
+**Uma página leve com três ferramentas e as páginas institucionais. Nada de conta, nada de banco.** (Desde 05/11/2026, as três ferramentas se usam por um caminho só, o fluxo único: `docs/produto.md` 7.6.)
 
 ### 4.1 Cards e convites
 - 5 modelos: **Reunião ou assembleia, Evento ou atividade, Aviso, Resultado ou conquista, Agradecimento**.
@@ -162,7 +164,7 @@ O QUE FAZER
    - cadeia de compartilhar: arquivo pelo Web Share > texto e link > copiar, MAIS botão "Baixar imagem", aviso em aria-live e envio só do arquivo quando texto + arquivo falham no iOS;
    - QR (uqr sob demanda) desenhado direto no canvas;
    - aviso de link externo (saida.ts) e nivelInicial (economia de dados / aparelho fraco).
-9. Home provisória: as três ferramentas como botões grandes, e rodapé com Sobre, Termos, Privacidade, Regras de uso, Como denunciar.
+9. Home provisória (trocada em 05/11/2026 pelo início "O que você quer fazer?" do fluxo único): as três ferramentas como botões grandes, e rodapé com Sobre, Termos, Privacidade, Regras de uso, Como denunciar.
 10. Testes de regra do projeto:
    - peso: falha se o JS+CSS inicial passar de 80 KB gzip;
    - neutralidade: varre os textos da plataforma (não o que o usuário digita) atrás de linguagem de campanha ("vote", "eleja", "candidato") e de siglas de partidos registrados no TSE (lista em arquivo, com nota para conferir a lista oficial);
@@ -339,10 +341,10 @@ Contador + advogado: formato do responsável (associação sem fins lucrativos �
 - Como: 10 minutos, por chamada ou presencial, com o celular da pessoa.
 - Roteiro:
   1. "Como vocês chamam as pessoas para uma reunião hoje?"
-  2. Peça para ela fazer um convite real no site, sem ajuda. Anote onde travou.
-  3. "Mandaria isso no grupo? O que falta?"
-  4. "Fazem ata? Como?"
-  5. "Alguma coisa aqui pareceu ter lado político?"
+  2. Abra o site no celular dela e peça para escolher, sozinha, uma das cinco portas ("Chamar para uma reunião", "Divulgar um evento"…) e fazer um convite real, trocando o exemplo pelo que for dela. Não ajude. Anote onde travou: em qual passo, em qual campo, se entendeu "Onde vai mandar?" e se achou o "Mandar no WhatsApp".
+  3. Peça para mandar de verdade para ela mesma (ou para quem ela quiser) e olhar como chegou: a imagem e o texto foram juntos? O link abriu a página do evento? "Mandaria isso no grupo? O que falta?"
+  4. "Fazem ata? Como?" Se fizerem, peça para tocar em "Fazer a ata" (ou "Depois da reunião: fazer a ata", no início) e ver se o modelo serve.
+  5. "Alguma coisa aqui pareceu ter lado político?" (inclusive os exemplos que já vêm preenchidos)
 - Não anote nome de quem participou nem a posição política da organização; anote só o tipo de organização e o que ouviu. Me mande as anotações que eu consolido.
 
 ### 8.8 Antes de divulgar (checklist)
