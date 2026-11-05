@@ -13,8 +13,11 @@ export const REGRAS_DE_USO = [
   'Dados de outras pessoas sem permissão: telefone, endereço, foto, lista de presença.',
   'Conteúdo que viole direito autoral ou use marca de outra pessoa sem direito.',
   'Conteúdo sexual envolvendo crianças ou adolescentes.',
-  // 9, auditoria 05/11/2026 (M6): convocação falsa em nome de outra organização ou de órgão público.
-  'Fingir ser outra pessoa, organização ou órgão público.',
+  // 9, auditoria 05/11/2026 (M6) e análise jurídica: convocação falsa em nome de outra organização ou de órgão público.
+  'Fingir ser outra pessoa, organização ou órgão público, ou publicar em nome deles convocação, cancelamento ou aviso que eles não fizeram. Paródia, sátira e crítica podem usar o nome de outras organizações, desde que quem lê perceba logo que não é um aviso de verdade.',
+  // 10 e 11, análise jurídica preliminar de 05/11/2026.
+  'Expor criança ou adolescente: nome completo, foto, escola, endereço ou rotina, ou qualquer conteúdo que os coloque em risco.',
+  'Incentivo a automutilação ou suicídio.',
 ] as const;
 
 /** Texto da regra pelo número (1 a REGRAS_DE_USO.length), ou vazio se o número não existir. */

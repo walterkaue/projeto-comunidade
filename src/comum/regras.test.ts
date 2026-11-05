@@ -6,6 +6,8 @@ describe('Regras de uso', () => {
   it('textoDaRegra pelo número, começando em 1', () => {
     expect(textoDaRegra(1)).toBe(REGRAS_DE_USO[0]);
     expect(textoDaRegra(9)).toMatch(/^Fingir ser outra pessoa/);
+    expect(textoDaRegra(10)).toMatch(/^Expor criança ou adolescente/);
+    expect(textoDaRegra(11)).toMatch(/^Incentivo a automutilação/);
     for (const n of [0, -1, 1.5, REGRAS_DE_USO.length + 1, Number.NaN]) expect(textoDaRegra(n)).toBe('');
   });
 

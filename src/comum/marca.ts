@@ -10,7 +10,7 @@ export const NOME_CURTO = 'Comunidade';
  * Quem mantém o projeto e responde pelos dados (controlador, LGPD) enquanto não existir a associação.
  * Decisão do Kauê em 05/11/2026. Quando a associação existir, trocar aqui pelo nome dela.
  */
-export const RESPONSAVEL = 'Walter Kauê';
+export const RESPONSAVEL = 'Kauê Sevilhano Walter';
 
 /** Único e-mail de contato da plataforma (dúvidas, denúncias, pedidos de remoção). */
 export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
@@ -18,8 +18,14 @@ export const EMAIL_CONTATO = 'contato.projetocomunidade@gmail.com';
 /** Prazo público de resposta a uma denúncia (docs/produto.md, seção 3). */
 export const PRAZO_DENUNCIA_DIAS_UTEIS = 5;
 
-/** Prazo para golpe, ameaça, risco a criança ou dado pessoal exposto. */
-export const PRAZO_URGENTE_HORAS = 48;
+/**
+ * Prazo para outro risco a criança ou adolescente, ameaça, golpe em andamento, aviso falso de perigo ou em nome de
+ * órgão público. Conteúdo sexual com criança ou adolescente não espera prazo: é bloqueado ao ser lido.
+ */
+export const PRAZO_URGENTE_HORAS = 24;
+
+/** Prazo para dado pessoal exposto. */
+export const PRAZO_DADO_PESSOAL_HORAS = 48;
 
 /**
  * Métricas de visita, sem cookie. Vazio = desligado: nenhum script de fora é carregado.

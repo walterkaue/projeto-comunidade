@@ -20,6 +20,8 @@ export const TIPOS_DE_PROBLEMA = [
   { valor: 'autoral', texto: 'Direito autoral ou uso de marca' },
   { valor: 'crianca', texto: 'Conteúdo sexual com criança ou adolescente' },
   { valor: 'personificacao', texto: 'Finge ser outra pessoa, organização ou órgão público' },
+  { valor: 'expoe-crianca', texto: 'Expõe criança ou adolescente' },
+  { valor: 'automutilacao', texto: 'Incentivo a automutilação ou suicídio' },
   { valor: 'meu', texto: 'É um conteúdo meu e quero que saia' },
   { valor: 'outro', texto: 'Outro motivo' },
 ] as const;
