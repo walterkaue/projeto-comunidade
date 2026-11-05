@@ -6,7 +6,7 @@ import './comum/tema.css';
 import './comum/componentes.css';
 import { prepararAviso } from './comum/aviso';
 import { ligarMetricas } from './comum/metricas';
-import { lerRota, linkPara, type NomeDaRota, type Rota } from './comum/rotas';
+import { lerRota, linkPara, parteDaRota, type Parte, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
 import type { Limpeza, Tela } from './comum/tela';
 import { NOME } from './comum/marca';
@@ -16,19 +16,15 @@ import { registrarServiceWorker } from './pwa';
 
 type Carregador = () => Promise<{ tela: Tela }>;
 
-const paginas: Carregador = () => import('./paginas/index');
-
-const TELAS: Record<NomeDaRota, Tela | Carregador> = {
+// Cada parte do site baixa só quando abre. O fluxo único (docs/produto.md 7.6) atende também os endereços
+// antigos das ferramentas (#/cards, #/evento sem dados, #/reuniao); a página do evento segue com o Evento.
+const TELAS: Record<Parte, Tela | Carregador> = {
   inicio: telaInicio,
-  cards: () => import('./ferramentas/cards/index'),
+  fluxo: () => import('./ferramentas/fluxo/index'),
+  ata: () => import('./ferramentas/reuniao/index'),
   evento: () => import('./ferramentas/evento/index'),
-  reuniao: () => import('./ferramentas/reuniao/index'),
-  sobre: paginas,
-  termos: paginas,
-  privacidade: paginas,
-  regras: paginas,
-  denunciar: paginas,
-  contato: paginas,
+  galeria: () => import('./ferramentas/cards/index'),
+  paginas: () => import('./paginas/index'),
 };
 
 const raiz = document.getElementById('app')!;
@@ -91,13 +87,22 @@ function mostrarFalha(titulo: string, texto: string): void {
   raiz.querySelector('[data-atualizar]')?.addEventListener('click', () => location.reload());
 }
 
+// Partes já baixadas: abrem direto, sem a tela "Carregando…" (no fluxo, cada passo é uma troca de endereço e o
+// leitor de tela não precisa ouvir "Carregando…" a cada Continuar).
+const baixadas = new Map<Carregador, Tela>();
+
 function abrir(): void {
   const rota = lerRota(location.hash);
-  const alvo = TELAS[rota.nome];
+  const alvo = TELAS[parteDaRota(rota)];
   const minha = ++navegacao;
   if (rodapeComum) rodapeComum.hidden = rota.nome === 'inicio';
   if (alvo === telaInicio) {
     mostrar(telaInicio, rota);
+    return;
+  }
+  const pronta = baixadas.get(alvo as Carregador);
+  if (pronta) {
+    mostrar(pronta, rota);
     return;
   }
   limpar?.();
@@ -107,6 +112,7 @@ function abrir(): void {
   if (!primeira) raiz.querySelector<HTMLElement>('h1')?.focus();
   (alvo as Carregador)().then(
     (m) => {
+      baixadas.set(alvo as Carregador, m.tela);
       if (minha === navegacao) mostrar(m.tela, rota);
     },
     () => {
