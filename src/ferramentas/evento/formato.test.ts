@@ -56,14 +56,14 @@ describe('formato: ida e volta', () => {
 
   it('com compressão (quando o navegador tem)', async () => {
     expect(temCompressao()).toBe(true);
-    const dados = await codificar(evento);
+    const dados = await codificar(evento, { comprimir: true });
     expect(dados.startsWith('1z')).toBe(true);
     const r = await decodificar(dados);
     expect(r).toEqual({ ok: true, evento: sempre(evento) });
   });
 
   it('comprimido é menor que sem compressão em texto normal', async () => {
-    expect((await codificar(evento)).length).toBeLessThan((await codificar(evento, { comprimir: false })).length);
+    expect((await codificar(evento, { comprimir: true })).length).toBeLessThan((await codificar(evento, { comprimir: false })).length);
   });
 
   it('só usa caracteres seguros no link', async () => {

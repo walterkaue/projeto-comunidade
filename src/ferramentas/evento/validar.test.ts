@@ -89,9 +89,10 @@ describe('data e hora', () => {
     for (const h of ['00:00', '08:30', '23:59']) expect(horaValida(h), h).toBe(true);
     for (const h of ['24:00', '8:30', '12:60', '12h30', '', '12:30:00']) expect(horaValida(h), h).toBe(false);
   });
-  it('o fim tem de ser depois do início', () => {
+  it('o fim não pode ser igual ao início; fim menor é no dia seguinte', () => {
     expect(com({ fim: '08:30' }).ok).toBe(false);
-    expect(com({ fim: '08:00' }).ok).toBe(false);
+    expect(com({ fim: '08:00' }).ok).toBe(true);
+    expect(com({ inicio: '22:00', fim: '02:00' }).ok).toBe(true);
     expect(com({ fim: '08:31' }).ok).toBe(true);
     expect(com({ fim: '' }).ok).toBe(true);
     expect(com({ fim: '25:00' }).ok).toBe(false);

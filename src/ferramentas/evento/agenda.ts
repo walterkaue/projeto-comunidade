@@ -40,9 +40,14 @@ export function horaPorExtenso(hora: string): string {
   return m === '00' ? `${Number(h)}h` : `${Number(h)}h${m}`;
 }
 
-/** "das 19h às 21h" ou "às 19h" (sem hora de fim). */
+/** O evento termina depois da meia-noite (fim menor que o início). */
+export const passaDaMeiaNoite = (inicio: string, fim: string): boolean => Boolean(fim) && fim < inicio;
+
+/** "das 19h às 21h", "das 22h às 2h do dia seguinte" ou "às 19h" (sem hora de fim). */
 export function horarioPorExtenso(inicio: string, fim: string): string {
-  return fim ? `das ${horaPorExtenso(inicio)} às ${horaPorExtenso(fim)}` : `às ${horaPorExtenso(inicio)}`;
+  if (!fim) return `às ${horaPorExtenso(inicio)}`;
+  const dia = passaDaMeiaNoite(inicio, fim) ? ' do dia seguinte' : '';
+  return `das ${horaPorExtenso(inicio)} às ${horaPorExtenso(fim)}${dia}`;
 }
 
 // ---------- mapa ----------
@@ -69,9 +74,9 @@ function somar(data: string, hora: string, minutosAMais: number): { data: string
 
 const compacto = (data: string, hora: string): string => `${data.replace(/-/g, '')}T${hora.replace(':', '')}00`;
 
-/** Início e fim no formato de agenda (AAAAMMDDTHHMMSS). Sem hora de fim, o evento dura 1 hora. */
+/** Início e fim no formato de agenda (AAAAMMDDTHHMMSS). Sem hora de fim, o evento dura 1 hora; fim menor que o início é no dia seguinte. */
 export function horariosDaAgenda(e: Pick<Evento, 'data' | 'inicio' | 'fim'>): { inicio: string; fim: string } {
-  const fim = e.fim ? { data: e.data, hora: e.fim } : somar(e.data, e.inicio, 60);
+  const fim = !e.fim ? somar(e.data, e.inicio, 60) : passaDaMeiaNoite(e.inicio, e.fim) ? somar(e.data, e.fim, 24 * 60) : { data: e.data, hora: e.fim };
   return { inicio: compacto(e.data, e.inicio), fim: compacto(fim.data, fim.hora) };
 }
 

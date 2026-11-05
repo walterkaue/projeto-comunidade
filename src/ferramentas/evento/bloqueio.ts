@@ -21,15 +21,19 @@ export async function lerListaDoSite(): Promise<unknown> {
   }
 }
 
-/** Este link (os dados depois de "#/evento/") foi removido após denúncia? Qualquer falha conta como "não". */
+/**
+ * Algum destes dados (o que vem depois de "#/evento/") foi removido após denúncia? Passe o texto do link como
+ * veio e, se der para ler o evento, também a forma canônica dele (formato.ts). Qualquer falha conta como "não".
+ */
 export async function linkBloqueado(
-  dados: string,
+  dados: string | readonly string[],
   lerLista: () => Promise<unknown> = lerListaDoSite,
   impressao: (d: string) => Promise<string> = impressaoDoLink,
 ): Promise<boolean> {
   try {
-    const [lista, marca] = await Promise.all([lerLista(), impressao(dados)]);
-    return estaBloqueado(marca, lista);
+    const todos = typeof dados === 'string' ? [dados] : dados;
+    const [lista, marcas] = await Promise.all([lerLista(), Promise.all(todos.map(impressao))]);
+    return marcas.some((m) => estaBloqueado(m, lista));
   } catch {
     return false;
   }

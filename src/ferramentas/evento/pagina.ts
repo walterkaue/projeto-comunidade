@@ -9,10 +9,10 @@ import { esc } from '../../comum/html';
 import { NOME } from '../../comum/marca';
 import { linkPara } from '../../comum/rotas';
 import type { Limpeza } from '../../comum/tela';
+import { abrirEvento } from './abrir';
 import { dataPorExtenso, gerarIcs, hrefExterno, horarioPorExtenso, linkDoGoogleAgenda, linkDoMapa, nomeDoArquivoIcs } from './agenda';
-import { linkBloqueado } from './bloqueio';
-import { MENSAGEM_DO_PROBLEMA, decodificar } from './formato';
-import { ligarCompartilhar, ligarQr } from './partes';
+import { MENSAGEM_DO_PROBLEMA } from './formato';
+import { enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
 import type { Evento } from './validar';
 
 const NOVO = linkPara('evento');
@@ -33,7 +33,9 @@ function telaDeMensagem(raiz: HTMLElement, titulo: string, texto: string, foco: 
 }
 
 function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean): void {
-  const link = location.href;
+  // Sempre o endereço limpo do site + o hash do evento (sem "?…" de quem abriu por um link com rastreio).
+  const link = `${enderecoDoSite()}${location.hash}`;
+  const denuncia = esc(linkDeDenuncia(link));
   const card = linkDoCard({
     modelo: 'evento',
     titulo: e.titulo,
@@ -47,11 +49,11 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
 
   raiz.innerHTML = `<main class="tela evento">
     <aside class="evento-faixa" aria-label="Aviso sobre este conteúdo">
-      <p>Conteúdo criado por quem enviou este link. O ${esc(NOME)} não confere nem guarda este conteúdo.
-      <a class="evento-denunciar" href="${esc(linkDeDenuncia(link))}">Denunciar</a></p>
+      <p id="ev-faixa">Conteúdo criado por quem enviou este link. O ${esc(NOME)} não confere nem guarda este conteúdo.</p>
+      <a class="evento-denunciar" href="${denuncia}">Denunciar</a>
     </aside>
 
-    <h1 tabindex="-1" data-titulo></h1>
+    <h1 tabindex="-1" aria-describedby="ev-faixa" data-titulo></h1>
     <p class="evento-organizacao" data-organizacao hidden></p>
 
     <dl class="evento-dados">
@@ -71,7 +73,7 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
     <section class="evento-secao" aria-labelledby="ev-h-link">
       <h2 id="ev-h-link">Compartilhar</h2>
       <button class="botao" type="button" data-compartilhar>Compartilhar este link</button>
-      <button class="botao botao-sec" type="button" data-qr aria-expanded="false" aria-controls="ev-qr-area">Mostrar o QR do link</button>
+      <button class="botao botao-sec" type="button" data-qr aria-expanded="false" aria-controls="ev-qr-area">QR do link</button>
       <div class="evento-qr-area" id="ev-qr-area" data-qr-area hidden></div>
     </section>
 
@@ -79,6 +81,8 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
       <h2 id="ev-h-mais">Mais</h2>
       <a class="botao botao-sec" href="${esc(card)}">Fazer o card deste evento</a>
       <a class="botao botao-sec" href="${esc(linkPara('evento', `editar/${dados}`))}">Criar outro evento a partir deste</a>
+      <a class="botao botao-sec" href="${denuncia}">Denunciar este evento</a>
+      <a class="botao botao-sec" href="${esc(linkPara('inicio'))}">Conhecer o ${esc(NOME)}</a>
     </section>
   </main>`;
 
@@ -120,18 +124,15 @@ export function telaPagina(raiz: HTMLElement, dados: string): Limpeza {
 
   void (async () => {
     try {
-      if (await linkBloqueado(dados)) {
-        if (!vivo()) return;
-        telaDeMensagem(raiz, 'Este link foi removido após denúncia', 'Ele não está mais disponível.', true);
-        return;
-      }
-      const r = await decodificar(dados);
+      const r = await abrirEvento(dados);
       if (!vivo()) return;
-      if (!r.ok) {
+      if (r.estado === 'bloqueado') {
+        telaDeMensagem(raiz, 'Este link foi removido após denúncia', 'Ele não está mais disponível.', true);
+      } else if (r.estado === 'problema') {
         telaDeMensagem(raiz, 'Não deu para abrir este evento', MENSAGEM_DO_PROBLEMA[r.problema], true);
-        return;
+      } else {
+        pagina(raiz, r.evento, dados, vivo);
       }
-      pagina(raiz, r.evento, dados, vivo);
     } catch (erro) {
       console.error(erro);
       if (vivo()) telaDeMensagem(raiz, 'Não deu para abrir este evento', MENSAGEM_DO_PROBLEMA.malformado, true);

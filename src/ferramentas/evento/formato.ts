@@ -19,6 +19,12 @@ export const LINK_IDEAL = 1500;
 /** Link máximo: acima disto não gera (o card também não leva). */
 export const LINK_MAXIMO = 4000;
 
+/**
+ * Só comprime quando o link simples passa disto. Link curto fica sem compressão para abrir também em
+ * aparelho antigo (sem DecompressionStream); o comprimido fica para os eventos mais cheios.
+ */
+export const COMPRIMIR_A_PARTIR = 1000;
+
 /** O que se aceita ler depois do "#/evento/" (contra link absurdamente grande). */
 export const DADOS_MAXIMO = 6000;
 /** Tamanho máximo do JSON depois de descomprimir (contra "bomba" de compressão). */
@@ -87,8 +93,17 @@ async function passarPor(bytes: Uint8Array, fluxo: CompressionStream | Decompres
 const paraLista = (e: Evento): string[] => [e.titulo, e.data, e.inicio, e.fim, e.local, e.descricao, e.organizacao];
 
 export interface OpcoesDeCodificar {
-  /** false = nunca comprime (teste e navegador sem suporte). Padrão: comprime quando o navegador sabe e compensa. */
+  /** false = nunca comprime; true = comprime sempre que ficar menor; sem valor = só passa de COMPRIMIR_A_PARTIR (e o navegador sabe). */
   comprimir?: boolean;
+}
+
+/**
+ * Forma canônica dos dados de um evento (validado): sempre "1r" + JSON sem compressão. É a mesma para o mesmo
+ * evento, venha o link escrito do jeito que vier (marca z ou r, espaço no JSON, bits soltos no base64). Serve
+ * para conferir a lista de bloqueio: quem muda um caractere do link continua sendo o mesmo evento.
+ */
+export function dadosCanonicos(evento: Evento): string {
+  return VERSAO + MARCA_SIMPLES + paraBase64Url(new TextEncoder().encode(JSON.stringify(paraLista(evento))));
 }
 
 /** Evento (já validado) → texto para depois do "#/evento/". */
@@ -96,6 +111,7 @@ export async function codificar(evento: Evento, opcoes: OpcoesDeCodificar = {}):
   const bytes = new TextEncoder().encode(JSON.stringify(paraLista(evento)));
   const simples = VERSAO + MARCA_SIMPLES + paraBase64Url(bytes);
   if (opcoes.comprimir === false || !temCompressao()) return simples;
+  if (opcoes.comprimir === undefined && simples.length <= COMPRIMIR_A_PARTIR) return simples;
   const comprimido = await passarPor(bytes, new CompressionStream('deflate-raw'), JSON_MAXIMO * 4);
   if (!comprimido) return simples;
   const z = VERSAO + MARCA_COMPRIMIDO + paraBase64Url(comprimido);

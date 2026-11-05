@@ -22,9 +22,11 @@ describe('linkBloqueado', () => {
     expect(await linkBloqueado(dados, async () => ({ bloqueados: [] }))).toBe(false);
   });
 
-  it('o link original e uma variação mínima têm impressões diferentes', async () => {
-    const lista = { bloqueados: [await impressaoDoLink(dados)] };
-    expect(await linkBloqueado(dados + 'A', async () => lista)).toBe(false);
+  it('com vários dados, basta um estar na lista', async () => {
+    const lista = { bloqueados: [await impressaoDoLink('canonico')] };
+    expect(await linkBloqueado([dados, 'canonico'], async () => lista)).toBe(true);
+    expect(await linkBloqueado([dados, 'outro'], async () => lista)).toBe(false);
+    expect(await linkBloqueado([], async () => lista)).toBe(false);
   });
 
   it('lista que não pôde ser lida: mostra o evento', async () => {
