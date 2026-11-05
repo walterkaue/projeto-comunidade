@@ -1,0 +1,181 @@
+/* Tema base. Celular primeiro (360 px), toque, nunca hover. Paleta provisória e neutra: grafite e papel,
+   sem cor associada a partido. Todos os pares de texto e fundo passam de 4,5:1 (WCAG AA). */
+
+:root {
+  --papel: #fbfaf7;
+  --superficie: #ffffff;
+  --tinta: #1d232a;
+  --tinta-suave: #4a5460;
+  --borda: #c9ccd1;
+  --destaque: #1d232a;
+  --sobre-destaque: #ffffff;
+  --foco: #0b57d0;
+  --erro: #a8241b;
+  --raio: 12px;
+  --toque: 48px;
+  --fonte: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --papel: #14181d;
+    --superficie: #1d232a;
+    --tinta: #f1f2f4;
+    --tinta-suave: #b8bec6;
+    --borda: #48515c;
+    --destaque: #f1f2f4;
+    --sobre-destaque: #14181d;
+    --foco: #8ab4f8;
+    --erro: #ff8a80;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--fonte);
+  font-size: 1.125rem;
+  line-height: 1.5;
+  overflow-x: clip;
+}
+
+#app {
+  max-width: 40rem;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.tela {
+  flex: 1;
+  padding: 1.5rem 1rem 2rem;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+h1 {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
+}
+
+h1:focus {
+  outline: none;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+/* ---------- botões ---------- */
+
+.botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: var(--toque);
+  margin: 0.75rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--destaque);
+  border-radius: var(--raio);
+  background: var(--destaque);
+  color: var(--sobre-destaque);
+  font: inherit;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.botao:active {
+  transform: scale(0.98);
+}
+
+.botao-sec {
+  background: transparent;
+  color: var(--tinta);
+}
+
+.botao-grande {
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-height: 5.5rem;
+  padding: 1rem 1.25rem;
+}
+
+.botao-titulo {
+  font-size: 1.25rem;
+}
+
+.botao-descricao {
+  font-weight: 400;
+}
+
+/* ---------- inicial ---------- */
+
+.inicio-lema {
+  color: var(--tinta-suave);
+  margin: 0 0 1rem;
+}
+
+.inicio-ferramentas,
+.rodape ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rodape {
+  padding: 1rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--borda);
+}
+
+.rodape ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1rem;
+}
+
+.rodape a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque);
+  color: var(--tinta-suave);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .botao:active {
+    transform: none;
+  }
+}

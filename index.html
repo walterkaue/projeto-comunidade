@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Projeto Comunidade</title>
+    <meta name="description" content="Ferramentas gratuitas para organizações comunitárias e sociais. Tudo feito no aparelho, sem cadastro." />
+    <meta name="theme-color" content="#1d232a" />
+
+    <!-- PWA e ícones: caminhos relativos (funcionam em /projeto-comunidade/ e na raiz). -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icones/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Comunidade" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Prévia do WhatsApp e redes. ATENÇÃO: og:image precisa ser URL ABSOLUTA (o WhatsApp não
+         aceita relativa). Ao mudar de domínio, troque o endereço da og:image (e do og:image:alt, se citar). -->
+    <meta property="og:title" content="Projeto Comunidade" />
+    <meta property="og:description" content="Ferramentas gratuitas para organizações comunitárias e sociais: cards, eventos e reuniões, sem cadastro." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:image" content="https://walterkaue.github.io/projeto-comunidade/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Projeto Comunidade: ferramentas gratuitas para a comunidade" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>Este site precisa de JavaScript ligado.</noscript>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
