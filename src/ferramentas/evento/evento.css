@@ -1,0 +1,110 @@
+/* Evento em um link. Usa os tokens de src/comum/tema.css. Celular primeiro: 360 px sem rolagem lateral. */
+
+.evento {
+  min-width: 0;
+}
+
+/* Todo texto vindo do link quebra em qualquer lugar, para uma palavra comprida não abrir rolagem lateral. */
+.evento h1,
+.evento dd,
+.evento p,
+.evento input {
+  overflow-wrap: anywhere;
+}
+
+.evento-regra {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--borda-campo);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.evento-form {
+  margin-top: 1rem;
+}
+
+/* Faixa fixa de aviso da página: sempre no topo, sem como fechar. */
+.evento-faixa {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.evento-faixa p {
+  margin: 0 0 0.25rem;
+}
+
+.evento-denunciar {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--toque);
+  font-weight: 700;
+}
+
+.evento-organizacao {
+  margin: 0 0 1rem;
+  color: var(--tinta-suave);
+}
+
+.evento-dados {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 0.5rem;
+}
+
+.evento-dados dt {
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+}
+
+.evento-dados dd {
+  margin: 0;
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+.evento-descricao {
+  margin: 1.25rem 0 0;
+  /* Mantém as quebras de linha que a pessoa digitou. */
+  white-space: pre-line;
+}
+
+.evento-secao {
+  margin-top: 1.75rem;
+}
+
+.evento-secao h2,
+.evento-pronto h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.evento-pronto {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 2px solid var(--borda);
+}
+
+.evento-pronto:focus {
+  outline: none;
+}
+
+.evento-qr-area {
+  margin-top: 0.75rem;
+}
+
+.evento-qr {
+  display: block;
+  width: min(100%, 20rem);
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid var(--borda);
+  image-rendering: pixelated;
+}

@@ -1,7 +1,19 @@
-// Ferramenta 2: evento em um link (os dados vão depois do #, em `rota.resto`). Carregada sob demanda (src/main.ts).
-// Esta pasta é da sessão que constrói o evento. Mudanças em src/comum viram pedido em docs/pedidos-comum.md.
+// Ferramenta 2: evento em um link. Carregada sob demanda (src/main.ts).
+//   #/evento                  → formulário
+//   #/evento/editar/<dados>   → formulário já preenchido com um evento (para criar outro parecido)
+//   #/evento/<dados>          → página do evento
+// Os dados ficam depois do # e nunca vão para servidor. Formato em formato.ts, regras em validar.ts.
 
-import { telaEmConstrucao } from '../../paginas/emConstrucao';
 import type { Tela } from '../../comum/tela';
+import { telaCriar } from './criar';
+import './evento.css';
+import { telaPagina } from './pagina';
 
-export const tela: Tela = (raiz) => telaEmConstrucao(raiz, 'Evento em um link');
+const EDITAR = 'editar/';
+
+export const tela: Tela = (raiz, rota) => {
+  const resto = rota.resto;
+  if (!resto) return telaCriar(raiz);
+  if (resto.startsWith(EDITAR)) return telaCriar(raiz, resto.slice(EDITAR.length));
+  return telaPagina(raiz, resto);
+};
