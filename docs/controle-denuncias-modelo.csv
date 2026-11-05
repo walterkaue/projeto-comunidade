@@ -1,1 +1,1 @@
-numero,recebida_em,tipo,regra_ferida,prioridade,prazo_limite,respondida_em,prazo_cumprido,decisao,recurso_pedido,decisao_do_recurso,conflito_declarado,triagem_com_ia
+numero,recebida_em,tipo,regra_ferida,prioridade,prazo_limite,respondida_em,prazo_cumprido,decisao,fundamento,recurso_pedido,decisao_do_recurso,conflito_declarado,triagem_com_ia
