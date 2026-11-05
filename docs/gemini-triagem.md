@@ -11,7 +11,7 @@
 4. **Instruções:** copie todo o bloco da seção 4 abaixo e cole no campo.
 5. Clique em **Salvar**.
 
-Privacidade: em **Configurações > Atividade** (Atividade nos apps do Gemini), veja se dá para desligar a atividade sem o Gem parar de funcionar. Desligada, as conversas não ficam guardadas para revisão pelo Google. Se o Gem parar, deixe ligada e siga o passo 3 da seção 2 com mais cuidado ainda.
+Privacidade (**obrigatório**): em **Configurações > Atividade**, desligue a **Atividade nos apps do Gemini**. Desligada, as conversas não ficam guardadas nem servem para treinar o modelo. Confira que o Gem continua funcionando com ela desligada. **Se o Gem não funcionar assim, a triagem é feita sem IA**: uma pessoa lê a denúncia e decide, sem usar o Gemini. Ligada, o Gem não pode ser usado.
 
 ## 2. Em cada denúncia
 
@@ -64,7 +64,7 @@ COMO RESPONDER (sempre neste formato, em português simples e frases curtas)
 2. Regras: quais regras parecem feridas (número e nome), cada uma com o trecho que mostra isso. Se nenhuma, escreva "Nenhuma regra parece ferida" e explique em uma linha.
 3. Prioridade: URGENTE (ameaça, risco a criança ou adolescente, golpe em andamento), ALTA (ódio, dados de terceiros, mentira comprovada sobre saúde, segurança ou eleição), NORMAL (o resto) ou SEM AÇÃO.
 4. Sugestão para a pessoa que decide: REMOVER, MANTER ou PEDIR MAIS INFORMAÇÃO, com o motivo em uma linha. Aponte dúvidas e o que pode estar errado na sua análise.
-5. Rascunho de resposta para quem denunciou: curto, educado, sem expor quem criou o conteúdo, sem prometer prazo. Se a sugestão for REMOVER, escreva como se a remoção já tivesse sido feita, para a pessoa usar só depois de remover. Assine "Equipe Projeto Comunidade".
+5. Rascunho de resposta para quem denunciou: curto, educado, sem expor quem criou o conteúdo, com o motivo da decisão e dizendo que dá para pedir revisão respondendo o e-mail. Se a sugestão for REMOVER, escreva como se a remoção já tivesse sido feita, para a pessoa usar só depois de remover. Assine "Equipe Projeto Comunidade".
 6. Lembrete fixo: "Esta é uma sugestão. A decisão é de uma pessoa da equipe."
 
 Se o caso envolver conteúdo sexual com criança ou adolescente: não descreva o conteúdo, marque URGENTE e lembre de denunciar também à SaferNet (new.safernet.org.br/denuncie) ou à polícia.

@@ -28,8 +28,23 @@ export const regras: Pagina = {
       ],
     },
     {
+      titulo: 'O que é mentira comprovada',
+      blocos: [
+        'Só conta como comprovada quando há decisão judicial, ou checagem publicada por uma iniciativa de checagem independente (de preferência mais de uma, de linhas editoriais diferentes).',
+        `Nunca é só a avaliação do ${NOME}.`,
+      ],
+    },
+    {
+      titulo: 'Quem modera',
+      blocos: [
+        'Quem modera não decide casos com conflito de interesse: organização própria ou de parente, adversário direto, ou caso em que tenha interesse pessoal.',
+        'Enquanto houver uma pessoa só moderando, o conflito é declarado no relatório público semestral.',
+      ],
+    },
+    {
       titulo: 'O que não fazemos',
       blocos: [
+        'Não usamos robô nem a API do WhatsApp. O site só abre links do WhatsApp (wa.me) e usa recursos que o próprio WhatsApp já tem.',
         'Não recomendamos voto, não damos destaque a ninguém e não cobramos de nenhum lado.',
         'Não perguntamos voto, filiação nem opinião política.',
         'Não guardamos o conteúdo que você cria: ele fica no seu aparelho ou dentro do link que você escolhe compartilhar.',

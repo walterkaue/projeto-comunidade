@@ -51,6 +51,7 @@ export const termos: Pagina = {
       blocos: [
         'Qualquer pessoa pode denunciar um conteúdo ou pedir remoção. Veja a página "Como denunciar".',
         'Uma pessoa decide. Uma inteligência artificial pode ajudar a separar e resumir as denúncias, mas ela não decide.',
+        'O nome e o e-mail de quem denunciou não são passados à inteligência artificial, e a ferramenta é usada com o histórico desligado, para não treinar com esses dados.',
         'Ao denunciar um evento, o link dele, com o conteúdo, vai por e-mail (Gmail) e pode ser lido por uma inteligência artificial (Gemini).',
       ],
     },

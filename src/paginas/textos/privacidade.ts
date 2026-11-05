@@ -69,6 +69,7 @@ export const privacidade: Pagina = {
         `Denúncias e mensagens chegam por e-mail, em ${EMAIL_CONTATO}. Esse e-mail passa pelo Gmail, do Google.`,
         'Ao denunciar, você manda o link do evento (que leva dentro o conteúdo dele, inclusive dados de outras pessoas, se houver), o motivo e o que mais escrever. Seu endereço de e-mail também fica visível para nós.',
         'Uma inteligência artificial (Gemini, do Google) pode ajudar a separar e resumir as denúncias. Para isso, o texto da denúncia, com o conteúdo do evento, pode ser lido por essa ferramenta. O Gmail e o Gemini podem guardar dados em outros países.',
+        'O nome e o e-mail de quem denunciou não são passados à inteligência artificial. A ferramenta é usada com o histórico desligado, para que esses textos não sirvam para treiná-la.',
         'Quem decide a remoção é sempre uma pessoa.',
         'A lista pública de links recusados guarda só uma impressão digital (um código) de cada link, nunca o conteúdo.',
         'Por quanto tempo guardamos os e-mails: [a definir antes do lançamento].',

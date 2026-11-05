@@ -1,4 +1,4 @@
-import { EMAIL_CONTATO } from '../../comum/marca';
+import { EMAIL_CONTATO, PRAZO_DENUNCIA_DIAS_UTEIS, PRAZO_URGENTE_HORAS } from '../../comum/marca';
 import type { Pagina } from './tipos';
 
 /** Texto fixo da página de denúncia. A caixa com o link denunciado e o botão são desenhados pela página. */
@@ -36,7 +36,10 @@ export const denunciar: Pagina = {
           'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site.',
           'Respondemos por e-mail. Se não quiser resposta, diga no texto.',
         ],
-        'Não prometemos prazo fixo. Casos de ameaça ou de risco a criança vêm primeiro.',
+        `Respondemos em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis. Em caso de golpe, ameaça, risco a criança ou dado pessoal exposto, em até ${PRAZO_URGENTE_HORAS} horas.`,
+        'A resposta traz o motivo da decisão.',
+        'Quem denunciou, ou quem foi denunciado, pode pedir revisão: basta responder o e-mail e dizer por quê. Quando houver mais de uma pessoa moderando, outra pessoa decide a revisão.',
+        'Vamos publicar um relatório a cada seis meses, com o número de denúncias, remoções, revisões e prazos cumpridos, sem dados pessoais.',
       ],
     },
     {
