@@ -11,7 +11,11 @@ npm install
 npm run dev      # servidor local
 npm test         # testes
 npm run build    # versão final
+npm run fontes   # refaz as fontes cortadas para o português
+npm run icones   # refaz ícones e imagem de prévia (precisa do Chrome ou do Edge)
 ```
+
+Cada push na `main` testa, gera e publica no GitHub Pages (`.github/workflows/deploy.yml`).
 
 ## Regras do projeto
 

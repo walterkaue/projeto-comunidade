@@ -14,7 +14,7 @@ Para saber onde o projeto está e o que vem a seguir, leia `docs/proximos-passos
 
 Várias sessões trabalham ao mesmo tempo, cada uma em seu worktree. Para não haver conflito:
 
-- **Cada sessão de ferramenta mexe só na própria pasta:** `src/ferramentas/<nome>/` e os testes dela.
+- **Cada sessão de ferramenta mexe só na própria pasta:** `src/ferramentas/<nome>/` e os testes dela, que ficam dentro da mesma pasta (`src/ferramentas/<nome>/*.test.ts`; a pasta `testes/` é compartilhada).
 - **São compartilhados e NÃO se editam numa sessão de ferramenta:** `src/comum/`, `src/main.ts`, `src/paginas/`, `testes/`, o tema (`tema.css`) e a configuração (`package.json`, `vite.config.ts`, `index.html`, `.github/`).
 - **O que precisar mudar nesses lugares vira um pedido** em `docs/pedidos-comum.md` (data, sessão, o que precisa, por quê, sugestão de assinatura). Uma sessão só atende os pedidos depois, juntando todos.
 - **Pode copiar código de `src/comum/` para dentro da própria pasta** enquanto o pedido não é atendido, para não travar. Marque a cópia com o comentário `// cópia provisória: pedido em docs/pedidos-comum.md`.
@@ -48,7 +48,10 @@ Várias sessões trabalham ao mesmo tempo, cada uma em seu worktree. Para não h
 - **Nenhuma chamada de rede para fora do próprio site** (`testes/privacidade.test.ts`), exceto o script de métricas quando ligado em `src/comum/marca.ts`.
 - **Nada de lista de presença nem ata em link.** Esses só existem em arquivo gerado no aparelho.
 - **Dados de evento ficam depois do `#`** (o servidor não os vê) e levam só o que a pessoa escolheu publicar.
-- **Todo texto digitado passa por `esc`** (`src/comum/html.ts`) antes de ir para `innerHTML`.
+- **Todo texto digitado passa por `esc`** (`src/comum/html.ts`) antes de ir para `innerHTML`. **Todo `href` com dado variável passa também por `urlSegura`** (barra `javascript:` e `data:`): `href="${esc(urlSegura(link))}"`.
+- **CSP no `index.html`:** o navegador só deixa o site falar consigo mesmo. Não afrouxe sem pedido em `docs/pedidos-comum.md`.
+- **Armazenamento no aparelho:** enquanto o site estiver em `walterkaue.github.io`, `localStorage` e IndexedDB são divididos com os outros projetos desse endereço. Rascunho só com chave prefixada `pc:`, só o necessário, com botão de apagar; nada sensível (presença, ata, dado de terceiros) até haver domínio próprio.
+- **Contrato das telas:** título em `<h1 tabindex="-1">` (o roteador põe o foco nele); para atualizar o link sem remontar a tela, use `history.replaceState` (detalhes em `src/comum/tela.ts`).
 
 ## Neutralidade
 
