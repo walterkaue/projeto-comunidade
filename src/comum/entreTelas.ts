@@ -149,8 +149,40 @@ export async function impressaoDoLink(dados: string): Promise<string> {
   return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** A impressão está na lista? Aceita o JSON de public/bloqueados.json já lido; lista estranha conta como vazia. */
-export function estaBloqueado(impressao: string, lista: unknown): boolean {
+/**
+ * Por que um link foi removido (auditoria 05/11/2026, M7 e M8): a regra ferida (número de src/comum/regras.ts),
+ * a pedido de quem criou, ou sem motivo registrado (itens antigos da lista).
+ */
+export type MotivoDaRemocao = { tipo: 'regra'; regra: number } | { tipo: 'pedido' } | { tipo: 'sem-motivo' };
+
+/** Motivo como fica gravado na lista: "regra-5" ou "pedido". Qualquer outra coisa conta como sem motivo. */
+export function lerMotivo(gravado: unknown): MotivoDaRemocao {
+  if (gravado === 'pedido') return { tipo: 'pedido' };
+  const r = typeof gravado === 'string' ? /^regra-([1-9]\d?)$/.exec(gravado) : null;
+  return r ? { tipo: 'regra', regra: Number(r[1]) } : { tipo: 'sem-motivo' };
+}
+
+/**
+ * A impressão está na lista? Devolve o motivo, ou null se não está. Aceita o JSON de public/bloqueados.json já
+ * lido, com itens em texto (só a impressão, formato antigo) ou { "h": impressão, "motivo": "regra-5" }.
+ * Lista ou item estranho conta como vazio.
+ */
+export function motivoDoBloqueio(impressao: string, lista: unknown): MotivoDaRemocao | null {
   const itens = (lista as { bloqueados?: unknown } | null)?.bloqueados;
-  return Array.isArray(itens) && itens.some((i) => typeof i === 'string' && i.toLowerCase() === impressao.toLowerCase());
+  if (!Array.isArray(itens)) return null;
+  const alvo = impressao.toLowerCase();
+  for (const i of itens) {
+    if (typeof i === 'string') {
+      if (i.toLowerCase() === alvo) return { tipo: 'sem-motivo' };
+    } else if (i && typeof i === 'object') {
+      const { h, motivo } = i as { h?: unknown; motivo?: unknown };
+      if (typeof h === 'string' && h.toLowerCase() === alvo) return lerMotivo(motivo);
+    }
+  }
+  return null;
+}
+
+/** A impressão está na lista? (O mesmo que motivoDoBloqueio, sem o motivo.) */
+export function estaBloqueado(impressao: string, lista: unknown): boolean {
+  return motivoDoBloqueio(impressao, lista) !== null;
 }

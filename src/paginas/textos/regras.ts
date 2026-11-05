@@ -51,7 +51,7 @@ export const regras: Pagina = {
     {
       titulo: 'O que acontece se alguém desrespeitar',
       blocos: [
-        'Depois de uma denúncia, uma pessoa confere o link. Se ferir estas regras, o site passa a recusá-lo e mostra: "Este link foi removido após denúncia".',
+        'Depois de uma denúncia, uma pessoa confere o link. Se ferir estas regras, o site passa a recusá-lo e mostra: "Este link foi removido após denúncia", com a regra ferida e como pedir revisão.',
         'A lista pública de links recusados guarda só uma impressão digital do link (um código), nunca o conteúdo denunciado.',
         'Quem denunciou recebe resposta por e-mail, se quiser.',
         `Quer contestar uma remoção? Escreva para ${EMAIL_CONTATO}.`,

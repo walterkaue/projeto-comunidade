@@ -42,6 +42,15 @@ describe('linkBloqueado', () => {
     expect(await linkBloqueado(dados, async () => lista, () => Promise.reject(new Error('sem crypto')))).toBe(false);
   });
 
+  it('devolve o motivo; entre o link e a forma canônica, vale o que tem motivo', async () => {
+    const { motivoDoLinkBloqueado } = await import('./bloqueio');
+    const lista = { bloqueados: [await impressaoDoLink(dados), { h: await impressaoDoLink('canonico'), motivo: 'pedido' }] };
+    expect(await motivoDoLinkBloqueado([dados, 'canonico'], async () => lista)).toEqual({ tipo: 'pedido' });
+    expect(await motivoDoLinkBloqueado(dados, async () => lista)).toEqual({ tipo: 'sem-motivo' });
+    expect(await motivoDoLinkBloqueado('outro', async () => lista)).toBeNull();
+    expect(await motivoDoLinkBloqueado(dados, async () => Promise.reject(new Error('sem rede')))).toBeNull();
+  });
+
   it('funciona de ponta a ponta com dados de verdade', async () => {
     const d = await codificar({
       titulo: 'Evento removido',

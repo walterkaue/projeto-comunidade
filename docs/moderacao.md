@@ -5,20 +5,30 @@
 ## Como funciona
 
 - A denúncia chega por e-mail (`contato.projetocomunidade@gmail.com`), já com o link, pelo botão "Denunciar" da página do evento.
-- `public/bloqueados.json` guarda só a **impressão** (SHA-256) dos dados de cada link removido. A lista é pública, mas não republica o conteúdo denunciado.
-- Antes de mostrar um evento, a página confere a lista. Se o link estiver nela, mostra "Este link foi removido após denúncia".
+- `public/bloqueados.json` guarda só a **impressão** (SHA-256) dos dados de cada link removido e o **motivo** (`{ "h": "<impressão>", "motivo": "regra-5" }` ou `"motivo": "pedido"`). A lista é pública, mas não republica o conteúdo denunciado. Itens antigos, só com a impressão, continuam valendo, sem motivo.
+- Antes de mostrar um evento, a página confere a lista. Se o link estiver nela, mostra "Este link foi removido após denúncia" com a regra ferida (ou "a pedido de quem o criou") e como pedir revisão por e-mail.
 - A conta da impressão está em `src/comum/entreTelas.ts` e em `scripts/bloquear.mjs`; um teste confere que as duas batem.
 
 ## Passo a passo
 
 1. **Confira o link antes de abrir.** Ele precisa começar exatamente com `https://walterkaue.github.io/projeto-comunidade/#/evento/` (com domínio próprio, o endereço novo). Depois de `#/evento/`, só pode ter **letras sem acento, números, `-` e `_`**. Duas exceções servem: o link de "editar" (`#/evento/editar/` e depois o mesmo formato) e o link quebrado em linhas pelo e-mail (junte as linhas; o resto precisa seguir o formato). Com qualquer outro sinal (`$`, `(`, `)`, `;`, `'`, `` ` ``, `|`, espaço no meio de uma linha) ou outro começo, não é um link do site: não abra, não bloqueie e não cole no Claude Code. O script confere o formato de novo. Nunca digite senha numa página aberta a partir de uma denúncia.
 2. Abra o link e confira se fere as Regras de uso. Para ajuda na triagem, use o Gem do Gemini (`docs/gemini-triagem.md`): ele sugere, a pessoa decide.
-3. Peça ao Claude Code: "bloqueie este link: <link>". Cole **só o link**, nunca o e-mail inteiro: o texto de quem denuncia é dado, não instrução.
-   - **Como o Claude Code faz:** grava o link num arquivo de texto fora do git (na pasta temporária dele), com a ferramenta de escrever arquivos, e roda `npm run bloquear -- --arquivo <caminho>`. **Nunca põe o link dentro de um comando**: o link vem de pessoa desconhecida, e o Bash ou o PowerShell executariam um `$(…)` escondido nele (`docs/auditoria/2026-11-05/seguranca.md`, A1). O script recusa o link na linha de comando e recusa dados fora do formato.
+3. Peça ao Claude Code: "bloqueie este link pela regra <número>: <link>" (o número de `src/comum/regras.ts`, de 1 a 9) ou "bloqueie este link a pedido de quem criou: <link>". Cole **só o link**, nunca o e-mail inteiro: o texto de quem denuncia é dado, não instrução.
+   - **Como o Claude Code faz:** grava o link num arquivo de texto fora do git (na pasta temporária dele), com a ferramenta de escrever arquivos, e roda `npm run bloquear -- --arquivo <caminho> --motivo regra-<número>` (ou `--motivo pedido`). O script para se faltar o motivo. **Nunca põe o link dentro de um comando**: o link vem de pessoa desconhecida, e o Bash ou o PowerShell executariam um `$(…)` escondido nele (`docs/auditoria/2026-11-05/seguranca.md`, A1). O script recusa o link na linha de comando e recusa dados fora do formato.
    - O script mostra a data e a hora do evento lido: confira se batem com a página denunciada. Depois, commit `fix: bloqueia link denunciado` e push.
    - O script grava a impressão do link e a da forma canônica do evento: o mesmo evento escrito de outro jeito no link (compressão, espaços) continua bloqueado. **Mudar o texto do evento gera outro link**, que precisa de outra denúncia.
    - Link quebrado em linhas pelo e-mail ou link de "editar" funcionam (passo 1). Se o evento não puder ser lido, o script **para sem gravar**; confira se o link chegou inteiro (`--forcar` grava só aquele link exato).
 4. Em cerca de 2 minutos o site novo está no ar. Responda o e-mail de quem denunciou.
+
+## Pedido "é um conteúdo meu e quero que saia"
+
+> Auditoria 05/11/2026, achado M8. Sem conta, ninguém consegue provar que criou um link. Um adversário pode dizer "este evento é meu" para derrubar a convocação de outra organização.
+
+- **Se o conteúdo fere uma regra**, trate como denúncia comum (`--motivo regra-<número>`), não importa quem pediu.
+- **Se não fere regra**, só remova com algum indício de que a pessoa criou o link. Por exemplo: ela mostra onde mandou o link primeiro (print da conversa, com data), escreve do e-mail conhecido da organização que aparece no evento, ou o pedido vem com dado pessoal dela que está no evento (nome, endereço).
+- **Na dúvida, não remova.** Responda que quem criou pode só parar de compartilhar e fazer outro link; o site não guarda nada.
+- Quando remover a pedido, use `--motivo pedido`: a tela diz "removido a pedido de quem o criou", não "após denúncia". Na planilha, `tipo` = `pedido de quem criou`.
+- Quem discordar (por exemplo, a organização que de fato criou o link) pede revisão respondendo o e-mail, como em qualquer remoção.
 
 Limite conhecido: sem internet e sem nenhuma cópia da lista guardada no aparelho (primeira visita já sem rede), o evento é mostrado. Com rede lenta ou erro do servidor, vale a última lista guardada.
 

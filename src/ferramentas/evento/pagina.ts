@@ -4,7 +4,7 @@
 
 import { avisar } from '../../comum/aviso';
 import { baixarImagem } from '../../comum/compartilhar';
-import { ENDERECO_DO_CARDS, linkDeDenuncia, prepararCard } from '../../comum/entreTelas';
+import { ENDERECO_DO_CARDS, linkDeDenuncia, prepararCard, type MotivoDaRemocao } from '../../comum/entreTelas';
 import { esc } from '../../comum/html';
 import { NOME } from '../../comum/marca';
 import { linkPara } from '../../comum/rotas';
@@ -13,6 +13,7 @@ import { abrirEvento } from './abrir';
 import { dataPorExtenso, gerarIcs, hrefExterno, horarioPorExtenso, linkDoGoogleAgenda, linkDoMapa, nomeDoArquivoIcs } from './agenda';
 import { MENSAGEM_DO_PROBLEMA } from './formato';
 import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
+import { textosDoRemovido } from './removido';
 import type { Evento } from './validar';
 
 const NOVO = linkPara('evento');
@@ -30,6 +31,19 @@ function telaDeMensagem(raiz: HTMLElement, titulo: string, texto: string, foco: 
     }
   </main>`;
   if (foco) raiz.querySelector<HTMLElement>('h1')?.focus();
+}
+
+/** Tela de link removido: o motivo, como pedir revisão e o caminho para as Regras de uso. */
+function telaDeRemovido(raiz: HTMLElement, motivo: MotivoDaRemocao): void {
+  const t = textosDoRemovido(motivo);
+  raiz.innerHTML = `<main class="tela evento">
+    <h1 tabindex="-1">${esc(t.titulo)}</h1>
+    ${t.paragrafos.map((p) => `<p>${esc(p)}</p>`).join('')}
+    <a class="botao" href="${esc(linkPara('regras'))}">Ver as Regras de uso</a>
+    <a class="botao botao-sec" href="${esc(NOVO)}">Criar um evento</a>
+    <a class="botao botao-sec" href="${esc(linkPara('inicio'))}">Voltar ao início</a>
+  </main>`;
+  raiz.querySelector<HTMLElement>('h1')?.focus();
 }
 
 function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean): void {
@@ -120,7 +134,7 @@ export function telaPagina(raiz: HTMLElement, dados: string): Limpeza {
       const r = await abrirEvento(dados);
       if (!vivo()) return;
       if (r.estado === 'bloqueado') {
-        telaDeMensagem(raiz, 'Este link foi removido após denúncia', 'Ele não está mais disponível.', true);
+        telaDeRemovido(raiz, r.motivo);
       } else if (r.estado === 'problema') {
         telaDeMensagem(raiz, 'Não deu para abrir este evento', MENSAGEM_DO_PROBLEMA[r.problema], true);
       } else {

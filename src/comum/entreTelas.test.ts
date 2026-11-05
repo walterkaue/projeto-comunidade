@@ -13,7 +13,9 @@ import {
   estaBloqueado,
   impressaoDoLink,
   lerLinkDenunciado,
+  lerMotivo,
   linkDeDenuncia,
+  motivoDoBloqueio,
   pegarCardPreparado,
   prepararCard,
 } from './entreTelas';
@@ -83,6 +85,25 @@ describe('card preenchido pela memória da aba', () => {
     );
     expect(d).toEqual({ modelo: 'aviso' });
     expect(conferirDadosDoCard({ texto: 'Reunião dia 21/11 às 19h' }, BASE)).toEqual({ texto: 'Reunião dia 21/11 às 19h' });
+  });
+});
+
+describe('motivo da remoção na lista', () => {
+  it('lê regra-N e pedido; o resto é sem motivo', () => {
+    expect(lerMotivo('regra-5')).toEqual({ tipo: 'regra', regra: 5 });
+    expect(lerMotivo('pedido')).toEqual({ tipo: 'pedido' });
+    for (const x of [undefined, '', 'regra-0', 'regra-100', 'Regra-5', 5, {}]) expect(lerMotivo(x)).toEqual({ tipo: 'sem-motivo' });
+  });
+
+  it('aceita item antigo (texto) e item novo ({ h, motivo }), sem depender de maiúsculas', () => {
+    const lista = { bloqueados: ['AAA', { h: 'bbb', motivo: 'regra-9' }, { h: 'ccc', motivo: 'pedido' }, { h: 'ddd' }, { motivo: 'regra-1' }, null, 7] };
+    expect(motivoDoBloqueio('aaa', lista)).toEqual({ tipo: 'sem-motivo' });
+    expect(motivoDoBloqueio('BBB', lista)).toEqual({ tipo: 'regra', regra: 9 });
+    expect(motivoDoBloqueio('ccc', lista)).toEqual({ tipo: 'pedido' });
+    expect(motivoDoBloqueio('ddd', lista)).toEqual({ tipo: 'sem-motivo' });
+    expect(motivoDoBloqueio('eee', lista)).toBeNull();
+    expect(estaBloqueado('bbb', lista)).toBe(true);
+    expect(estaBloqueado('eee', lista)).toBe(false);
   });
 });
 
@@ -165,6 +186,33 @@ describe('script de moderação: link vindo do e-mail', () => {
 
 // Auditoria 05/11/2026, A1: o link vem de e-mail de pessoa desconhecida. Ele nunca vai na linha de comando
 // (o shell executaria um "$(…)" antes de o script ler) e, no arquivo, só passa o formato dos dados.
+// Auditoria 05/11/2026, M7 e M8: cada bloqueio novo grava o motivo, que a tela do link removido mostra.
+describe('script de moderação: motivo da remoção', () => {
+  it('aceita regra-N (1 até o número de regras) ou pedido', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { motivoValido } = await import('../../scripts/bloquear.mjs');
+    for (const bom of ['regra-1', 'regra-9', 'pedido']) expect(motivoValido(bom, 9), bom).toBe(true);
+    for (const ruim of ['', 'regra-0', 'regra-10', 'regra-5 ', 'golpe', 'regra-$(x)', undefined]) expect(motivoValido(ruim, 9), String(ruim)).toBe(false);
+  });
+
+  it('grava as impressões novas com o motivo e mantém as antigas', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { novaLista } = await import('../../scripts/bloquear.mjs');
+    const antiga = { bloqueados: ['AAA', { h: 'bbb', motivo: 'pedido' }] };
+    const r = novaLista(antiga, ['aaa', 'BBB', 'ccc'], 'regra-5');
+    expect(r.novas).toBe(1);
+    expect(r.lista.bloqueados).toEqual(['AAA', { h: 'bbb', motivo: 'pedido' }, { h: 'ccc', motivo: 'regra-5' }]);
+    expect(antiga.bloqueados).toHaveLength(2);
+  });
+
+  it('o site lê o motivo gravado pelo script', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { novaLista } = await import('../../scripts/bloquear.mjs');
+    const { lista } = novaLista({ bloqueados: [] }, ['abc'], 'regra-5');
+    expect(motivoDoBloqueio('ABC', lista)).toEqual({ tipo: 'regra', regra: 5 });
+  });
+});
+
 describe('script de moderação: o link é dado, não comando', () => {
   const raiz = fileURLToPath(new URL('../../', import.meta.url));
   const script = join(raiz, 'scripts', 'bloquear.mjs');
@@ -184,9 +232,26 @@ describe('script de moderação: o link é dado, não comando', () => {
   it('separa --arquivo e --forcar; texto solto vira sobra', async () => {
     // @ts-expect-error script .mjs sem tipos
     const { lerArgumentos } = await import('../../scripts/bloquear.mjs');
-    expect(lerArgumentos(['--arquivo', 'link.txt', '--forcar'])).toEqual({ arquivo: 'link.txt', forcar: true, sobra: [] });
+    expect(lerArgumentos(['--arquivo', 'link.txt', '--motivo', 'regra-5', '--forcar'])).toEqual({ arquivo: 'link.txt', motivo: 'regra-5', forcar: true, sobra: [] });
     expect(lerArgumentos(['https://x.exemplo/#/evento/abc']).sobra).toEqual(['https://x.exemplo/#/evento/abc']);
   });
+
+  it('sem motivo ou com motivo estranho: para sem gravar', () => {
+    const pasta = mkdtempSync(join(tmpdir(), 'bloquear-'));
+    const arquivo = join(pasta, 'link.txt');
+    writeFileSync(arquivo, 'https://walterkaue.github.io/projeto-comunidade/#/evento/1rAbc\n');
+    const antes = readFileSync(lista, 'utf8');
+    try {
+      for (const args of [['--arquivo', arquivo], ['--arquivo', arquivo, '--motivo', 'golpe'], ['--arquivo', arquivo, '--motivo', 'regra-99']]) {
+        const r = rodar(...args);
+        expect(r.status, args.join(' ')).toBe(1);
+        expect(r.stderr).toContain('Diga o motivo');
+      }
+      expect(readFileSync(lista, 'utf8')).toBe(antes);
+    } finally {
+      rmSync(pasta, { recursive: true, force: true });
+    }
+  }, 30000);
 
   it('link na linha de comando: para sem gravar', () => {
     const antes = readFileSync(lista, 'utf8');
@@ -202,9 +267,9 @@ describe('script de moderação: o link é dado, não comando', () => {
     writeFileSync(arquivo, 'https://walterkaue.github.io/projeto-comunidade/#/evento/1rAbc$(comando)\n');
     const antes = readFileSync(lista, 'utf8');
     try {
-      const r = rodar('--arquivo', arquivo);
+      const r = rodar('--arquivo', arquivo, '--motivo', 'regra-5');
       expect(r.status).toBe(1);
-      expect(r.stderr).toContain('Nada foi gravado');
+      expect(r.stderr).toContain('só pode ter letras');
       expect(readFileSync(lista, 'utf8')).toBe(antes);
     } finally {
       rmSync(pasta, { recursive: true, force: true });

@@ -24,6 +24,7 @@ export const denunciar: Pagina = {
           'seu nome e um meio de resposta, se quiser ser respondido.',
         ],
         'Pedidos sobre direito autoral e uso de marca também entram por aqui.',
+        'Quer tirar do ar um link que você criou? O site não sabe quem criou cada link. Conte onde e quando você mandou o link (um print da conversa ajuda) ou escreva do e-mail da organização que aparece no evento. Sem isso, não removemos: qualquer pessoa poderia pedir a remoção do link de outra.',
       ],
     },
     {
@@ -33,7 +34,7 @@ export const denunciar: Pagina = {
           'A denúncia chega por e-mail.',
           'Uma inteligência artificial (Gemini, do Google) pode ajudar a separar e resumir as denúncias.',
           'Quem decide é uma pessoa. A inteligência artificial nunca decide sozinha.',
-          'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site.',
+          'Se o conteúdo ferir as Regras de uso, o link passa a ser recusado pelo site. A página do link mostra a regra ferida e como pedir revisão.',
           'Respondemos por e-mail. Se não quiser resposta, diga no texto.',
         ],
         `Respondemos em até ${PRAZO_DENUNCIA_DIAS_UTEIS} dias úteis. Em caso de golpe, ameaça, risco a criança ou dado pessoal exposto, em até ${PRAZO_URGENTE_HORAS} horas.`,

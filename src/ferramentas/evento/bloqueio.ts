@@ -4,7 +4,7 @@
 // Se a lista não puder ser lida (sem rede e sem cópia guardada, arquivo estranho), o evento é mostrado:
 // o service worker já guarda a última lista que veio, então sem rede vale a última conhecida.
 
-import { estaBloqueado, impressaoDoLink } from '../../comum/entreTelas';
+import { impressaoDoLink, motivoDoBloqueio, type MotivoDaRemocao } from '../../comum/entreTelas';
 
 export const ESPERA_DA_LISTA_MS = 8000;
 
@@ -37,19 +37,30 @@ async function listaGuardada(): Promise<unknown> {
 }
 
 /**
- * Algum destes dados (o que vem depois de "#/evento/") foi removido após denúncia? Passe o texto do link como
- * veio e, se der para ler o evento, também a forma canônica dele (formato.ts). Qualquer falha conta como "não".
+ * Algum destes dados (o que vem depois de "#/evento/") foi removido? Devolve o motivo, ou null. Passe o texto do
+ * link como veio e, se der para ler o evento, também a forma canônica dele (formato.ts). Se mais de um estiver na
+ * lista, vale o que tem motivo registrado. Qualquer falha conta como "não".
  */
+export async function motivoDoLinkBloqueado(
+  dados: string | readonly string[],
+  lerLista: () => Promise<unknown> = lerListaDoSite,
+  impressao: (d: string) => Promise<string> = impressaoDoLink,
+): Promise<MotivoDaRemocao | null> {
+  try {
+    const todos = typeof dados === 'string' ? [dados] : dados;
+    const [lista, marcas] = await Promise.all([lerLista(), Promise.all(todos.map(impressao))]);
+    const achados = marcas.map((m) => motivoDoBloqueio(m, lista)).filter((m): m is MotivoDaRemocao => m !== null);
+    return achados.find((m) => m.tipo !== 'sem-motivo') ?? achados[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** Algum destes dados foi removido? (O mesmo que motivoDoLinkBloqueado, sem o motivo.) */
 export async function linkBloqueado(
   dados: string | readonly string[],
   lerLista: () => Promise<unknown> = lerListaDoSite,
   impressao: (d: string) => Promise<string> = impressaoDoLink,
 ): Promise<boolean> {
-  try {
-    const todos = typeof dados === 'string' ? [dados] : dados;
-    const [lista, marcas] = await Promise.all([lerLista(), Promise.all(todos.map(impressao))]);
-    return marcas.some((m) => estaBloqueado(m, lista));
-  } catch {
-    return false;
-  }
+  return (await motivoDoLinkBloqueado(dados, lerLista, impressao)) !== null;
 }

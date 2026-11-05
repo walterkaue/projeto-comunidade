@@ -134,11 +134,13 @@ describe('mesmo evento, link escrito de outro jeito: a forma canônica é a mesm
 });
 
 describe('abrirEvento: lista e leitura juntas', () => {
+  const SEM_MOTIVO = { tipo: 'sem-motivo' } as const;
   const bloqueando =
     (...bloqueados: string[]) =>
     async (dados: string[]) =>
-      dados.some((d) => bloqueados.includes(d));
+      dados.some((d) => bloqueados.includes(d)) ? SEM_MOTIVO : null;
   const deps = (...bloqueados: string[]) => ({ bloqueado: bloqueando(...bloqueados), ler: decodificar });
+  const BLOQUEADO = { estado: 'bloqueado', motivo: SEM_MOTIVO };
 
   it('abre o que não está na lista', async () => {
     const dados = await codificar(sempre(bom));
@@ -147,27 +149,27 @@ describe('abrirEvento: lista e leitura juntas', () => {
 
   it('bloqueia pelo texto do link como veio', async () => {
     const dados = await codificar(sempre(bom));
-    expect(await abrirEvento(dados, deps(dados))).toEqual({ estado: 'bloqueado' });
+    expect(await abrirEvento(dados, deps(dados))).toEqual(BLOQUEADO);
   });
 
   it('bloqueia a variação do link quando a forma canônica está na lista', async () => {
     const e = sempre(bom);
     const variacao = montar('r', JSON.stringify(lista(e), null, 1));
     expect(variacao).not.toBe(dadosCanonicos(e));
-    expect(await abrirEvento(variacao, deps(dadosCanonicos(e)))).toEqual({ estado: 'bloqueado' });
+    expect(await abrirEvento(variacao, deps(dadosCanonicos(e)))).toEqual(BLOQUEADO);
     const comprimido = await codificar(e, { comprimir: true });
-    expect(await abrirEvento(comprimido, deps(dadosCanonicos(e)))).toEqual({ estado: 'bloqueado' });
+    expect(await abrirEvento(comprimido, deps(dadosCanonicos(e)))).toEqual(BLOQUEADO);
   });
 
   it('com a lista de verdade (impressão SHA-256)', async () => {
     const e = sempre(bom);
-    const arquivo = { bloqueados: [await impressaoDoLink(dadosCanonicos(e))] };
-    const { linkBloqueado } = await import('./bloqueio');
+    const arquivo = { bloqueados: [{ h: await impressaoDoLink(dadosCanonicos(e)), motivo: 'regra-5' }] };
+    const { motivoDoLinkBloqueado } = await import('./bloqueio');
     const r = await abrirEvento(await codificar(e, { comprimir: true }), {
-      bloqueado: (d) => linkBloqueado(d, async () => arquivo),
+      bloqueado: (d) => motivoDoLinkBloqueado(d, async () => arquivo),
       ler: decodificar,
     });
-    expect(r).toEqual({ estado: 'bloqueado' });
+    expect(r).toEqual({ estado: 'bloqueado', motivo: { tipo: 'regra', regra: 5 } });
   });
 
   it('link ruim vira problema, sem lançar erro', async () => {
@@ -175,7 +177,7 @@ describe('abrirEvento: lista e leitura juntas', () => {
   });
 
   it('link bloqueado e ruim: bloqueado vence (nada é mostrado)', async () => {
-    expect(await abrirEvento('lixo', deps('lixo'))).toEqual({ estado: 'bloqueado' });
+    expect(await abrirEvento('lixo', deps('lixo'))).toEqual(BLOQUEADO);
   });
 });
 
