@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AVISO_AO_COPIAR_A_ATA,
   AVISO_DO_MODELO,
   ataVazia,
   faltasDaAta,
@@ -107,5 +108,13 @@ describe('rodapé do PDF da ata', () => {
     const css = readFileSync(new URL('./reuniao.css', import.meta.url), 'utf8');
     expect(css).toMatch(/@bottom-center/);
     expect(css).toContain(`content: '${RODAPE_DO_PDF}'`);
+  });
+});
+
+// Auditoria de segurança, 05/11/2026, B9: a ata copiada leva a lista de presença para a área de transferência.
+describe('aviso ao copiar a ata', () => {
+  it('fala do histórico da área de transferência, sem termo técnico em inglês', () => {
+    expect(AVISO_AO_COPIAR_A_ATA).toMatch(/histórico da área de transferência/);
+    expect(AVISO_AO_COPIAR_A_ATA).not.toMatch(/clipboard/i);
   });
 });

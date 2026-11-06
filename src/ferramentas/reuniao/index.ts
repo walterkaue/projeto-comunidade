@@ -9,6 +9,7 @@ import { esc } from '../../comum/html';
 import { linkPara } from '../../comum/rotas';
 import type { Tela } from '../../comum/tela';
 import {
+  AVISO_AO_COPIAR_A_ATA,
   encaminhamentoVazio,
   faltasDaAta,
   htmlDaAta,
@@ -260,10 +261,11 @@ export const tela: Tela = (raiz) => {
       <h3>Guardar a ata</h3>
       <div class="reuniao-botoes">
         <button type="button" class="botao" data-acao="imprimir-ata">Imprimir ou salvar em PDF</button>
-        <button type="button" class="botao botao-sec" data-acao="copiar-ata">Copiar o texto</button>
+        <button type="button" class="botao botao-sec" data-acao="copiar-ata" aria-describedby="ata-nota-copiar">Copiar o texto</button>
         <button type="button" class="botao botao-sec" data-acao="ver-ata">Ver a ata pronta</button>
         <button type="button" class="botao botao-sec" data-acao="apagar-ata">Apagar a ata</button>
       </div>
+      <p class="reuniao-nota" id="ata-nota-copiar">${AVISO_AO_COPIAR_A_ATA}</p>
       <p class="reuniao-nota">No celular, em “Imprimir”, escolha “Salvar como PDF”.</p>
     </section>`;
   }

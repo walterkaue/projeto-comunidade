@@ -35,6 +35,12 @@ export const AVISO_DO_MODELO = 'Esta ata é um modelo. Ela não substitui o que 
 /** Rodapé de cada página do PDF (reuniao.css, @page @bottom-center: o texto lá precisa ser igual). */
 export const RODAPE_DO_PDF = 'Modelo de ata gratuito. Não substitui o que o estatuto da organização exige.';
 
+/**
+ * Perto de "Copiar o texto" (auditoria de segurança, B9): no Windows e em alguns teclados de celular, o que se copia
+ * fica guardado e pode ir para a nuvem. A ata tem a lista de presença.
+ */
+export const AVISO_AO_COPIAR_A_ATA = 'O texto copiado pode ficar no histórico da área de transferência do aparelho.';
+
 export const MAXIMOS = { pontos: 30, encaminhamentos: 30, presentes: 6000, texto: 3000 } as const;
 
 export const pontoVazio = (titulo = ''): Ponto => ({ titulo, discutido: '', decidido: '' });
