@@ -224,3 +224,50 @@ describe('avisar', () => {
     expect(c.criados[0]?.classes.has('aviso-vivo-leitor')).toBe(false);
   });
 });
+
+// Regras de componentes.css que a auditoria de 06/11/2026 pediu (o CSS não roda nos testes: lemos o texto).
+describe('componentes.css', () => {
+  async function css() {
+    const { readFileSync } = await import('node:fs');
+    return readFileSync(new URL('./componentes.css', import.meta.url), 'utf8');
+  }
+  const bloco = (c: string, seletor: string) => {
+    const i = c.indexOf(`${seletor} {`);
+    expect(i, seletor).toBeGreaterThanOrEqual(0);
+    return c.slice(i, c.indexOf('}', i));
+  };
+
+  it('aviso no alto usa a área segura e solta o rodapé; o de só leitor fica escondido', async () => {
+    const c = await css();
+    const alto = bloco(c, '.aviso-vivo-alto');
+    expect(alto).toMatch(/top:[^;]*safe-area-inset-top/);
+    expect(alto).toMatch(/bottom:\s*auto/);
+    expect(bloco(c, '.aviso-vivo-leitor')).toMatch(/clip/);
+  });
+  it('no alto contraste o aviso ganha borda', async () => {
+    const c = await css();
+    expect(c).toMatch(/@media \(forced-colors: active\)\s*{\s*\.aviso-vivo\s*{\s*border: 2px solid CanvasText/);
+  });
+  it('contador e anúncio existem; o anúncio é só para leitor de tela', async () => {
+    const c = await css();
+    expect(bloco(c, '.campo-contador')).toContain('font-size');
+    expect(bloco(c, '.campo-anuncio')).toMatch(/clip/);
+  });
+  it('folha de saída rola, e o domínio só quebra nos pontos', async () => {
+    const c = await css();
+    const folha = bloco(c, '.folha');
+    expect(folha).toMatch(/overflow-y:\s*auto/);
+    expect(folha).toMatch(/align-items:\s*safe flex-end/);
+    const caixa = bloco(c, '.folha-caixa');
+    expect(caixa).toMatch(/max-height:\s*100%/);
+    expect(caixa).toMatch(/overflow-y:\s*auto/);
+    expect(bloco(c, '.folha-caixa strong')).toMatch(/overflow-wrap:\s*normal/);
+  });
+  it('caixa de marcar com 48 px, radio como está', async () => {
+    const c = await css();
+    const cx = bloco(c, ".campo-radio input[type='checkbox']");
+    expect(cx).toMatch(/width:\s*48px/);
+    expect(cx).toMatch(/height:\s*48px/);
+    expect(bloco(c, '.campo-radio input')).toMatch(/width:\s*24px/);
+  });
+});
