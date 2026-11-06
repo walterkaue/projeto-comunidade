@@ -9,9 +9,10 @@ const motivo = (m) => {
   if (!x) return '';
   if (x.includes('telefone, e-mail')) return 'contato';
   if (x.includes('link ou endereço')) return 'link';
-  if (x.includes('chave pix')) return 'pix';
-  if (x.includes('dizer que é do site')) return 'plataforma';
-  if (x.includes('senha, dados de cartão')) return 'dados';
+  // Mensagens antigas e as de 06/11/2026 (correção B-08 a B-10, D2 e WCAG 3.3.3).
+  if (['chave pix', 'palavra pix', 'pagamento, chave', 'pedido de pagamento', 'código ou chave'].some((k) => x.includes(k))) return 'pix';
+  if (['dizer que é do site', 'nome deste site', 'aviso do site'].some((k) => x.includes(k))) return 'plataforma';
+  if (['senha, dados de cartão', 'senha, cartão'].some((k) => x.includes(k))) return 'dados';
   if (x.includes('sinais < e >')) return 'html';
   if (x.includes('preencha') || x.includes('escreva o')) return 'vazio';
   return x.slice(0, 30);
