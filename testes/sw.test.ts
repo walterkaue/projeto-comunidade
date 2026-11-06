@@ -72,7 +72,14 @@ function montar(versao: string, opcoes: { caches?: Map<string, CacheFalso>; rede
     if (!resposta) throw new Error('o service worker não respondeu');
     return resposta;
   }
-  return { guardados, instalar: () => esperar('install'), ativar: () => esperar('activate'), navegar };
+  async function pedir(url: string): Promise<Response> {
+    let resposta: Promise<Response> | undefined;
+    const request = { url, method: 'GET', mode: 'cors' };
+    ouvintes.get('fetch')!({ request, respondWith: (r: Promise<Response>) => (resposta = r) });
+    if (!resposta) throw new Error('o service worker não respondeu');
+    return resposta;
+  }
+  return { guardados, instalar: () => esperar('install'), ativar: () => esperar('activate'), navegar, pedir };
 }
 
 const html = (texto: string) => new Response(texto, { headers: { 'content-type': 'text/html' } });
@@ -150,5 +157,32 @@ describe('service worker: a lista de bloqueio sobrevive à troca de versão (aud
     await v1.instalar();
     await v1.ativar();
     expect(caches.has('outro-projeto')).toBe(true);
+  });
+});
+
+describe('service worker: Wi-Fi com página de login não troca a lista de bloqueio', () => {
+  const LISTA = `${ESCOPO}bloqueados.json`;
+  const portal = () => html('<h1>Entre para usar o Wi-Fi</h1>');
+
+  it('na instalação, HTML no lugar da lista não é guardado (a cópia velha fica)', async () => {
+    const caches = new Map<string, CacheFalso>();
+    const v1 = montar('pc-v1', { caches, rede: siteNoAr('{"bloqueados":["velha"]}') });
+    await v1.instalar();
+    await v1.ativar();
+    const site = siteNoAr();
+    const v2 = montar('pc-v2', { caches, rede: (url) => (url === LISTA ? portal() : site(url)) });
+    await v2.instalar();
+    await v2.ativar();
+    expect(await (await caches.get('pc-v2-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["velha"]}');
+  });
+
+  it('ao abrir um evento, devolve a lista guardada e não o HTML do portal', async () => {
+    const caches = new Map<string, CacheFalso>();
+    const v1 = montar('pc-v1', { caches, rede: siteNoAr('{"bloqueados":["velha"]}') });
+    await v1.instalar();
+    await v1.ativar();
+    const comPortal = montar('pc-v1', { caches, rede: portal });
+    expect(await (await comPortal.pedir(LISTA)).text()).toBe('{"bloqueados":["velha"]}');
+    expect(await (await caches.get('pc-v1-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["velha"]}');
   });
 });

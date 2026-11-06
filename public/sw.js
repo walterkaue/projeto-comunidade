@@ -19,6 +19,14 @@ const PREFIXO_ASSETS = caminho('assets/').pathname;
 const PREFIXO_FONTES = caminho('fontes/').pathname;
 const PREFIXO_ICONES = caminho('icones/').pathname;
 
+const LISTA = caminho('bloqueados.json').href;
+
+/**
+ * A lista de bloqueio só vale em JSON. Wi-Fi com página de login (hotel, rodoviária) responde 200 com HTML para
+ * qualquer endereço: guardar isso no lugar da lista faria um link removido voltar.
+ */
+const ehJson = (resp) => !!resp && resp.ok && (resp.headers.get('content-type') ?? '').includes('json');
+
 // Arquivos fixos guardados na instalação (a tela offline vai junto com a página).
 const FIXOS = ['bloqueados.json', 'manifest.webmanifest', 'favicon.svg', 'icones/icone-192.png', 'icones/icone-512.png', 'icones/apple-touch-icon.png'];
 
@@ -36,7 +44,7 @@ async function precarregar() {
   const guardar = async (cache, url) => {
     try {
       const resp = await fetch(url, { cache: 'reload' });
-      if (resp.ok) await cache.put(url, resp.clone());
+      if (url === LISTA ? ehJson(resp) : resp.ok) await cache.put(url, resp.clone());
       return resp;
     } catch {
       return null;
@@ -84,13 +92,12 @@ self.addEventListener('activate', (evento) => {
 // para a nova antes de os caches velhos serem apagados: sem nenhuma cópia, sem rede, um link removido
 // apareceria (auditoria de segurança, B2).
 async function guardarListaDeBloqueio(velhos) {
-  const lista = caminho('bloqueados.json').href;
   const novo = await caches.open(CACHE_ARQUIVOS);
-  if (await novo.match(lista, { ignoreVary: true })) return;
+  if (await novo.match(LISTA, { ignoreVary: true })) return;
   for (const nome of velhos) {
-    const copia = await (await caches.open(nome)).match(lista, { ignoreVary: true });
+    const copia = await (await caches.open(nome)).match(LISTA, { ignoreVary: true });
     if (copia) {
-      await novo.put(lista, copia);
+      await novo.put(LISTA, copia);
       return;
     }
   }
@@ -115,7 +122,7 @@ self.addEventListener('fetch', (evento) => {
     return;
   }
   // Lista de links removidos após denúncia: sempre a mais nova da rede; sem rede, a última guardada.
-  if (url.pathname === caminho('bloqueados.json').pathname) {
+  if (url.pathname === new URL(LISTA).pathname) {
     evento.respondWith(redeOuGuardada(req));
     return;
   }
@@ -189,14 +196,14 @@ async function cacheEAtualiza(req) {
 async function redeOuGuardada(req) {
   const cache = await caches.open(CACHE_ARQUIVOS);
   const daRede = fetch(req, { cache: 'no-cache' }).then(async (resp) => {
-    if (resp.ok) await cache.put(req, resp.clone());
+    if (ehJson(resp)) await cache.put(req, resp.clone());
     return resp;
   });
   daRede.catch(() => {});
   const demorou = new Promise((ok) => setTimeout(ok, ESPERA_DA_REDE_MS, null));
   try {
     const resp = await Promise.race([daRede, demorou]);
-    if (resp && resp.ok) return resp;
+    if (ehJson(resp)) return resp;
   } catch {
     // sem rede: cai na guardada
   }
