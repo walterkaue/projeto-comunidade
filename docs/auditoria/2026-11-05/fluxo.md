@@ -31,7 +31,13 @@ Os três pontos médios:
 | M3 | Corrigido em 06/11/2026, sem "Mandar sem o link" (ver abaixo) |
 | B1 e B3 | Corrigidos em 06/11/2026, com o M2 |
 | B2, B4, B5 e B6 | Corrigidos em 06/11/2026 (ver abaixo) |
-| B7 | Aberto (arquivos compartilhados) |
+| B7 | Corrigido em 06/11/2026 pela sessão de correções do comum (ver abaixo) |
+
+### Correção de 06/11/2026 (B7)
+
+Feita na sessão de correções do código compartilhado. O endereço do site sai de um lugar só: `enderecoDoSite(href)` em `src/comum/rotas.ts` dá a pasta do app (`new URL('./', href)`), sem caminho a mais, `?…` nem `#…`. `src/ferramentas/evento/partes.ts` usa essa conta, e com ela o link do Pronto, o QR e a denúncia. O `public/sw.js` serve a página guardada só na pasta do escopo e no `index.html`. Outro endereço vai à rede e, sem rede, mostra a tela "Sem conexão": o app não abre mais em `…/projeto-comunidade/qualquer-texto`. Teste do service worker com cache e rede falsos em `testes/sw.test.ts`, e conferido no navegador sem rede.
+
+Na mesma sessão, o pedido de 06/11/2026 (`docs/pedidos-comum.md`): `conferirDadosDoCard` deixa passar inteiro todo link que a página do evento abre (dados até 6000). "Fazer o card" de um link entre 4000 e 6000 caracteres não perde mais o link original, e o Pronto avisa que o link ficou grande demais, em vez de gerar sozinho outro evento que escaparia do bloqueio. Na revisão (`revisor-privacidade-neutralidade`), um caso a mais do mesmo problema: a página aberta por `#evento/<dados>` (sem a barra) montava o link com o endereço como veio, e o card e a denúncia o recusavam. Agora a página monta sempre `#/evento/<dados>` (`src/ferramentas/evento/pagina.ts`).
 
 ### Correções de 06/11/2026 (M1 e M3)
 

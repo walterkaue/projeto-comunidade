@@ -20,7 +20,7 @@ O ponto mais sério está **fora do site**: no fluxo de moderação, o link que 
 
 **Medida imediata, até A1 ser corrigido** (este relatório é público): antes de pedir um bloqueio, confira que, depois de `#/evento/`, o link tem **só letras sem acento, números, `-` e `_`**. Se tiver qualquer outro sinal (`$`, `(`, `)`, `;`, `'`, `` ` ``, `|`, espaço), não bloqueie e não cole o link no Claude Code. (A1 foi corrigido no mesmo dia; a conferência continua no procedimento.)
 
-## Situação das correções (atualizada em 05/11/2026)
+## Situação das correções (atualizada em 06/11/2026)
 
 | Achado | Situação | Commit |
 |---|---|---|
@@ -32,7 +32,15 @@ O ponto mais sério está **fora do site**: no fluxo de moderação, o link que 
 | M6 | Corrigido: regra 9 ("Fingir ser outra pessoa, organização ou órgão público") numa lista única (`src/comum/regras.ts`), nos Termos, na denúncia, no Gem e na planilha; a página diz "Quem chama, segundo quem criou o link" | `4cb8f79` |
 | M7, M8 | Corrigidos: `bloqueados.json` guarda o motivo (`regra-N` ou `pedido`), o script exige `--motivo`, a tela mostra a regra ferida e como pedir revisão; regra para o pedido "é meu" em `docs/moderacao.md` | `542f613` |
 | M9 | Sem mudança de código possível no github.io. **Depende do Kauê:** domínio próprio antes da divulgação e, até lá, desligar o Pages do `auxiliar-ia` se não for usado | — |
-| Baixos | B1 corrigido junto com A1 (`docs/moderacao.md`); os outros seguem abertos | — |
+| B1 | Corrigido junto com A1 (`docs/moderacao.md`, passo 3); em 06/11/2026, a frase também em "Como funciona" | `5b98cef`, `04d220b` |
+| B2 | Corrigido em 06/11/2026: na troca de versão, o service worker copia a lista do cache velho se o novo não tiver. Achado junto, na conferência offline: Wi-Fi com página de login (200 com HTML) trocava a lista guardada; agora o service worker só guarda e só usa a lista em JSON. Na revisão, a cópia da versão velha também passou a ser conferida (só JSON; com mais de uma, a que tem mais bloqueios). Testes em `testes/sw.test.ts`; conferido no navegador sem rede e com um deploy simulado | `84a57ad`, `861ec9d`, `7e3e030` |
+| B3 | Corrigido em 06/11/2026 no que dá para fazer no código: dentro de um iframe de outro site, o site mostra só "Abrir o site" (`src/comum/moldura.ts`); comentário do `index.html` corrigido para `img-src`. Cabeçalhos de verdade (`frame-ancestors`, `X-Content-Type-Options`) só com um serviço na frente do Pages, decisão do Kauê com o domínio próprio | `a774b1d` |
+| B4 | `if:` no job de publicar corrigido em 06/11/2026. **Falta o Kauê:** Dependabot e regra da `main` (ver B4) | `cb2e535` |
+| B5 | Corrigido antes (`CREDITOS.md` e `public/licencas.txt`) | — |
+| B6 | Sem mudança de código (procedimento) | — |
+| B7 | Depende do Kauê (conta do Gem com a Atividade desligada) | — |
+| B8 | Corrigido em 06/11/2026: com o e-mail acima de 1.800 caracteres, a revisão recomenda "Enviar pelo Gmail no navegador" ou "Copiar o texto" e põe o aplicativo de e-mail por último (`mailtoPodeCortar`) | `27fc60d` |
+| B9 | Corrigido em 06/11/2026: "O texto copiado pode ficar no histórico da área de transferência do aparelho." perto de "Copiar o texto" da ata, ligado ao botão por `aria-describedby` | `1546df5` |
 
 ## O que bloqueia o beta
 
