@@ -48,8 +48,9 @@ function telaDeRemovido(raiz: HTMLElement, motivo: MotivoDaRemocao): void {
 }
 
 function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean): void {
-  // Sempre o endereço limpo do site + o hash do evento (sem "?…" de quem abriu por um link com rastreio).
-  const link = `${enderecoDoSite()}${location.hash}`;
+  // Sempre o endereço limpo do site + "#/evento/<dados>", na forma que ehLinkDoEvento aceita, mesmo que a pessoa
+  // tenha aberto "#evento/<dados>" (sem a barra): senão o card e a denúncia perderiam o link.
+  const link = `${enderecoDoSite()}${linkPara('evento', dados)}`;
   const denuncia = esc(linkDeDenuncia(link));
 
   raiz.innerHTML = `<main class="tela evento">
