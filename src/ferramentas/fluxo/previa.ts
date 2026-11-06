@@ -64,7 +64,7 @@ export const BOTAO_VER_MAIOR = '<button type="button" class="botao botao-sec flu
 /** HTML da faixa fixa do topo e do diálogo "Ver a prévia maior". Textos fixos, nada digitado. */
 export function htmlDaMiniatura(): string {
   return `<div class="fluxo-mini">
-      <canvas id="fluxo-mini-canvas" class="fluxo-mini-canvas" role="img" aria-label="Prévia do card"></canvas>
+      <canvas id="fluxo-mini-canvas" class="fluxo-mini-canvas" role="img" aria-label="Prévia da imagem"></canvas>
       ${BOTAO_VER_MAIOR}
     </div>
     ${htmlDoDialogo()}`;
@@ -74,7 +74,7 @@ export function htmlDaMiniatura(): string {
 export function htmlDoDialogo(): string {
   return `<dialog class="fluxo-dialogo" id="fluxo-dialogo" aria-labelledby="fluxo-dialogo-titulo">
       <h2 id="fluxo-dialogo-titulo">Como está ficando</h2>
-      <canvas id="fluxo-dialogo-canvas" class="fluxo-dialogo-canvas" role="img" aria-label="Prévia grande do card"></canvas>
+      <canvas id="fluxo-dialogo-canvas" class="fluxo-dialogo-canvas" role="img" aria-label="Prévia grande da imagem"></canvas>
       <button type="button" class="botao" id="fluxo-fechar">Fechar a prévia</button>
     </dialog>`;
 }

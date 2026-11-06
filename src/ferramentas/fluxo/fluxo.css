@@ -88,6 +88,17 @@
 }
 
 /* ---------- miniatura fixa no topo (passos 1 e 2) ---------- */
+/* No código a miniatura vem depois do título (quem desliza a partir do topo ouve o título primeiro); aqui ela volta
+   para o topo da tela com order. O diálogo fechado não ocupa lugar. */
+.fluxo:has(> .fluxo-mini) {
+  display: flex;
+  flex-direction: column;
+}
+
+.fluxo:has(> .fluxo-mini) > .fluxo-mini {
+  order: -1;
+}
+
 .fluxo-mini {
   position: sticky;
   top: 0;
@@ -304,28 +315,47 @@
   font-size: 0.9375rem;
 }
 
-/* Cor: seis bolinhas de 48 px numa linha em 360 px (6 x 48 = 288 px de 328 px); em tela mais estreita ou com
-   texto grande, quebram em duas linhas em vez de se sobrepor. */
+/* Cor: seis alvos de 48 px lado a lado até em 320 px (6 x 48 = 288 px); cada um tem a bolinha (40 px) e o nome curto
+   embaixo. Com letra grande, o alvo cresce com o texto e as bolinhas quebram em duas fileiras. */
 .fluxo-bolas {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 12px 4px;
-  padding: 6px;
+  gap: 12px 0;
+  padding: 8px 0 4px;
 }
 
 .fluxo-bola-item {
-  flex: none;
+  display: flex;
+  flex: 1 0 max(48px, 2.6rem);
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  min-height: 48px;
 }
 
 .fluxo-bola-item label {
   position: relative;
   display: block;
   box-sizing: border-box;
-  width: 48px;
-  height: 48px;
-  min-height: 48px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  margin: 4px 0 2px;
   border-radius: 50%;
+}
+
+.fluxo-bola-nome {
+  max-width: 100%;
+  color: var(--tinta-suave);
+  font-size: 0.6875rem;
+  line-height: 1.15;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.fluxo-bola-item input:checked ~ .fluxo-bola-nome {
+  color: var(--tinta);
+  font-weight: 700;
 }
 
 .fluxo-amostra {
@@ -341,7 +371,7 @@
 /* Escolhida: anel grosso de tinta por fora e um selo com ✓ no centro (contraste em cor clara e escura). */
 .fluxo-bola-item input:checked + label {
   outline: 3px solid var(--tinta);
-  outline-offset: 2px;
+  outline-offset: 1px;
 }
 
 .fluxo-bola-item input:checked + label::after {
@@ -361,6 +391,21 @@
   font-weight: 700;
   line-height: 1;
   transform: translate(-50%, -50%);
+}
+
+/* Escolhida e com foco de teclado: o anel de foco vai POR FORA do anel de tinta (A-07). Vence a regra da escolhida. */
+.fluxo-bola-item input:checked:focus-visible + label {
+  outline: 3px solid var(--tinta);
+  outline-offset: 1px;
+}
+
+.fluxo-bola-item input:checked:focus-visible + label::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border: 3px solid var(--foco);
+  border-radius: 50%;
+  pointer-events: none;
 }
 
 /* ---------- passo 1: a dica e "Apagar o exemplo" (link discreto) na mesma linha ---------- */
@@ -395,7 +440,8 @@
   font-size: 0.9375rem;
 }
 
-.fluxo-apagar {
+.fluxo-apagar,
+.fluxo-fazer-outro button {
   display: inline-flex;
   align-items: center;
   min-height: 48px;
@@ -411,7 +457,8 @@
   cursor: pointer;
 }
 
-.fluxo-apagar:focus-visible {
+.fluxo-apagar:focus-visible,
+.fluxo-fazer-outro button:focus-visible {
   outline: 3px solid var(--foco);
   outline-offset: 2px;
 }
@@ -442,6 +489,7 @@
 /* Sinal visível de que abre e fecha: + fechado, − aberto (cor do texto: contraste alto). */
 .fluxo-mais summary::after {
   content: '+';
+  content: '+' / ''; /* só visual: o resumo já diz se está aberto ou fechado */
   flex: none;
   color: var(--tinta);
   font-size: 1.5rem;
@@ -450,6 +498,7 @@
 
 .fluxo-mais[open] summary::after {
   content: '\2212';
+  content: '\2212' / '';
 }
 
 .fluxo-mais-corpo {
@@ -671,4 +720,45 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
 /* Pronto: o estado do link fica logo abaixo do "Mandar no WhatsApp", com um respiro. */
 .fluxo-pronto .fluxo-estado-neutro:not(:empty) {
   margin-top: 0.5rem;
+}
+
+/* Dia que já passou (C-09): avisa, não bloqueia. */
+.fluxo-dia-passado {
+  margin-top: 0.25rem;
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.fluxo-dia-passado:empty {
+  display: none;
+}
+
+/* Letras que faltam na pauta (A-02): some enquanto faltam mais de 50. */
+.fluxo-pauta-letras {
+  margin: -0.25rem 0 0.5rem;
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.fluxo-pauta-letras:empty {
+  display: none;
+}
+
+/* Pronto: "Fazer outro" fica no fim, longe de "Mudar algo", com a dica acima. */
+.fluxo-fazer-outro {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borda);
+}
+
+.fluxo-fazer-outro .campo-dica {
+  margin: 0 0 0.25rem;
+}
+
+/* Pronto: nota sobre o corte do cartaz. Igual a uma dica de campo. */
+.fluxo-nota-corte {
+  margin: 0.5rem 0 0;
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.4;
 }

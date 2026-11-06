@@ -12,7 +12,14 @@ import { aplicarCorLivre, PALETAS, paletaPorId } from '../cards/paletas';
 import {
   apagarOPasso1,
   atalhosDoDia,
+  AVISO_DIA_PASSADO,
+  avisoDasLetrasDaPauta,
+  camposComOrgao,
+  confirmarOrgao,
+  copiaDoPasso1,
   dataBr,
+  devolverOPasso1,
+  diaJaPassou,
   diaPorExtenso,
   errosDoPasso,
   EXPLICACAO_DO_FORMATO,
@@ -23,14 +30,20 @@ import {
   marcarMudanca,
   NOME_DO_FORMATO,
   notaEDicaDoPasso,
+  PERGUNTA_DO_ORGAO,
   PORTAS,
   podePularOPasso2,
+  precisaPerguntarDoOrgao,
+  letrasQueFaltamNaPauta,
+  ROTULO_DESFAZER,
   rotuloDeApagar,
   temAgenda,
   tituloDoPasso2,
+  type CopiaDoPasso1,
   type DadosDoFluxo,
   type ErrosDoFluxo,
 } from './estado';
+import { deveAnunciarOContador, faixaDoContador } from './contador';
 import {
   avisoDeErros,
   camposDoPasso,
@@ -89,7 +102,7 @@ export function montarPasso(raiz: HTMLElement, d: DadosDoFluxo, passo: PassoNume
  */
 const AVISO_DO_LINK_DA_REUNIAO =
   'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.';
-const DICA_DO_LOCAL_DA_REUNIAO = 'Escreva o endereço como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
+const DICA_DO_LOCAL = 'Escreva o endereço como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
 
 function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
@@ -100,7 +113,9 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
       ${
         d.tipo === 'reuniao'
           ? `<p class="fluxo-quadro" id="fluxo-aviso-do-link">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
-      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })}`
+      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta (os assuntos da reunião)', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })}
+      <p class="campo-dica fluxo-pauta-letras" id="fluxo-pauta-letras">${esc(avisoDasLetrasDaPauta(d.pauta))}</p>
+      <p class="fluxo-so-leitor" id="fluxo-pauta-fala" role="status" aria-live="polite"></p>`
           : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, maximo: LIMITES.texto, linhas: 3 })
       }`;
 }
@@ -115,9 +130,10 @@ function campoDia(d: DadosDoFluxo): string {
   return `<div class="campo">
         <label class="campo-rotulo" for="fluxo-data">Dia${obrig ? ' <span class="campo-obrig">(obrigatório)</span>' : ''}</label>
         <p class="campo-dica" id="fluxo-data-dica">Ex.: 14/11/2026</p>
-        <input class="campo-entrada" type="text" inputmode="numeric" autocomplete="off" id="fluxo-data" name="fluxo-data" value="${esc(dataBr(d.data))}"${obrig ? ' aria-required="true"' : ''} aria-describedby="fluxo-data-dica fluxo-data-extenso fluxo-data-erro">
+        <input class="campo-entrada" type="text" inputmode="numeric" autocomplete="off" id="fluxo-data" name="fluxo-data" value="${esc(dataBr(d.data))}"${obrig ? ' aria-required="true"' : ''} aria-describedby="fluxo-data-dica fluxo-data-extenso fluxo-data-passado fluxo-data-erro">
         <div class="fluxo-atalhos" role="group" aria-label="Atalhos para o dia">${atalhos}</div>
         <p class="fluxo-extenso" id="fluxo-data-extenso">${esc(diaPorExtenso(d.data))}</p>
+        <p class="campo-dica fluxo-dia-passado" id="fluxo-data-passado">${esc(diaJaPassou(d.data) ? AVISO_DIA_PASSADO : '')}</p>
         <p class="fluxo-so-leitor" id="fluxo-data-fala" role="status"></p>
         <p class="campo-erro" id="fluxo-data-erro" hidden></p>
       </div>`;
@@ -127,17 +143,22 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
   const agenda = temAgenda(d.tipo);
   return `${campoDia(d)}
       ${agenda ? campoTexto({ id: 'fluxo-hora', rotulo: 'Hora', tipo: 'time', valor: d.hora, obrigatorio: true }) : ''}
-      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: d.tipo === 'reuniao' ? DICA_DO_LOCAL_DA_REUNIAO : 'Escreva o endereço como se fosse procurar no mapa.', valor: d.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
+      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: DICA_DO_LOCAL, valor: d.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
       ${podePularOPasso2(d.tipo) ? '<button type="button" class="botao botao-sec" id="fluxo-pular">Pular este passo</button>' : ''}`;
 }
 
 function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => void {
   raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
-    ${htmlDaMiniatura()}
     ${cabecalho(d, passo, passo === 1 ? `<button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>` : '')}
+    ${htmlDaMiniatura()}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
     </form>
+    <div class="fluxo-confirma" id="fluxo-orgao" role="group" aria-labelledby="fluxo-orgao-texto" hidden>
+      <p id="fluxo-orgao-texto">${esc(PERGUNTA_DO_ORGAO)}</p>
+      <button type="button" class="botao" id="fluxo-orgao-mudar" aria-describedby="fluxo-orgao-texto">Mudar</button>
+      <button type="button" class="botao botao-sec" id="fluxo-orgao-seguir">Seguir</button>
+    </div>
     ${BARRA()}
   </main>`;
 
@@ -156,13 +177,97 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
     descrever('fluxo-titulo', false);
     descrever('fluxo-pauta', true);
   }
+  // A linha das letras da pauta entra na leitura do campo, antes do espaço do erro.
+  const pauta = raiz.querySelector('[id="fluxo-pauta"]');
+  if (pauta) {
+    const ids = (pauta.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean);
+    const doErro = ids.filter((i) => i === 'fluxo-pauta-erro');
+    pauta.setAttribute('aria-describedby', [...ids.filter((i) => i !== 'fluxo-pauta-erro'), 'fluxo-pauta-letras', ...doErro].join(' '));
+  }
+  // Passo 2 com agenda: já baixa as partes que o Pronto usa para criar o link (C-01). Falhar aqui não mostra nada.
+  if (passo === 2 && temAgenda(d.tipo)) {
+    void import('../evento/partes').catch(() => undefined);
+    void import('../evento/formato').catch(() => undefined);
+    void import('../evento/bloqueio').catch(() => undefined);
+  }
   const medidas = medirFaixasFixas(raiz);
 
   const apagar = raiz.querySelector<HTMLButtonElement>('[id="fluxo-apagar"]');
+  // O que a pessoa tinha escrito antes de apagar: só nesta variável (memória da aba), por 10 s.
+  let copia: CopiaDoPasso1 | undefined;
+  let tempoDoDesfazer: ReturnType<typeof setTimeout> | undefined;
+  function esquecerACopia(): void {
+    clearTimeout(tempoDoDesfazer);
+    tempoDoDesfazer = undefined;
+    copia = undefined;
+    if (apagar) apagar.textContent = rotuloDeApagar(d.origem);
+  }
   /** A pessoa mexeu num campo: o exemplo passa a ser dela (e o botão deixa de falar em "exemplo"). */
   function mudou(): void {
     marcarMudanca(d);
-    if (apagar) apagar.textContent = rotuloDeApagar(d.origem);
+    fecharOrgao(false);
+    if (apagar) apagar.textContent = copia ? ROTULO_DESFAZER : rotuloDeApagar(d.origem);
+  }
+
+  // ---------- pergunta do órgão público (D1) ----------
+  const painelOrgao = q('fluxo-orgao');
+  const continuar = q<HTMLButtonElement>('fluxo-continuar');
+  function fecharOrgao(devolverFoco: boolean): void {
+    if (painelOrgao.hidden) return;
+    painelOrgao.hidden = true;
+    if (devolverFoco) continuar.focus();
+  }
+  function abrirOrgao(): void {
+    painelOrgao.hidden = false;
+    painelOrgao.scrollIntoView({ block: 'start' });
+    q<HTMLButtonElement>('fluxo-orgao-mudar').focus({ preventScroll: true });
+  }
+  q('fluxo-orgao-mudar').addEventListener('click', () => {
+    const primeiro = camposComOrgao(d, passo)[0];
+    fecharOrgao(false);
+    (primeiro ? raiz.querySelector<HTMLElement>(`[id="fluxo-${primeiro}"]`) : null)?.focus();
+  });
+  q('fluxo-orgao-seguir').addEventListener('click', () => {
+    confirmarOrgao(d, passo);
+    irAoPasso(d.tipo, passo === 1 ? 2 : 3);
+  });
+  painelOrgao.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    fecharOrgao(true);
+  });
+
+  // ---------- letras da pauta (A-02/B-19) ----------
+  const linhaDasLetras = raiz.querySelector<HTMLElement>('[id="fluxo-pauta-letras"]');
+  const falaDasLetras = raiz.querySelector<HTMLElement>('[id="fluxo-pauta-fala"]');
+  let faixaDasLetras = faixaDoContador(letrasQueFaltamNaPauta(d.pauta));
+  let tempoDaFala: ReturnType<typeof setTimeout> | undefined;
+  function atualizarLetras(): void {
+    if (!linhaDasLetras || !falaDasLetras) return;
+    const texto = avisoDasLetrasDaPauta(d.pauta);
+    linhaDasLetras.textContent = texto;
+    const faixa = faixaDoContador(letrasQueFaltamNaPauta(d.pauta));
+    const anunciar = deveAnunciarOContador(faixaDasLetras, faixa);
+    faixaDasLetras = faixa;
+    if (!anunciar) return;
+    // Esvazia e escreve logo depois, para o leitor de tela repetir uma frase igual à de antes.
+    falaDasLetras.textContent = '';
+    clearTimeout(tempoDaFala);
+    tempoDaFala = setTimeout(() => (falaDasLetras.textContent = texto), 60);
+  }
+
+  /** Escreve nos campos do passo 1 o que está em `d` (depois de apagar ou desfazer). */
+  function escreverOsCampos(): void {
+    for (const [id, valor] of [
+      ['fluxo-titulo', d.titulo],
+      ['fluxo-organizacao', d.organizacao],
+      ['fluxo-texto', d.texto],
+      ['fluxo-pauta', d.pauta],
+    ] as const) {
+      const el = raiz.querySelector<HTMLInputElement>(`[id="${id}"]`);
+      if (el) el.value = valor;
+    }
+    atualizarLetras();
   }
 
   let diaInvalido = false;
@@ -172,31 +277,43 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
     if (r === null) {
       diaInvalido = true;
       extenso.textContent = '';
+      mostrarDiaPassado();
       return;
     }
     diaInvalido = false;
     d.data = r;
     extenso.textContent = r ? diaPorExtenso(r) : '';
+    mostrarDiaPassado();
+  }
+  /** O dia já passou? Só avisa, não impede de seguir. */
+  function mostrarDiaPassado(): void {
+    q('fluxo-data-passado').textContent = !diaInvalido && diaJaPassou(d.data) ? AVISO_DIA_PASSADO : '';
   }
   /** Fala o dia por extenso (só ao terminar de escrever ou num atalho, nunca a cada letra). */
   function falarODia(): void {
-    q('fluxo-data-fala').textContent = !diaInvalido && d.data ? diaPorExtenso(d.data) : '';
+    q('fluxo-data-fala').textContent =
+      !diaInvalido && d.data ? `${diaPorExtenso(d.data)}${diaJaPassou(d.data) ? `. ${AVISO_DIA_PASSADO}` : ''}` : '';
   }
 
   form.addEventListener('input', (e) => {
     const el = e.target as HTMLInputElement;
     switch (el.id) {
       case 'fluxo-titulo':
+        esquecerACopia();
         d.titulo = el.value;
         break;
       case 'fluxo-organizacao':
+        esquecerACopia();
         d.organizacao = el.value;
         break;
       case 'fluxo-texto':
+        esquecerACopia();
         d.texto = el.value;
         break;
       case 'fluxo-pauta':
+        esquecerACopia();
         d.pauta = el.value;
+        atualizarLetras();
         break;
       case 'fluxo-data':
         lerDia();
@@ -229,6 +346,7 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
       entrada('fluxo-data').value = dataBr(d.data);
       diaInvalido = false;
       q('fluxo-data-extenso').textContent = diaPorExtenso(d.data);
+      mostrarDiaPassado();
       falarODia();
       mudou();
       limparErro(form, 'fluxo-data');
@@ -238,17 +356,33 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
 
   if (passo === 1) {
     q('fluxo-apagar').addEventListener('click', () => {
-      const eraExemplo = d.origem === 'exemplo';
-      apagarOPasso1(d);
-      for (const id of ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto', 'fluxo-pauta']) {
-        const el = raiz.querySelector<HTMLInputElement>(`[id="${id}"]`);
-        if (el) el.value = '';
+      if (copia) {
+        // Desfazer: devolve o que estava escrito e põe o foco no Título.
+        devolverOPasso1(d, copia);
+        esquecerACopia();
+        escreverOsCampos();
+        fecharOrgao(false);
+        limparTodosOsErros(form);
+        mini.redesenhar();
+        entrada('fluxo-titulo').focus();
+        avisar('Voltou o que você tinha escrito.');
+        return;
       }
+      const eraExemplo = d.origem === 'exemplo';
+      copia = copiaDoPasso1(d);
+      clearTimeout(tempoDoDesfazer);
+      tempoDoDesfazer = setTimeout(esquecerACopia, 10000);
+      apagarOPasso1(d);
+      escreverOsCampos();
       mudou();
       limparTodosOsErros(form);
       mini.redesenhar();
       entrada('fluxo-titulo').focus();
-      avisar(eraExemplo ? 'Exemplo apagado. Escreva o seu.' : 'Tudo apagado. Escreva de novo.');
+      avisar(
+        eraExemplo
+          ? 'Exemplo apagado. Para trazer de volta, toque em Desfazer.'
+          : 'Tudo apagado. Para trazer de volta, toque em Desfazer.',
+      );
     });
   }
 
@@ -260,12 +394,18 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
     const erros = errosDoPasso(d, passo);
     if (passo === 2 && diaInvalido) erros.data = 'escreva o dia como 14/11/2026.';
     if (mostrarErros(form, camposDoPasso(d.tipo, passo), erros)) return;
+    if (precisaPerguntarDoOrgao(d, passo)) {
+      abrirOrgao();
+      return;
+    }
     irAoPasso(d.tipo, passo === 1 ? 2 : 3);
   });
 
   q('fluxo-voltar').addEventListener('click', () => voltarDoPasso(d.tipo, passo));
 
   return () => {
+    clearTimeout(tempoDoDesfazer);
+    clearTimeout(tempoDaFala);
     mini.limpar();
     medidas();
   };
@@ -283,12 +423,13 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
         <label for="${id}"><span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-so-leitor">. ${esc(EXPLICACAO_DO_FORMATO[f])}</span></label>
       </div>`;
   }).join('');
-  // Cor: bolinhas de 48 px; o nome fica só para o leitor de tela.
+  // Cor: bolinhas com o nome curto embaixo (o leitor de tela lê o nome só uma vez, no rótulo).
   const paletas = PALETAS.map((p) => {
     const id = `fluxo-paleta-${p.id}`;
     return `<div class="fluxo-bola-item">
         <input type="radio" id="${id}" name="fluxo-paleta" value="${esc(p.id)}"${p.id === d.paletaId ? ' checked' : ''}>
         <label for="${id}"><span class="fluxo-amostra" data-paleta="${esc(p.id)}" aria-hidden="true"></span><span class="fluxo-so-leitor">${esc(p.nome)}</span></label>
+        <span class="fluxo-bola-nome" aria-hidden="true">${esc(p.nome)}</span>
       </div>`;
   }).join('');
   const nomeDaCor = (id: string): string => (id === 'livre' ? 'Cor livre' : paletaPorId(id).nome);
@@ -297,7 +438,7 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     ${cabecalho(d, 3)}
     <section class="fluxo-previa" aria-label="Prévia">
       <p class="fluxo-estado" id="fluxo-estado"></p>
-      <div class="fluxo-moldura fluxo-moldura-passo3"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas>${BOTAO_VER_MAIOR}</div>
+      <div class="fluxo-moldura fluxo-moldura-passo3"><canvas id="fluxo-canvas" role="img" aria-label="Prévia da imagem"></canvas>${BOTAO_VER_MAIOR}</div>
     </section>
     ${htmlDoDialogo()}
     <form class="fluxo-form" id="fluxo-form" novalidate>
@@ -319,7 +460,7 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
             <p class="campo-dica" id="fluxo-logo-dica">A imagem é lida e reduzida só neste aparelho. Ela não é enviada nem guardada.</p>
             <input class="campo-entrada" type="file" id="fluxo-logo" accept="image/*" aria-describedby="fluxo-logo-dica fluxo-logo-erro">
             <p class="campo-erro" id="fluxo-logo-erro" hidden></p>
-            <p id="fluxo-logo-nome" class="fluxo-logo-nome"${logoAtual() ? '' : ' hidden'}>Logo colocado no card.</p>
+            <p id="fluxo-logo-nome" class="fluxo-logo-nome"${logoAtual() ? '' : ' hidden'}>Logo colocado na imagem.</p>
             <button type="button" class="botao botao-sec" id="fluxo-logo-tirar"${logoAtual() ? '' : ' hidden'}>Tirar o logo</button>
           </div>
           <div class="campo">
@@ -437,12 +578,15 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       nome.textContent = `Logo escolhido: ${arquivo.name}`;
       nome.hidden = false;
       q('fluxo-logo-tirar').hidden = false;
-      avisar('Logo colocado no card.');
+      avisar('Logo colocado na imagem.');
       agendador.agendar();
     } catch (erro) {
       if (!vivo) return;
       input.value = '';
-      mostrarErro(form, 'fluxo-logo', erro instanceof Error ? erro.message : 'Não deu para ler essa imagem.');
+      // O arquivo recusado não troca nada: se já havia logo, o de antes continua (e "Tirar o logo" também).
+      const base = 'Esse arquivo não deu.';
+      const pedido = 'Escolha uma foto ou um desenho: PNG, JPG ou SVG.';
+      mostrarErro(form, 'fluxo-logo', logoAtual() ? `${base} O logo de antes continua. ${pedido}` : `${base} ${pedido}`);
     }
   });
   q('fluxo-logo-tirar').addEventListener('click', () => {
