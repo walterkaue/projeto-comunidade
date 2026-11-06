@@ -221,6 +221,7 @@ const FRASES_DO_SITE = new RegExp(
       'removido apos denuncia',
       'removido a pedido de quem o criou',
       'removemos este link',
+      'se voce recebeu este link',
     ].join('|') +
     `)${DEPOIS}`,
   'u',
