@@ -7,6 +7,10 @@ dist/
 .DS_Store
 prints/
 
+# Saída dos testes de ponta a ponta (Playwright)
+e2e/.resultados/
+e2e/.relatorio/
+
 # Configuração pessoal do Claude Code (permissões locais)
 .claude/settings.local.json
 

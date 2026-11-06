@@ -42,7 +42,7 @@ Várias sessões trabalham ao mesmo tempo, cada uma em seu worktree. Para não h
 - **JS + CSS inicial de até 80 KB gzip** (`testes/peso.test.ts`). As ferramentas carregam sob demanda.
 - Lógica em módulos puros, com teste. Rode `npm test` antes de cada commit.
 - **Base relativa e rotas por `#`.** Nunca use caminho absoluto começando em `/`.
-- Comandos: `npm run dev`, `npm test`, `npm run build`, `npm run fontes`, `npm run icones`.
+- Comandos: `npm run dev`, `npm test`, `npm run e2e`, `npm run build`, `npm run fontes`, `npm run icones`.
 
 ## Privacidade
 

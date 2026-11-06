@@ -20,6 +20,7 @@ Onde fica no código:
 npm install
 npm run dev      # servidor local
 npm test         # testes
+npm run e2e      # testes de ponta a ponta no celular emulado (e2e/README.md)
 npm run build    # versão final
 npm run fontes   # refaz as fontes cortadas para o português
 npm run icones   # refaz ícones e imagem de prévia (precisa do Chrome ou do Edge)

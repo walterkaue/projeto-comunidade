@@ -11,10 +11,13 @@
     "test": "vitest run --passWithNoTests",
     "fontes": "node scripts/fontes.mjs",
     "icones": "node scripts/gerar-icones.mjs",
-    "bloquear": "node scripts/bloquear.mjs"
+    "bloquear": "node scripts/bloquear.mjs",
+    "e2e": "playwright test"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@fontsource/atkinson-hyperlegible": "^5.2.0",
+    "@playwright/test": "^1.65.0",
     "@types/node": "^24.19.2",
     "subset-font": "^2.9.0",
     "typescript": "^7.0.2",

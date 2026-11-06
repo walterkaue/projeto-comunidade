@@ -1,0 +1,34 @@
+name: Testes de ponta a ponta
+
+# Separado da publicação (deploy.yml): se falhar, avisa, mas não impede o site de ir ao ar.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Faz o build de produção, serve em localhost e roda os testes de e2e/.
+      - run: npm run e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorio-e2e
+          path: |
+            e2e/.relatorio/
+            e2e/.resultados/
+          retention-days: 7
