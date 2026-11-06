@@ -55,6 +55,7 @@ export const idsDaDescricao = (temAviso: boolean, ...dicas: string[]): string =>
   [...(temAviso ? ['fluxo-aviso-exemplo'] : []), ...dicas].join(' ');
 
 export const MENSAGEM_LINK_COM_EXEMPLO = 'O link é criado quando você trocar o exemplo pelo seu.';
+export const MENSAGEM_LINK_REMOVIDO = 'Um evento igual a este foi removido do site. O link não vai abrir.';
 export const MENSAGEM_SEM_LINK = 'Não deu para criar o link do evento. Confira o texto em Mudar algo.';
 
 /**

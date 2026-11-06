@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
 import { camposDoExemplo, dadosDoCardPreparado, dadosDoEvento, exemploDoFluxo, linkAindaVale, type DadosDoFluxo, type Tipo } from './estado';
 import { linkDoFluxo, type DependenciasDoLink } from './link';
 
@@ -162,5 +162,25 @@ describe('linkDoFluxo', () => {
     expect(linkAindaVale(d)).toBe(true);
     d.organizacao = exemploDoFluxo('evento', 0, HOJE).organizacao;
     expect(linkAindaVale(d)).toBe(false);
+  });
+
+  it('evento igual a um removido: sem link, com a mensagem e o motivo; a lista é conferida com a forma canônica', async () => {
+    const d = daPessoa('evento');
+    const bloqueado = vi.fn(async () => ({ tipo: 'regra', regra: 3 }) as const);
+    const r = await linkDoFluxo(d, BASE, { ...deps(), canonico: () => 'canonico', bloqueado });
+    expect(r).toEqual({ link: '', aviso: MENSAGEM_LINK_REMOVIDO, removido: { tipo: 'regra', regra: 3 } });
+    expect(bloqueado).toHaveBeenCalledWith(['1rDADOS', 'canonico']);
+    expect(d.link).toBe('');
+  });
+
+  it('evento fora da lista segue com link; lista que falha (null) também', async () => {
+    const d = daPessoa('evento');
+    const r = await linkDoFluxo(d, BASE, { ...deps(), bloqueado: async () => null });
+    expect(r).toEqual({ link: `${BASE}#/evento/1rDADOS`, aviso: '' });
+  });
+
+  it('com o bloqueio de verdade, um evento comum não é removido', async () => {
+    const r = await linkDoFluxo(daPessoa('reuniao', 2), BASE);
+    expect(r.removido).toBeUndefined();
   });
 });
