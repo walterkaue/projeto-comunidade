@@ -226,8 +226,10 @@ describe('simulação B de 06/11/2026: a página do evento e o formulário', () 
     const m = /<p id="ev-faixa">([^<]+)<\/p>/.exec(fonte);
     expect(m, 'faixa em pagina.ts').not.toBeNull();
     const faixa = m![1]!.replace('${esc(NOME)}', NOME);
-    expect(motivoDeRecusa(faixa)).toBe('plataforma');
-    for (const frase of faixa.split(/(?<=\.)\s+/)) expect(motivoDeRecusa(frase), frase).toBe('plataforma');
+    // "mande documentos" na faixa nova é pego antes pelo filtro de pedido de dado: o motivo pode ser um dos dois,
+    // mas a faixa e cada frase dela seguem recusadas.
+    expect(['plataforma', 'dados']).toContain(motivoDeRecusa(faixa));
+    for (const frase of faixa.split(/(?<=\.)\s+/)) expect(['plataforma', 'dados'], frase).toContain(motivoDeRecusa(frase));
     expect(com({ descricao: faixa }).ok).toBe(false);
   });
 
@@ -284,5 +286,41 @@ describe('simulação B de 06/11/2026: a página do evento e o formulário', () 
       expect(r.ok).toBe(false);
       if (!r.ok) for (const m of Object.values(r.erros)) expect(m).not.toMatch(/golpe/i);
     }
+  });
+});
+
+describe('achados da simulação B de 06/11/2026: página', () => {
+  const lerFonte = (nome: string) => readFileSync(new URL(nome, import.meta.url), 'utf8');
+
+  it('D3: a frase nova da tela de golpe é recusada como se fosse do site', () => {
+    expect(motivoDeRecusa('Se você recebeu este link')).toBe('plataforma');
+    const frase = 'Se você recebeu este link, não pague nem mande documentos. Avise quem mandou.';
+    expect(motivoDeRecusa(frase)).not.toBeNull();
+    expect(com({ descricao: frase }).ok).toBe(false);
+  });
+
+  it('B-02: todo foco de h1 em pagina.ts não rola a tela', () => {
+    const fonte = lerFonte('./pagina.ts');
+    const focos = fonte.match(/'h1'\)\??\.focus\([^)]*\)/g) ?? [];
+    expect(focos.length).toBe(3);
+    for (const f of focos) expect(f).toContain('preventScroll: true');
+  });
+
+  it('B-29: o título hifeniza', () => {
+    const css = lerFonte('./evento.css');
+    expect(css).toMatch(/\.evento h1\s*\{[^}]*hyphens:\s*auto/);
+    expect(css).toMatch(/\.evento h1\s*\{[^}]*-webkit-hyphens:\s*auto/);
+  });
+
+  it('B-03, B-24, B-30, D9: página usa o link limpo e os textos novos', () => {
+    const fonte = lerFonte('./pagina.ts');
+    expect(fonte).toContain('pagina(raiz, r.evento, limpos, vivo)');
+    expect(fonte).toContain("history.replaceState(history.state, '', linkPara('evento', limpos))");
+    expect(fonte).toContain("'share' in navigator ? 'Compartilhar este link' : 'Copiar o link'");
+    expect(fonte).toContain('data-destino="o mapa"');
+    expect(fonte).toContain('data-destino="o Google Agenda"');
+    expect(fonte).toContain('Fazer a imagem deste evento');
+    expect(fonte).not.toContain('Fazer o card deste evento');
+    expect(fonte).toContain('Copie a mensagem inteira, até o fim do link.');
   });
 });

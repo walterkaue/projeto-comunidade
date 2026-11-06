@@ -7,9 +7,11 @@ import {
   hrefExterno,
   horariosDaAgenda,
   horarioPorExtenso,
+  jaPassou,
   linkDoGoogleAgenda,
   linkDoMapa,
   nomeDoArquivoIcs,
+  quandoNaPagina,
 } from './agenda';
 import type { Evento } from './validar';
 
@@ -164,5 +166,25 @@ describe('nome do arquivo e href', () => {
   it('href externo passa por esc(urlSegura)', () => {
     expect(hrefExterno(linkDoMapa('a"b<c'))).toBe('https://www.google.com/maps/search/?api=1&amp;query=a%22b%3Cc');
     expect(hrefExterno('javascript:alert(1)')).toBe('#');
+  });
+});
+
+describe('achados da simulação B de 06/11/2026', () => {
+  it('B-18: "Quando" diz que a hora é a do local', () => {
+    expect(quandoNaPagina(e)).toBe('sábado, 14 de novembro de 2026, das 8h30 às 12h (horário do local do evento)');
+    expect(quandoNaPagina({ ...e, fim: '' })).toBe('sábado, 14 de novembro de 2026, às 8h30 (horário do local do evento)');
+  });
+
+  it('B-22: já passou pelo fim, ou por início + 1 hora sem fim', () => {
+    const em = (a: number, m: number, d: number, h: number, min: number) => new Date(a, m - 1, d, h, min);
+    expect(jaPassou(e, em(2026, 11, 14, 11, 59))).toBe(false);
+    expect(jaPassou(e, em(2026, 11, 14, 12, 0))).toBe(true);
+    expect(jaPassou(e, em(2026, 11, 15, 9, 0))).toBe(true);
+    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 9, 29))).toBe(false);
+    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 9, 30))).toBe(true);
+    // Termina depois da meia-noite: o fim é no dia seguinte.
+    const noite = { ...e, inicio: '22:00', fim: '02:00' };
+    expect(jaPassou(noite, em(2026, 11, 15, 1, 59))).toBe(false);
+    expect(jaPassou(noite, em(2026, 11, 15, 2, 0))).toBe(true);
   });
 });

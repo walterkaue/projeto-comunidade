@@ -108,10 +108,10 @@ export function ligarQr(botao: HTMLButtonElement, area: HTMLElement, obterLink: 
 }
 
 /** Liga o botão de compartilhar o link (menu do celular; sem ele, copia). */
-export function ligarCompartilhar(botao: HTMLButtonElement, obter: () => { link: string; evento: Evento }): void {
+export function ligarCompartilhar(botao: HTMLButtonElement, obter: () => { link: string; evento: Evento }, seFalhar?: string): void {
   botao.addEventListener('click', async () => {
     const { link, evento } = obter();
     const r = await compartilhar({ texto: textoParaCompartilhar(evento), url: link, titulo: evento.titulo });
-    avisar(mensagemDoResultado(r));
+    avisar(mensagemDoResultado(r, seFalhar));
   });
 }
