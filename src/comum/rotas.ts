@@ -47,6 +47,16 @@ export function linkPara(nome: NomeDaRota, resto = ''): string {
   return resto ? `#/${nome}/${resto}` : `#/${nome}`;
 }
 
+/**
+ * Endereço do site (a pasta do app), sem caminho a mais, "?…" nem "#…". É a base de todo link que sai do site
+ * (link do evento, QR, denúncia). Vem da pasta do endereço aberto, não do caminho inteiro: aberto em
+ * ".../projeto-comunidade/qualquer-texto" ou em ".../index.html?fbclid=…", dá ".../projeto-comunidade/"
+ * (auditoria do fluxo, 05/11/2026, B7). O service worker só serve o app nessa pasta e no index.html.
+ */
+export function enderecoDoSite(href: string): string {
+  return new URL('./', href).href;
+}
+
 /** Qual parte do site abre cada rota (cada parte é um arquivo baixado só quando abre). */
 export type Parte = 'inicio' | 'fluxo' | 'ata' | 'evento' | 'galeria' | 'paginas';
 

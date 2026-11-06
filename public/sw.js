@@ -85,8 +85,10 @@ self.addEventListener('fetch', (evento) => {
   if (url.origin !== self.location.origin) return;
 
   // A página: rede primeiro; sem rede, a última guardada; se nem ela existir, a tela offline.
+  // Só no endereço do app (a pasta e o index.html). Qualquer outro endereço vai à rede e, sem rede, cai na tela
+  // offline: o app nunca abre em ".../qualquer-texto", onde o link do evento sairia com esse caminho (B7).
   if (req.mode === 'navigate') {
-    evento.respondWith(redePrimeiro(req));
+    evento.respondWith(ehOApp(url) ? redePrimeiro(req) : soDaRede(req));
     return;
   }
   // Arquivos do build têm hash no nome e nunca mudam: cache primeiro.
@@ -109,12 +111,14 @@ self.addEventListener('fetch', (evento) => {
 // (a resposta da rede, quando chegar, atualiza o cache para a próxima vez).
 const ESPERA_DA_REDE_MS = 4000;
 
+/** O endereço é o do app? Só a pasta do escopo e o index.html (com qualquer "?…" e "#…"). */
+const ehOApp = (url) => [caminho('./').pathname, caminho('index.html').pathname].includes(url.pathname);
+
 async function redePrimeiro(req) {
   const cache = await caches.open(CACHE_PAGINA);
   const daRede = fetch(req).then(async (resp) => {
-    // Só guarda como "a página" o próprio app (escopo ou index.html em HTML), nunca o og.png ou o manifest aberto direto.
-    const ehOApp = [caminho('./').pathname, caminho('index.html').pathname].includes(new URL(req.url).pathname);
-    if (resp.ok && ehOApp && (resp.headers.get('content-type') ?? '').includes('text/html')) await cache.put(PAGINA, resp.clone());
+    // Só guarda como "a página" a resposta em HTML (um erro do servidor em outro formato não substitui a guardada).
+    if (resp.ok && (resp.headers.get('content-type') ?? '').includes('text/html')) await cache.put(PAGINA, resp.clone());
     return resp;
   });
   daRede.catch(() => {}); // se a guardada já respondeu, a falha da rede não importa
@@ -125,6 +129,16 @@ async function redePrimeiro(req) {
     return primeira ?? (await daRede);
   } catch {
     return (await guardada()) ?? (await cache.match(OFFLINE)) ?? Response.error();
+  }
+}
+
+// Outro endereço aberto direto (og.png, licencas.txt, offline.html, caminho que não existe): só a rede.
+// Sem rede, a tela offline.
+async function soDaRede(req) {
+  try {
+    return await fetch(req);
+  } catch {
+    return (await caches.match(OFFLINE, { cacheName: CACHE_PAGINA })) ?? Response.error();
   }
 }
 

@@ -5,14 +5,16 @@ import { avisar } from '../../comum/aviso';
 import { compartilhar, mensagemDoResultado } from '../../comum/compartilhar';
 import type { DadosDoCard } from '../../comum/entreTelas';
 import { MARGEM_QR, desenharQr, matrizDoQr } from '../../comum/qr';
+import { enderecoDoSite as enderecoDoSiteEm } from '../../comum/rotas';
 import { dataPorExtenso, horarioPorExtenso } from './agenda';
 import type { Evento } from './validar';
 
 /**
- * Endereço do site sem "?…" nem "#…": o que sobra de quem abriu o site por um link com parâmetro de rastreio
- * (ex.: "?fbclid=…") não vai junto no link do evento, no QR nem na denúncia.
+ * Endereço do site (a pasta do app) sem caminho a mais, "?…" nem "#…": o que sobra de quem abriu o site por
+ * um link com parâmetro de rastreio (ex.: "?fbclid=…") ou por um endereço estranho não vai junto no link do
+ * evento, no QR nem na denúncia. A conta fica em src/comum/rotas.ts.
  */
-export const enderecoDoSite = (): string => `${location.origin}${location.pathname}`;
+export const enderecoDoSite = (): string => enderecoDoSiteEm(location.href);
 
 /** Dados do card de um evento (o Cards recebe pela memória da aba: prepararCard em src/comum/entreTelas.ts). */
 export function dadosDoCardDoEvento(e: Evento, link: string): DadosDoCard {

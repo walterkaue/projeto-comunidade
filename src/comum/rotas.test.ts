@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lerRota, linkPara, mostraORodapeComum, parteDaRota } from './rotas';
+import { enderecoDoSite, lerRota, linkPara, mostraORodapeComum, parteDaRota } from './rotas';
 
 describe('rotas por #', () => {
   it('endereço vazio ou desconhecido vai para a inicial', () => {
@@ -58,5 +58,17 @@ describe('mostraORodapeComum', () => {
   it('some no início e em todo o fluxo (passos, Pronto, editar, endereços antigos)', () => {
     for (const h of ['#/', '#/fazer/reuniao', '#/fazer/aviso/3', '#/fazer/evento/pronto', '#/evento', '#/evento/editar/abc', '#/cards', '#/reuniao'])
       expect(mostra(h), h).toBe(false);
+  });
+});
+
+// Auditoria do fluxo, 05/11/2026, B7: o link do evento não herda o caminho estranho do endereço aberto.
+describe('enderecoDoSite', () => {
+  const SITE = 'https://walterkaue.github.io/projeto-comunidade/';
+  it('dá sempre a pasta do app', () => {
+    expect(enderecoDoSite(SITE)).toBe(SITE);
+    expect(enderecoDoSite(`${SITE}#/fazer/evento/3`)).toBe(SITE);
+    expect(enderecoDoSite(`${SITE}index.html?fbclid=abc#/evento/1rAAA`)).toBe(SITE);
+    expect(enderecoDoSite(`${SITE}qualquer-texto#/evento/1rAAA`)).toBe(SITE);
+    expect(enderecoDoSite('http://localhost:5173/?x=1#/')).toBe('http://localhost:5173/');
   });
 });
