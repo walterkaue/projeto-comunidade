@@ -72,11 +72,29 @@ self.addEventListener('activate', (evento) => {
     (async () => {
       const nomes = await caches.keys();
       // Só os caches deste site ('pc-'): no github.io a origem é dividida com outros projetos do mesmo dono.
-      await Promise.all(nomes.filter((n) => n.startsWith('pc-') && !n.startsWith(`${VERSAO}-`)).map((n) => caches.delete(n)));
+      const velhos = nomes.filter((n) => n.startsWith('pc-') && !n.startsWith(`${VERSAO}-`));
+      await guardarListaDeBloqueio(velhos);
+      await Promise.all(velhos.map((n) => caches.delete(n)));
       await self.clients.claim();
     })(),
   );
 });
+
+// Se a lista de bloqueio não veio na instalação (rede caiu bem nessa hora), a cópia da versão anterior passa
+// para a nova antes de os caches velhos serem apagados: sem nenhuma cópia, sem rede, um link removido
+// apareceria (auditoria de segurança, B2).
+async function guardarListaDeBloqueio(velhos) {
+  const lista = caminho('bloqueados.json').href;
+  const novo = await caches.open(CACHE_ARQUIVOS);
+  if (await novo.match(lista, { ignoreVary: true })) return;
+  for (const nome of velhos) {
+    const copia = await (await caches.open(nome)).match(lista, { ignoreVary: true });
+    if (copia) {
+      await novo.put(lista, copia);
+      return;
+    }
+  }
+}
 
 self.addEventListener('fetch', (evento) => {
   const req = evento.request;

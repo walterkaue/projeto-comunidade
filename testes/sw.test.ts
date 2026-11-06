@@ -115,3 +115,40 @@ describe('service worker: onde o app abre sem rede (auditoria do fluxo, B7)', ()
     expect(r.status).toBe(404);
   });
 });
+
+describe('service worker: a lista de bloqueio sobrevive à troca de versão (auditoria de segurança, B2)', () => {
+  const LISTA = `${ESCOPO}bloqueados.json`;
+
+  it('a versão nova sem lista fica com a cópia da versão velha', async () => {
+    const caches = new Map<string, CacheFalso>();
+    const v1 = montar('pc-v1', { caches, rede: siteNoAr('{"bloqueados":["velha"]}') });
+    await v1.instalar();
+    await v1.ativar();
+    // Deploy novo: a lista falha bem na instalação.
+    const semLista = siteNoAr();
+    const v2 = montar('pc-v2', { caches, rede: (url) => (url === LISTA ? null : semLista(url)) });
+    await v2.instalar();
+    await v2.ativar();
+    expect([...caches.keys()].every((n) => n.startsWith('pc-v2-'))).toBe(true);
+    expect(await (await caches.get('pc-v2-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["velha"]}');
+  });
+
+  it('a versão nova com lista fica com a dela', async () => {
+    const caches = new Map<string, CacheFalso>();
+    const v1 = montar('pc-v1', { caches, rede: siteNoAr('{"bloqueados":["velha"]}') });
+    await v1.instalar();
+    await v1.ativar();
+    const v2 = montar('pc-v2', { caches, rede: siteNoAr('{"bloqueados":["nova"]}') });
+    await v2.instalar();
+    await v2.ativar();
+    expect(await (await caches.get('pc-v2-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["nova"]}');
+  });
+
+  it('não mexe nos caches de outros projetos do mesmo endereço', async () => {
+    const caches = new Map<string, CacheFalso>([['outro-projeto', new CacheFalso()]]);
+    const v1 = montar('pc-v1', { caches, rede: siteNoAr() });
+    await v1.instalar();
+    await v1.ativar();
+    expect(caches.has('outro-projeto')).toBe(true);
+  });
+});
