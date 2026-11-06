@@ -237,7 +237,11 @@ describe('script de moderação: o link é dado, não comando', () => {
     // @ts-expect-error script .mjs sem tipos
     const { dadosDoLink, dadosValidos } = await import('../../scripts/bloquear.mjs');
     expect(dadosValidos('1rAbc-_09')).toBe(true);
-    expect(dadosValidos(dadosDoLink('https://x.exemplo/p/#/evento/1rAbc\n$(comando)'))).toBe(false);
+    // O que vem depois dos dados é cortado: o comando nunca chega aos dados.
+    const cortado = dadosDoLink('https://x.exemplo/p/#/evento/1rAbc\n$(comando)');
+    expect(cortado).toBe('1rAbc');
+    expect(cortado).not.toMatch(/[$(]/);
+    expect(dadosValidos(cortado)).toBe(true);
     expect(dadosValidos("1r'x")).toBe(false);
     expect(dadosValidos('ab')).toBe(false);
   });
@@ -282,7 +286,8 @@ describe('script de moderação: o link é dado, não comando', () => {
     try {
       const r = rodar('--arquivo', arquivo, '--motivo', 'regra-5');
       expect(r.status).toBe(1);
-      expect(r.stderr).toContain('só pode ter letras');
+      // O "$(…)" é cortado e nunca vira comando; sobra "1rAbc", que não abre um evento, então nada é gravado.
+      expect(r.stderr).toContain('Nada foi gravado');
       expect(readFileSync(lista, 'utf8')).toBe(antes);
     } finally {
       rmSync(pasta, { recursive: true, force: true });

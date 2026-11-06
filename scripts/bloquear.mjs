@@ -34,11 +34,13 @@ export const USO =
   'Uso: grave o link num arquivo de texto fora do git e rode  npm run bloquear -- --arquivo <caminho> --motivo regra-<número>  (ou --motivo pedido, a pedido de quem criou)';
 
 export function dadosDoLink(link) {
-  // E-mail costuma quebrar link comprido em linhas: junta tudo antes de ler.
-  const junto = link.replace(/\s+/g, '');
+  // E-mail costuma quebrar link comprido em linhas: junta só as quebras de linha (e o espaço que vem junto).
+  const junto = link.replace(/[ \t]*\r?\n[ \t]*/g, '');
   const i = junto.indexOf(MARCA);
   if (i < 0) return '';
-  return junto.slice(i + MARCA.length).replace(/^editar\//, '');
+  // Corta no primeiro sinal fora do formato dos dados (ponto, parêntese, espaço, "%20Obrigada!"), como o site.
+  const resto = junto.slice(i + MARCA.length).replace(/^editar\//, '');
+  return /^[A-Za-z0-9_-]*/.exec(resto)[0];
 }
 
 /** Os dados têm o formato de um link do site? Qualquer outro sinal ("$", "(", "'", ";") é recusado. */
