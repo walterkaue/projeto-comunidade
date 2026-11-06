@@ -102,6 +102,8 @@ export interface EstadoDoLimite {
   anuncio: string;
   /** Guardar e passar de volta na próxima chamada. */
   nivel: NivelAnunciado;
+  /** Onde o cursor fica depois do corte (no mesmo lugar, se nada foi cortado). */
+  cursor: number;
 }
 
 /** Faltam quantas letras para o contador aparecer: no máximo 20, ou 20% do limite se for menor. */
@@ -115,24 +117,43 @@ export function textoDoLimite(faltam: number, maximo: number): string {
 }
 
 /** Conta toda a regra do limite. Pura: a tela só aplica o resultado. */
-export function estadoDoLimite(valor: string, maximo: number, anunciouAntes: NivelAnunciado = 0): EstadoDoLimite {
+export function estadoDoLimite(
+  valor: string,
+  maximo: number,
+  anunciouAntes: NivelAnunciado = 0,
+  /** Posição do cursor (unidades do campo, como selectionStart). Sem ela, conta como se estivesse no fim. */
+  cursorAntes: number = valor.length,
+): EstadoDoLimite {
   const partes = letras(valor);
   const cortou = partes.length > maximo;
-  const final = cortou ? partes.slice(0, maximo).join('') : valor;
+  // O que passou do limite são as letras que acabaram de entrar, logo antes do cursor: tira essas e mantém
+  // o que já estava escrito depois dele (como o maxlength fazia ao recusar a letra nova).
+  let final = valor;
+  let cursor = Math.min(Math.max(0, cursorAntes), valor.length);
+  if (cortou) {
+    const excesso = partes.length - maximo;
+    const antesDoCursor = letras(valor.slice(0, cursor)).length;
+    const inicio = Math.max(0, antesDoCursor - excesso);
+    final = [...partes.slice(0, inicio), ...partes.slice(inicio + excesso)].join('');
+    cursor = partes.slice(0, inicio).join('').length;
+  }
   const faltam = Math.max(0, maximo - partes.length);
   const visivel = faltam <= faixaPerto(maximo);
   const textoVisivel = visivel ? textoDoLimite(faltam, maximo) : '';
   let nivel: NivelAnunciado = anunciouAntes;
   let anuncio = '';
   if (!visivel) nivel = 0;
-  else if (faltam === 0 && anunciouAntes < 2) {
+  else if (faltam > 0 && anunciouAntes === 2) {
+    // Apagou depois de chegar ao limite: ao chegar de novo, anuncia de novo.
+    nivel = 1;
+  } else if (faltam === 0 && anunciouAntes < 2) {
     nivel = 2;
     anuncio = textoVisivel;
   } else if (faltam > 0 && anunciouAntes < 1) {
     nivel = 1;
     anuncio = textoVisivel;
   }
-  return { valor: final, cortou, faltam, visivel, textoVisivel, anuncio, nivel };
+  return { valor: final, cortou, faltam, visivel, textoVisivel, anuncio, nivel, cursor };
 }
 
 /** A dica do campo com o limite no mesmo parágrafo: "Dica. Até 80 letras." */
@@ -159,13 +180,13 @@ type Campo = HTMLInputElement | HTMLTextAreaElement;
 function aplicarLimite(campo: Campo, cortar: boolean): boolean {
   const maximo = Number(campo.dataset['limite']);
   if (!(maximo > 0)) return false;
-  const est = estadoDoLimite(campo.value, maximo, niveis.get(campo) ?? 0);
+  const est = estadoDoLimite(campo.value, maximo, niveis.get(campo) ?? 0, campo.selectionStart ?? campo.value.length);
   let cortado = false;
   if (cortar && est.cortou) {
     campo.value = est.valor;
     cortado = true;
     try {
-      campo.setSelectionRange(est.valor.length, est.valor.length);
+      campo.setSelectionRange(est.cursor, est.cursor);
     } catch {
       /* tipos sem seleção */
     }

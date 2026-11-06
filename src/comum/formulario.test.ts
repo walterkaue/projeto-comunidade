@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { letras } from './texto';
 import {
   campoAreaDeTexto,
   campoEscolha,
@@ -298,5 +299,42 @@ describe('estadoDoLimite', () => {
   it('colar texto que já passa do limite anuncia só o limite', () => {
     const e = estadoDoLimite('a'.repeat(200), 80, 0);
     expect(e.anuncio).toBe('Chegou ao limite de 80 letras.');
+  });
+});
+
+describe('estadoDoLimite com o cursor (revisão de 06/11/2026)', () => {
+  it('campo cheio: a letra digitada no meio é a que sai, e o cursor fica no lugar', () => {
+    const cheio = 'a'.repeat(40) + 'b'.repeat(40);
+    // "x" digitado depois da 10ª letra: 81 letras, cursor logo depois do "x".
+    const digitado = cheio.slice(0, 10) + 'x' + cheio.slice(10);
+    const e = estadoDoLimite(digitado, 80, 2, 11);
+    expect(e.valor).toBe(cheio);
+    expect(e.cursor).toBe(10);
+  });
+
+  it('colar no começo corta só o que foi colado, sem apagar o fim', () => {
+    const e = estadoDoLimite('XYZ' + 'a'.repeat(78), 80, 0, 3);
+    expect(e.valor).toBe('XY' + 'a'.repeat(78));
+    expect(letras(e.valor)).toHaveLength(80);
+    expect(e.valor.endsWith('a'.repeat(78))).toBe(true);
+    expect(e.cursor).toBe(2);
+  });
+
+  it('emoji antes do cursor conta como 1 letra no corte', () => {
+    const e = estadoDoLimite('👍🏽👍🏽' + 'a'.repeat(79), 80, 0, '👍🏽👍🏽'.length);
+    expect(e.valor).toBe('👍🏽' + 'a'.repeat(79));
+    expect(e.cursor).toBe('👍🏽'.length);
+  });
+
+  it('sem cursor, corta no fim como antes', () => {
+    expect(estadoDoLimite('a'.repeat(82), 80).valor).toBe('a'.repeat(80));
+  });
+
+  it('apagar depois de chegar ao limite e voltar a ele anuncia de novo', () => {
+    const cheio = estadoDoLimite('a'.repeat(80), 80, 1);
+    expect(cheio.anuncio).toBe('Chegou ao limite de 80 letras.');
+    const apagou = estadoDoLimite('a'.repeat(79), 80, cheio.nivel);
+    expect(apagou.anuncio).toBe('');
+    expect(estadoDoLimite('a'.repeat(80), 80, apagou.nivel).anuncio).toBe('Chegou ao limite de 80 letras.');
   });
 });
