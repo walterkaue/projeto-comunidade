@@ -2,6 +2,8 @@
 
 > 05/11/2026 · Preparado pelo Chat depois da revisão de toda a base e do código público do Guerra de Torcidas. Aqui estão o escopo fechado, o plano em trilhas paralelas, as mensagens prontas para o Claude Code e o passo a passo fora do Code. As decisões que o Kauê ainda precisa confirmar estão na seção 1.
 >
+> **Para o estado de hoje e o que vem a seguir, leia `docs/proximos-passos.md`** (atualizado a cada rodada; o último retrato é de 06/11/2026).
+>
 > **Atualização de 05/11/2026:** este é o plano de construção, guardado como registro. Depois dele veio o **fluxo único** (`docs/produto.md` 7.6): a entrada deixou de ser "três ferramentas" e virou "O que você quer fazer?", com cinco portas, 3 passos e a tela Pronto; a ata ficou em "Depois da reunião" (`#/ata`). As ferramentas continuam as mesmas por dentro (pastas `cards`, `evento` e `reuniao`), e as telas novas moram em `src/ferramentas/fluxo/`. O roteiro das entrevistas (8.7) já está no fluxo novo.
 
 ## 1. O que considerei aprovado e o que falta confirmar
@@ -286,11 +288,16 @@ Leia o relatório mais recente em docs/auditoria/. Corrija todos os achados crí
 
 ## 8. Passo a passo fora do Code
 
-### 8.1 Claude (claude.ai) — corrigir as instruções do Projeto (2 min)
-1. Abra o Projeto "Projeto Comunidade" no claude.ai.
-2. Clique em **Instruções** (ou no lápis ao lado delas).
-3. Troque `claude/estado-do-projeto.md` por `estado-do-projeto.md` e `claude/pesquisa-e-roadmap.md` por `pesquisa-e-roadmap.md`. Acrescente: "`claude/onda-1.md` é o plano da Onda 1".
-4. Salve.
+### 8.1 Claude (claude.ai) — manter o Projeto em dia (5 min, depois de cada rodada no Code)
+Os arquivos que valem estão no GitHub; o Projeto do claude.ai guarda cópias, que ficam velhas. Depois de cada rodada no Claude Code:
+1. Abra https://github.com/walterkaue/projeto-comunidade/tree/main/docs. Em cada arquivo abaixo, toque no arquivo e depois no botão **Download raw file** (seta para baixo, no alto à direita do texto):
+   - `produto.md` (regras e decisões; hoje v0.8);
+   - `proximos-passos.md` (onde estamos e o que vem a seguir);
+   - `onda-1.md` (plano da Onda 1 e passo a passo fora do Code);
+   - se quiser o detalhe das revisões: `auditoria/2026-11-05/seguranca.md` e `auditoria/2026-11-05/fluxo.md`.
+2. Abra o Projeto "Projeto Comunidade" no claude.ai. Em **Conhecimento do projeto** (Project knowledge), remova a cópia antiga de cada arquivo (no menu ou no **×** do arquivo) e envie a nova pelo **+** (**Carregar do dispositivo**, ou *Upload from device* se o claude.ai estiver em inglês).
+3. Se o Projeto ainda tiver um `estado-do-projeto.md` antigo, troque por `proximos-passos.md`: é ele que tem o retrato atual.
+4. Em **Instruções** (o lápis ao lado delas), deixe esta frase: "Antes de responder sobre o projeto, leia `produto.md` (regras e decisões) e `proximos-passos.md` (onde estamos e o que vem a seguir). `onda-1.md` é o plano da Onda 1." Salve.
 
 ### 8.2 E-mail de contato (10 min) — feito em 05/11: `contato.projetocomunidade@gmail.com`
 1. Crie um Gmail novo só para o projeto (ex.: `projetocomunidade.contato@gmail.com`, ou o que estiver livre). Não use o pessoal: ele vai ficar público na página de denúncia.
