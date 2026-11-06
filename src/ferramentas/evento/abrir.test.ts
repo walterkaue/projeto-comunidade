@@ -2,7 +2,7 @@
 // deixar o que veio depois entrar no evento nem escapar da lista de bloqueio.
 
 import { describe, expect, it } from 'vitest';
-import { abrirEvento, SOBRA_MAXIMA, sobraAceitavel } from './abrir';
+import { abrirEvento, PALAVRAS_DA_SOBRA, SOBRA_MAXIMA, sobraAceitavel } from './abrir';
 import { codificar, dadosCanonicos, decodificar } from './formato';
 import { validarEvento, type Evento } from './validar';
 
@@ -31,6 +31,10 @@ const COM_CONTEUDO = [
   '.%20Zap%2011%2098765%20--%204321',
   '%20%40coletivo',
   '?x=1',
+  // Contato sem número nem @, ou frase comprida demais para ser resto de mensagem.
+  '%20Siga%20golpista%20no%20insta',
+  '%20Chame%20no%20privado',
+  '%20Obrigada%20a%20todas%20as%20pessoas%20do%20bairro',
   '.%20Chame%20no%20zap%2011%2098765-4321',
   '%20golpe.com',
   '%20Projeto%20Comunidade%20conferiu',
@@ -80,10 +84,12 @@ describe('abrirEvento: lixo colado no fim do link', () => {
 
   it('o limite do que pode sobrar no fim', () => {
     expect(sobraAceitavel('')).toBe(true);
-    const cabe = ' ' + 'oi '.repeat(SOBRA_MAXIMA).slice(0, SOBRA_MAXIMA - 1);
+    // 40 letras em 4 palavras cabem; uma letra ou uma palavra a mais, não.
+    const cabe = ' ' + Array(PALAVRAS_DA_SOBRA).fill('abcdefghi').join(' ');
     expect(Array.from(cabe).length).toBe(SOBRA_MAXIMA);
     expect(sobraAceitavel(encodeURIComponent(cabe))).toBe(true);
     expect(sobraAceitavel(encodeURIComponent(cabe + 'x'))).toBe(false);
+    expect(sobraAceitavel(encodeURIComponent(' a b c d e'))).toBe(false);
   });
 
   for (const sufixo of SUFIXOS) {

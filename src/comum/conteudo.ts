@@ -400,7 +400,7 @@ const BANCO = String.raw`(?:banco(?!\s+d[eoa]s?\s+(?:alimentos?|sangue|leite|rou
 const LUGAR_DE_IR = '(?:portaria|recepcao|entrada|balcao|secretaria|guiche|sede|salao|biblioteca|escola|igreja|quadra|sala)';
 const CONVERSA =
   '(?:privado|pv|inbox|direct|dm|zap|zapzap|zapp|whats|whatsapp|wpp|chat|conversa|mensagem|telefone|celular|grupo|virtual|online|digital|zoom|meet|chamada|video|videochamada|app|aplicativo|site|link|plataforma|e-?mail|telegram|insta|instagram)';
-const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em)\s+(?:(?:nossa|nosso|sua|seu)\s+)?${LUGAR_DE_IR}${F}(?![^\n]{0,40}${B}${CONVERSA}${F})(?:\s+(?!com${F})\p{L}+){0,2}\s+com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo|selfie|rosto)${F}))`;
+const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em)\s+(?:(?:nossa|nosso|sua|seu)\s+)?${LUGAR_DE_IR}${F}(?![^\n]{0,40}${B}${CONVERSA}${F})(?:\s+(?:principal|central|da\s+frente|do\s+fundo|d[aeo]s?\s+(?:escola|igreja|associacao|sede|biblioteca|quadra|creche|unidade)))?\s+com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo|selfie|rosto)${F}))`;
 const DADOS: readonly RegExp[] = [
   new RegExp(String.raw`${B}senhas?${F}.{0,40}${B}(cartao|cartoes|${BANCO}|pix)`, 'u'),
   new RegExp(String.raw`${B}(cartao|cartoes|${BANCO}|pix)${F}.{0,40}${B}senhas?${F}`, 'u'),
@@ -436,6 +436,11 @@ function motivoNoTexto(t: string, texto: string): Motivo | null {
 
 export function motivoDeRecusa(texto: string): Motivo | null {
   return motivoNoTexto(paraConferir(texto), texto);
+}
+
+/** O texto tem palavra de contato ("zap", "ligue", "insta", "privado"...)? Usado na sobra do link (abrir.ts). */
+export function citaContato(texto: string): boolean {
+  return PALAVRA_DE_CONTATO.test(paraConferir(texto));
 }
 
 // ---------- órgão público ----------
@@ -517,7 +522,10 @@ export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
     case 'contato': {
       // Com palavra de contato no texto, nenhuma dica de horário ou período: "Fale: 11 23:45-23:59" é telefone.
       const semContato = !PALAVRA_DE_CONTATO.test(t);
-      if (semContato && resolve(texto, motivo, (s) => s.replace(HORA_SOZINHA, '$1h$2'))) return com('Se for horário, escreva 19h30 às 21h.');
+      // E só se todo algarismo do texto for de horário: "11 9 12:34-5678" é telefone com dois-pontos no meio.
+      if (semContato && !/\d/.test(texto.replace(HORA_SOZINHA, '')) && resolve(texto, motivo, (s) => s.replace(HORA_SOZINHA, '$1h$2'))) {
+        return com('Se for horário, escreva 19h30 às 21h.');
+      }
       if (palavra('cep') && resolve(texto, motivo, (s) => s.replace(/(?<!\d)(\d{5})(\d{3})(?!\d)/g, '$1-$2'))) {
         return com('Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".');
       }
@@ -536,7 +544,11 @@ export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
       if (temPagamento(t)) return `o evento não aceita pedido de pagamento nem dado de banco. Tire esse trecho. ${EXEMPLO.pix}`;
       // Só para nome feito de palavras com hífen ("Mutirao-de-limpeza-..."): numa chave aleatória, que tem
       // algarismos entre os hífens, separar com espaço ensinaria a passar a chave.
-      if (/(?<!\S)\p{L}+(?:-\p{L}+)+(?!\S)/u.test(t) && /(?<!\S)\S{30,}/u.test(t) && resolve(texto, motivo, (s) => s.replace(/-/g, ' '))) {
+      // A troca só mexe nesses nomes: se sobrar outro código no texto, ela não resolve e a dica não aparece.
+      if (
+        /(?<!\S)(?=\S{30,}(?!\S))\p{L}+(?:-\p{L}+)+(?!\S)/u.test(t) &&
+        resolve(texto, motivo, (s) => s.replace(/(?<!\S)\p{L}+(?:-\p{L}+)+(?!\S)/gu, (nome) => nome.replace(/-/g, ' ')))
+      ) {
         return 'parece ter um código ou chave comprida, e o evento não aceita isso. Se é nome com hífens, separe com espaço, como em "Mutirão de limpeza".';
       }
       return 'parece ter um código ou chave comprida, e o evento não aceita isso. Tire o código.';

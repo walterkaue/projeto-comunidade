@@ -548,6 +548,16 @@ describe('revisão de 06/11/2026: golpes que a mudança tinha soltado continuam 
       'Criado por quem enviou o link. O site não confere.',
     ]);
     recusa('contato', ['Zap 11 98765 -- 4321', 'Ligue 11 98765 / / 4321']);
+    // Terceira passada: nenhuma palavra solta entre o lugar e "com documento".
+    recusa('dados', [
+      'Passe na sala remota com documento',
+      'Passe na sala do Teams com documento',
+      'Passe na sala do Discord com documento',
+      'Passe na sala web com documento',
+      'Passe na sala do Facebook com documento',
+      'Passe na sala por SMS com documento',
+    ]);
+    passa(['Passe na secretaria da escola com documento', 'Passe na portaria principal com documento com foto']);
     it('as dicas não ensinam a driblar', () => {
       const m = (t: string) => mensagemDaRecusa(t, motivoDeRecusa(t)!);
       expect(m('Aprovado pelo site')).not.toMatch(/diga de quem/);
@@ -556,6 +566,9 @@ describe('revisão de 06/11/2026: golpes que a mudança tinha soltado continuam 
       expect(m('Fale: 11 9876:5432')).not.toMatch(/horário/);
       expect(m('Fale: 11 23:45-23:59')).not.toMatch(/horário/);
       expect(m('Contato: 10/11-15/11')).not.toMatch(/período/);
+      // Terceira passada.
+      expect(m('Informações: 11 9 12:34-5678')).not.toMatch(/horário/);
+      expect(m('Mutirao-de-limpeza-da-praca-central-do-bairro Chave 7d9f2c1a-3b4e-4f6a-9c8d-1e2f3a4b5c6d')).not.toMatch(/hífens/);
     });
   });
   describe('conferência com a versão da main (roteiro do revisor de privacidade)', () => {
