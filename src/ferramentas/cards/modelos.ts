@@ -46,8 +46,8 @@ export const DEF_MODELOS: Record<ModeloDeCard, DefModelo> = {
   reuniao: { id: 'reuniao', nome: 'Reunião ou assembleia', faixa: 'REUNIÃO', usaHora: true, usaLocal: true, dicaTitulo: 'Ex.: Assembleia geral', dicaTexto: 'Pauta ou recado curto.' },
   evento: { id: 'evento', nome: 'Evento ou atividade', faixa: 'EVENTO', usaHora: true, usaLocal: true, dicaTitulo: 'Ex.: Mutirão de limpeza', dicaTexto: 'O que vai acontecer, em poucas palavras.' },
   aviso: { id: 'aviso', nome: 'Aviso', faixa: 'AVISO', usaHora: false, usaLocal: false, dicaTitulo: 'Ex.: Mudança de horário', dicaTexto: 'O que as pessoas precisam saber.' },
-  resultado: { id: 'resultado', nome: 'Resultado ou conquista', faixa: 'CONQUISTA', usaHora: false, usaLocal: false, dicaTitulo: 'Ex.: Conseguimos!', dicaTexto: 'O que foi alcançado e por quem.' },
-  agradecimento: { id: 'agradecimento', nome: 'Agradecimento', faixa: 'OBRIGADO', usaHora: false, usaLocal: false, dicaTitulo: 'Ex.: Obrigado a quem ajudou', dicaTexto: 'A quem e pelo quê.' },
+  resultado: { id: 'resultado', nome: 'Resultado ou conquista', faixa: 'CONQUISTA', usaHora: false, usaLocal: false, dicaTitulo: 'Ex.: Conseguimos!', dicaTexto: 'O que o grupo conseguiu.' },
+  agradecimento: { id: 'agradecimento', nome: 'Agradecimento', faixa: 'OBRIGADO', usaHora: false, usaLocal: false, dicaTitulo: 'Ex.: Obrigado a quem ajudou', dicaTexto: 'A quem o grupo agradece e pelo quê. Prefira o nome do grupo. Nome de criança ou adolescente nunca.' },
 };
 
 /** Campos que a pessoa preenche. `link` não aparece no formulário: só vem de outra ferramenta, já validado. */

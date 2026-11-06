@@ -11,6 +11,7 @@ import { escalaDoFormato } from '../cards/modelos';
 import { rascunho } from '../reuniao/rascunho';
 import { temConteudo } from '../reuniao/ata';
 import {
+  AVISO_FAZER_OUTRO,
   avisoDoCompartilhamento,
   descricaoDaImagem,
   enderecoDaPaginaDoEvento,
@@ -50,6 +51,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     ${d.origem === 'link' ? `<p class="fluxo-nota">${esc(NOTA_DO_LINK)}</p>` : ''}
     ${aviso ? `<p class="fluxo-nota" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
+    <a class="botao botao-sec" id="fluxo-regras" href="${esc(linkPara('regras'))}" hidden>Ver as Regras de uso</a>
     <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
     <p class="fluxo-estado" id="fluxo-estado"></p>
 
@@ -74,8 +76,9 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
     <div class="fluxo-acoes">
       <button type="button" class="botao botao-sec" id="fluxo-mudar">Mudar algo</button>
-      <button type="button" class="botao botao-sec" id="fluxo-outro">Fazer outro</button>
+      <button type="button" class="botao botao-sec" id="fluxo-outro" aria-describedby="fluxo-outro-dica">Fazer outro</button>
     </div>
+    <p class="campo-dica" id="fluxo-outro-dica">${esc(AVISO_FAZER_OUTRO)}</p>
     ${
       d.tipo === 'reuniao'
         ? `<section class="fluxo-ata" aria-labelledby="fluxo-ata-titulo">
@@ -141,9 +144,10 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   });
 
   linkPronto
-    .then(({ link, aviso }) => {
+    .then(({ link, aviso, removido }) => {
       if (!vivo) return;
       estadoDoLink.textContent = aviso;
+      if (removido) q('fluxo-regras').hidden = false;
       // O aviso do exemplo já está na tela e no aviso do topo; a região de status basta para o do link.
       if (aviso && aviso !== MENSAGEM_LINK_COM_EXEMPLO) avisar(aviso);
       if (!link) return;

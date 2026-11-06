@@ -148,3 +148,14 @@ describe('confirmação do Pronto (sem DOM)', () => {
     expect(idsDaDescricao(false, 'fluxo-mandar-dica')).toBe('fluxo-mandar-dica');
   });
 });
+
+describe('aviso de apagar no Pronto (B6)', () => {
+  it('o texto é o do relatório e a tela o usa junto de "Fazer outro"', async () => {
+    const { AVISO_FAZER_OUTRO } = await import('./apoio');
+    expect(AVISO_FAZER_OUTRO).toBe('Terminou? Toque em Fazer outro para apagar o que você escreveu neste aparelho.');
+    const { readFileSync } = await import('node:fs');
+    const fonte = readFileSync(new URL('./pronto.ts', import.meta.url), 'utf8');
+    expect(fonte).toContain('esc(AVISO_FAZER_OUTRO)');
+    expect(fonte).toContain('aria-describedby="fluxo-outro-dica"');
+  });
+});

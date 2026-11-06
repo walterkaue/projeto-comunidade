@@ -1,8 +1,9 @@
 // Link do evento para a tela Pronto (reunião e evento). O formato do evento (compressão, base64) só é
 // baixado aqui, quando a tela Pronto abre, e pode ser trocado nos testes.
 
+import type { MotivoDaRemocao } from '../../comum/entreTelas';
 import { validarEvento, type Evento } from '../evento/validar';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
 import { assinatura, eventoDoFluxo, exemploNoLink, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
 
 export interface ResultadoDoLink {
@@ -10,17 +11,29 @@ export interface ResultadoDoLink {
   link: string;
   /** Explicação para a pessoa quando faltou o link. */
   aviso: string;
+  /** Presente quando o link novo é igual a um evento removido do site (não há link). */
+  removido?: MotivoDaRemocao;
 }
 
 export interface DependenciasDoLink {
   codificar: (e: Evento) => Promise<string>;
   completo: (dados: string, base: string) => string;
   maximo: number;
+  /** Forma canônica do evento (a que a lista de bloqueio também guarda). */
+  canonico?: (e: Evento) => string;
+  /** O motivo da remoção, ou null se nenhum destes dados está na lista. Sem isto, não confere. */
+  bloqueado?: (dados: string[]) => Promise<MotivoDaRemocao | null>;
 }
 
 async function padrao(): Promise<DependenciasDoLink> {
-  const f = await import('../evento/formato');
-  return { codificar: (e) => f.codificar(e), completo: f.linkCompleto, maximo: f.LINK_MAXIMO };
+  const [f, b] = await Promise.all([import('../evento/formato'), import('../evento/bloqueio')]);
+  return {
+    codificar: (e) => f.codificar(e),
+    completo: f.linkCompleto,
+    maximo: f.LINK_MAXIMO,
+    canonico: f.dadosCanonicos,
+    bloqueado: (dados) => b.motivoDoLinkBloqueado(dados),
+  };
 }
 
 /**
@@ -44,6 +57,13 @@ export async function linkDoFluxo(d: DadosDoFluxo, base: string, deps?: Dependen
     const dp = deps ?? (await padrao());
     const link = dp.completo(await dp.codificar(r.evento), base);
     if (link.length > dp.maximo) return { link: '', aviso: MENSAGEM_DO_LINK_GRANDE };
+    // Um evento igual a um removido não ganha link: quem recebe só veria "removido" (conferência falha = segue).
+    if (dp.bloqueado) {
+      const feitos = link.slice(link.indexOf('#/evento/') + '#/evento/'.length);
+      const canonico = dp.canonico?.(r.evento);
+      const motivo = await dp.bloqueado(canonico && canonico !== feitos ? [feitos, canonico] : [feitos]);
+      if (motivo) return { link: '', aviso: MENSAGEM_LINK_REMOVIDO, removido: motivo };
+    }
     d.link = link;
     d.assinaturaDoLink = assinatura(d);
     d.linkOriginal = false;

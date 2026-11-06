@@ -3,13 +3,13 @@
 import type { CamposDoCard, ModeloDeCard } from './modelos';
 
 export const ORGANIZACOES = [
-  'Associação de Moradores Jardim das Flores',
-  'Sindicato dos Metalúrgicos Vale Azul',
-  'Grupo de Oração Luz do Amanhecer',
-  'Núcleo de Bairro Zona Norte',
+  'Associação de Moradores Vila Cantinho Sereno',
+  'Sindicato dos Metalúrgicos Vale das Pedras Mansas',
+  'Grupo de Oração Flor do Pomar',
+  'Núcleo de Bairro Morro do Tatu-Bola',
   'Coletivo Palco Aberto',
   'Instituto Rede Viva',
-  'Conselho Escolar Rio Claro',
+  'Conselho Escolar Riacho Cinco Pedras',
 ] as const;
 
 type Linha = readonly [titulo: string, texto: string, local: string];
