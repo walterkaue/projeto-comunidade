@@ -262,7 +262,7 @@ a {
 .rodape ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 1rem;
+  gap: 12px 1rem;
 }
 
 .rodape a {
@@ -283,5 +283,19 @@ a {
   }
   .botao:active {
     transform: none;
+  }
+}
+
+/* Contraste forçado (Windows): o botão principal mantém fundo e foco visíveis. */
+@media (forced-colors: active) {
+  .botao:not(.botao-sec):not(.botao-grande) {
+    forced-color-adjust: none;
+    background: ButtonText;
+    color: ButtonFace;
+    border-color: ButtonText;
+  }
+
+  .botao:not(.botao-sec):not(.botao-grande):focus-visible {
+    outline-color: Highlight;
   }
 }
