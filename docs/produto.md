@@ -1,6 +1,6 @@
 # Projeto Comunidade — produto (fonte da verdade)
 
-> Versão 0.8 · 06/11/2026 · nome provisório. Este documento guarda regras e decisões. O que está em "Perguntas abertas" ainda não foi decidido. A cópia que vale no código é `docs/produto.md` no repositório; esta aqui deve ficar igual a ela. A v0.5 junta a v0.4 (benchmark aprovado) com as decisões tomadas no Claude Code em 05/11 (ata só na aba, denúncias por e-mail com ajuda do Gemini, sem fins lucrativos, menores, só pessoas, métricas no beta). A v0.7 registra as decisões tomadas a partir da revisão de segurança e da análise jurídica preliminar de 05/11 (guarda dos e-mails, nome do responsável, prazos de denúncia, regras 9 a 11). A v0.8 registra as decisões de 06/11, tomadas a partir da revisão do fluxo único (exemplo, link e reunião; seção 7.6).
+> Versão 0.9 · 06/11/2026 · nome provisório. Este documento guarda regras e decisões. O que está em "Perguntas abertas" ainda não foi decidido. A cópia que vale no código é `docs/produto.md` no repositório; esta aqui deve ficar igual a ela. A v0.5 junta a v0.4 (benchmark aprovado) com as decisões tomadas no Claude Code em 05/11 (ata só na aba, denúncias por e-mail com ajuda do Gemini, sem fins lucrativos, menores, só pessoas, métricas no beta). A v0.7 registra as decisões tomadas a partir da revisão de segurança e da análise jurídica preliminar de 05/11 (guarda dos e-mails, nome do responsável, prazos de denúncia, regras 9 a 11). A v0.8 registra as decisões de 06/11, tomadas a partir da revisão do fluxo único (exemplo, link e reunião; seção 7.6). A v0.9 registra a direção para problemas da rua (06/11): a porta "Pedir conserto na rua" logo depois do beta e o mapa público do bairro na Onda 3.
 
 ## 1. O que é
 
@@ -43,6 +43,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 | 05/11/2026 | **Depois da revisão de segurança** (`docs/auditoria/2026-11-05/seguranca.md`): regra nova nas Regras de uso, "fingir ser outra pessoa, organização ou órgão público"; a tela de link removido mostra a regra ferida e como pedir revisão; pedido "é um conteúdo meu" só é atendido com indício de que a pessoa criou o link; o Cards só abre preenchido pelo que outra ferramenta preparou na mesma aba, nunca por dados no link. |
 | 05/11/2026 | **Depois da análise jurídica preliminar** (feita por IA, a conferir pelo advogado; não muda a faixa "em revisão jurídica"): a regra 9 ganha exceção para paródia, sátira e crítica que quem lê percebe logo; regras novas 10 (expor criança ou adolescente) e 11 (incentivo a automutilação ou suicídio); seção "O que não é removido" (crítica, mesmo dura, não é ofensa); a tela de link removido fala como decisão do site e, nas regras 8 e 10, não repete o texto da regra; a página de evento pede para não ser indexada e avisa "Nunca faça pagamento pedido por um evento"; cada decisão de moderação registra o fundamento; Termos com responsabilidade, cláusula eleitoral e nenhum atendimento exclusivo a partido, candidato ou campanha. **Regras de apoio** (página Sobre): nenhuma doação com destino marcado; recusa de dinheiro e serviço de partido, candidato, pré-candidato, campanha, quem exerce mandato, dirigente partidário e órgão público (a não ser por edital público); lista pública de apoiadores com o valor ou a faixa; nenhum apoiador passa de 20% da receita do ano. |
 | 06/11/2026 | **Depois da revisão do fluxo único** (`docs/auditoria/2026-11-05/fluxo.md`): o Pronto diz o que ainda é do exemplo e pede confirmação na própria tela antes de mandar, baixar, copiar ou imprimir; **o link do evento só nasce com a organização trocada** (o título do exemplo pode ser o de verdade, então não trava); a reunião avisa no passo 1 que título, local e pauta vão no link, sem nome de pessoa; "Fazer o card" e "Criar outro", sem mudança, mantêm o link original, para o bloqueio pegar as cópias. "Mandar sem o link" e cartaz de reunião sem QR esperam o beta. Detalhes na seção 7.6. |
+| 06/11/2026 | **Problemas da rua** (mato alto, buraco, lâmpada apagada, entulho e parecidos). **Porta nova "Pedir conserto na rua"**, logo depois do beta do fluxo único: a pessoa escolhe o tipo, marca o ponto no mapa ou digita o endereço e pode pôr uma foto; o site monta texto, foto e link do local para o canal oficial da cidade (ouvidoria, 156 ou o aplicativo que a prefeitura já usa, como o Colab) e para o grupo do bairro no WhatsApp. **Nada fica guardado** e nada é enviado em nome de ninguém. O **mapa público do bairro** fica para a Onda 3, com as condições da seção 8. Em qualquer caso, **as categorias falam só de coisas, nunca de pessoas**. Escopo na seção 8. |
 
 ## 4. Princípios (regras que nunca mudam)
 
@@ -95,6 +96,7 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - **ECA Digital (Lei 15.211/2025):** em vigor desde 17/03/2026; vale para serviços direcionados a menores ou "de acesso provável" por eles; guia da ANPD de 28/10/2026 modula exigências por porte; fiscalização a partir de jan/2027. Autodeclaração de idade tem risco (art. 9º). Decisão de 05/11: menores podem usar, se o advogado confirmar. Rever antes de quizzes e jogos.
 - **Direito autoral:** livros e aulas enviados por usuários precisam de termo de autorização e de canal de pedido de remoção. Preferir apontar (link + resumo próprio) a hospedar. Logos e marcas nos cards são responsabilidade de quem faz o card (confirmar redação). Modelos da WikiLAI (CC BY 4.0) podem ser adaptados com crédito.
 - **IA e transferência internacional:** mandar texto de usuário para IA no exterior (inclusive na triagem de denúncias) pode ser transferência internacional (LGPD, art. 33). Confirmar com o advogado e citar na Política de Privacidade.
+- **Fotos de rua (06/11):** rosto, placa de carro e fachada de casa podem ser dado pessoal. Na porta "Pedir conserto na rua" a foto não sai do aparelho. No mapa público (Onda 3), perguntar ao advogado a base legal para publicar e se borrar rosto e placa basta. Um mapa de problemas também pode ser usado como peça de campanha em 2028: perguntar que cuidados eleitorais valem para ele.
 - **Moderação:** com conteúdo de todas as posições políticas, a moderação precisa ser previsível e documentada desde o início (seção 4.1).
 - Lista completa de perguntas ao advogado: `docs/onda-1.md` 8.6 e `claude/benchmarks.md` 6.4.
 
@@ -107,6 +109,8 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - [ ] Se haverá conta de "organização" (Onda 3). Por enquanto, só pessoas.
 - [ ] Na lista "quem leva o quê": nome, apelido ou nada, e quando a lista se apaga sozinha (antes da Onda 2).
 - [ ] Parecer do advogado sobre a análise jurídica preliminar de 05/11/2026 (feita por IA). As normas de 2026 citadas nela (adequação da União Europeia, decretos do Marco Civil e do ECA Digital) só entram nos textos públicos depois que ele confirmar.
+- [ ] De onde vem o mapa da porta "Pedir conserto na rua": hospedar o nosso próprio mapa (dados do OpenStreetMap) ou usar um fornecedor gratuito que permita esse uso. Decidir antes de construir a porta.
+- [ ] Lista de canais oficiais por cidade (ouvidoria, 156, aplicativo da prefeitura): começa genérica ou com algumas cidades? Quem mantém e como confere que o canal é mesmo oficial?
 
 ## 7. Escopo da Onda 1
 
@@ -172,6 +176,15 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 
 ## 8. Direção das Ondas 2 e 3 (aprovada em 05/11/2026; escopo detalhado antes de cada onda)
 
+**Logo depois do beta — porta "Pedir conserto na rua"** (aprovada em 06/11/2026; sem banco, mesma arquitetura da Onda 1)
+- Mais uma porta do início "O que você quer fazer?", no mesmo jeito de 3 passos e tela "Pronto".
+- **Tipos fixos, só de coisas:** mato alto, buraco no asfalto ou na calçada, lâmpada apagada, lixo ou entulho, vazamento de água ou esgoto, árvore ou galho com risco de cair, sinalização quebrada, outro problema na rua. **Nunca** categoria sobre pessoas (morador em situação de rua, "ponto de droga", "pessoa suspeita" e parecidos).
+- **Local:** endereço digitado ou ponto no mapa. O mapa é opcional e só carrega se a pessoa pedir (internet fraca). A localização do aparelho só é usada se a pessoa tocar em "usar onde estou", e só o ponto do problema entra no texto.
+- **Foto opcional:** lida e reduzida no aparelho, sem a localização gravada pela câmera, com aviso "evite rostos e placas de carro". Nunca é enviada para nós.
+- **Saída:** texto pronto pedindo o conserto, a foto e o link do ponto no mapa; "Mandar no WhatsApp" para o grupo do bairro; e "Onde pedir na sua cidade", que mostra o canal oficial (ouvidoria, 156 ou o aplicativo que a prefeitura já usa, como o Colab). A plataforma **nunca envia o pedido em nome de ninguém** e não cria página no nosso domínio.
+- **Neutralidade:** o texto pede o conserto e não culpa ninguém; nenhuma menção a prefeito, vereador, partido ou gestão.
+- **Mapa:** dados do OpenStreetMap, com crédito. Nunca usar os servidores de mapa do próprio OpenStreetMap, que proíbem uso pesado; hospedar o nosso ou usar fornecedor que permita (pergunta aberta na seção 6).
+
 **Onda 2 — Aprender e agir** (entra o Supabase)
 1. **Lista de quem leva o quê** (antigos itens 7 e 8 juntos): lista em link para doação de itens, mutirão, festa ou ação, com itens, quantidade, limite e botão "eu levo"; apelido opcional, sem telefone. **Primeira da Onda 2.**
 2. **Assistente de pedido de LAI** (antigo item 4): mostra onde pedir (Informa.BR no federal, prefeitura, câmara), modelo pronto adaptado da WikiLAI, aviso de que não é preciso dizer o motivo, "veja se alguém já pediu" (busca da CGU e diário oficial) e lembrete de prazo e de recurso gerado no aparelho. Nunca envia nem publica pedidos. Estático; pode rodar em paralelo ao item 1.
@@ -184,5 +197,6 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 - **Mapa de consenso** no estilo Polis (antigo item 10, parte B): só pauta interna da organização, só agregados, sem tema partidário ou eleitoral.
 - **Rascunho de ata com IA** a partir de texto colado: só depois de nova decisão registrada aqui, porque contraria hoje a regra "ata só no aparelho".
 - Consulta a dados públicos via API do Querido Diário, página da organização, prestação de contas e contas de organização.
+- **Mapa público do bairro** (aprovado como direção em 06/11/2026): os pedidos de conserto ficam à vista de todos, com "eu também vi" e "já foi resolvido". Só entra quando houver parecer do advogado, Supabase, mais de uma pessoa moderando e regras eleitorais com calendário público (seção 4.1). Condições: quem registrou nunca aparece; foto só aparece depois de revisão ou com rosto e placa borrados; "eu também vi" e "resolvido" contados e validados no servidor; nenhuma nota, ranking ou comparação de gestão, prefeito, vereador ou partido; dados abertos iguais para todos. Antes de construir, comparar com reaproveitar o FixMyStreet (código aberto da mySociety) e com o padrão aberto Open311.
 
-**Fora:** robô ou API do WhatsApp (por princípio), abaixo-assinado, mapa de organizações, cadastro de membros e ferramentas de campanha eleitoral.
+**Fora:** robô ou API do WhatsApp (por princípio), abaixo-assinado, mapa de organizações (o mapa de problemas da rua é outra coisa: ver acima), cadastro de membros e ferramentas de campanha eleitoral.
