@@ -82,7 +82,7 @@ test('link com ponto colado no fim abre, e a denúncia leva o link limpo', async
   await expect(recebida).toHaveURL(link);
 
   await recebida.getByRole('link', { name: 'Denunciar este evento' }).click();
-  await expect(recebida).toHaveURL(/#/denunciar//);
+  await expect(recebida).toHaveURL(/#\/denunciar\//);
   await expect(recebida.locator('.link-denunciado')).toContainText(link.slice(0, 40));
   await recebida.getByLabel('Tipo de problema').selectOption('golpe');
   await recebida.getByLabel('O que há de errado').fill('O evento pede um pagamento adiantado para garantir a vaga.');
