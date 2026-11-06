@@ -82,7 +82,7 @@ const LINHAS: Record<ModeloDeCard, readonly Linha[]> = {
     ['Reunião de núcleo transferida', 'A reunião desta semana passa para o salão ao lado. Mesmo horário.', ''],
     ['Ensaio aberto cancelado', 'Por causa da chuva, o ensaio fica para a próxima semana.', ''],
     ['Inscrições prorrogadas', 'As inscrições seguem abertas até o fim do mês. Vagas limitadas.', ''],
-    ['Entrega de material escolar', 'A retirada do material será na secretaria, de segunda a sexta.', ''],
+    ['Entrega de material escolar', 'A retirada do material será na sede da escola, de segunda a sexta.', ''],
   ],
   resultado: [
     ['Conseguimos o asfalto da rua 4', 'Depois de um ano de pedidos, as obras vão começar. Obrigado a todos.', ''],
