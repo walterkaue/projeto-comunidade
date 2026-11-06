@@ -1,6 +1,51 @@
 import { describe, expect, it } from 'vitest';
-import { limparTexto, motivoDeRecusa, paraConferir } from './conteudo';
+import { citaOrgaoPublico, limparTexto, motivoDeRecusa, paraConferir } from './conteudo';
 import { NOME, NOME_CURTO } from './marca';
+
+describe('citaOrgaoPublico', () => {
+  const citam = [
+    'Prefeitura de Vila Alegre informa',
+    'PREFEITURA',
+    'Defesa Civil: evacuação imediata',
+    'defesa  civil',
+    'Governo Federal convoca',
+    'governo do estado',
+    'INSS: atualização cadastral',
+    'inss',
+    'Receita Federal: regularize seu CPF',
+    'Receita: regularize seu CPF',
+    'Polícia Militar: operação no bairro',
+    'POLICIA',
+    'Banco Central: devolução de valores',
+    'Ministério da Saúde',
+    'Ministerio',
+    'Secretaria de Saúde de Vila Alegre: vacinação',
+    'URGENTE: aviso da Prefeitura',
+    'Reunião com a Prefeitura sobre a praça',
+    'ｐｒｅｆｅｉｔｕｒａ',
+    'Prefeitura​ de Vila Alegre',
+  ];
+  for (const t of citam) it(`cita: ${t}`, () => expect(citaOrgaoPublico(t), t).toBe(true));
+
+  const naoCitam = [
+    'Sarau na praça',
+    'Associação de moradores do Bairro Novo',
+    'Troca de receitas da vó',
+    'Receita de bolo de fubá',
+    'Mutirão de limpeza',
+    'Governança do coletivo',
+    'Policiamento',
+    'Banco de alimentos',
+    'Festa da Comunidade',
+    '',
+  ];
+  for (const t of naoCitam) it(`não cita: ${t || '(vazio)'}`, () => expect(citaOrgaoPublico(t), t).toBe(false));
+
+  it('não barra nada: só informa', () => {
+    expect(motivoDeRecusa('Reunião com a Prefeitura sobre a praça')).toBeNull();
+    expect(motivoDeRecusa('Defesa Civil: evacuação imediata')).toBeNull();
+  });
+});
 
 describe('telefone disfarçado', () => {
   const recusados = [

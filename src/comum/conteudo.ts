@@ -213,6 +213,39 @@ export function motivoDeRecusa(texto: string): Motivo | null {
   return null;
 }
 
+// ---------- órgão público ----------
+
+// Nomes de órgão público. Texto já sem acento e em minúsculas (paraConferir). "Receita" sozinha só conta no
+// singular e sem "de/do/da" depois ("receita de bolo" e "troca de receitas" não contam).
+const SEP = String.raw`[^\p{L}\p{N}]*`;
+const ORGAO_PUBLICO = new RegExp(
+  `${B}(?:` +
+    [
+      'prefeituras?',
+      `defesa${SEP}civil`,
+      'governos?',
+      'inss',
+      `receita${SEP}federal`,
+      String.raw`receita(?!\s+d[eoa]s?${F})`,
+      'policias?',
+      `banco${SEP}central`,
+      'ministerios?',
+      'secretarias?',
+    ].join('|') +
+    `)${F}`,
+  'u',
+);
+
+/**
+ * O texto cita um órgão público (Prefeitura, Defesa Civil, Governo, INSS, Receita Federal, Polícia, Banco
+ * Central, Ministério, Secretaria)? Com ou sem acento, em qualquer caixa e com os mesmos disfarces que
+ * `paraConferir` desfaz. NÃO barra nada: "reunião com a Prefeitura" é honesto. Serve para o Pronto perguntar
+ * antes de mandar se o convite fala em nome de um órgão (simulação B, 06/11/2026, B-01).
+ */
+export function citaOrgaoPublico(texto: string): boolean {
+  return ORGAO_PUBLICO.test(paraConferir(texto));
+}
+
 export const MENSAGEM_DO_MOTIVO: Record<Motivo, string> = {
   dados: 'o evento não pode pedir senha, dados de cartão, código recebido por mensagem nem documento. É assim que muitos golpes começam.',
   html: 'não use os sinais < e > nem códigos como &amp; (o texto é mostrado como está, sem formatação).',
