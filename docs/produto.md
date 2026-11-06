@@ -153,13 +153,13 @@ Uma plataforma digital gratuita, aberta a qualquer pessoa e a qualquer organiza�
 
 > Telas aprovadas no quadro "Fluxo único — telas" (claude.ai). As ferramentas continuam as mesmas por dentro; muda o caminho até elas.
 
-- **Início — "O que você quer fazer?"**: cinco portas grandes com verbo e exemplo: Chamar para uma reunião (assembleia, encontro, plenária); Divulgar um evento (mutirão, festa, culto, ato, curso); Dar um aviso (mudança, lembrete, recado); Contar uma conquista; Agradecer. Abaixo, o atalho "Depois da reunião: fazer a ata". Uma frase só de explicação: "Em 1 minuto você tem a imagem, o texto e o link para o WhatsApp. Sem cadastro."
-- **Três passos**, uma coisa por tela, com "Passo N de 3" em texto, botões "Voltar" e "Continuar" fixos embaixo:
+- **Início — "O que você quer fazer?"**: cinco portas grandes com verbo e exemplo: Chamar para uma reunião (assembleia, encontro, plenária); Divulgar um evento (mutirão, festa, culto, ato, curso); Dar um aviso (mudança, lembrete, recado); Contar uma conquista; Agradecer. Reunião em destaque (fundo escuro), evento e aviso em largura cheia, conquista e agradecimento lado a lado e menores, cada porta com um ícone simples de traço. Abaixo, o atalho "Depois da reunião: fazer a ata". Uma frase só de explicação: "Em 1 minuto você tem a imagem, o texto e o link para o WhatsApp. Sem cadastro."
+- **Três passos**, uma coisa por tela, com "Passo N de 3" em texto, botões "Voltar" e "Continuar" fixos embaixo (no passo 3, "Ficou bom"). A barra nunca cobre o campo: com o teclado aberto, ela solta da tela. O rodapé do site não aparece nos passos nem no Pronto; fica no início, nas páginas, na ata e na página do evento:
   1. **O quê:** título, organização e, se for reunião, a pauta (um item por linha).
   2. **Quando e onde:** dia (com atalhos Hoje, Amanhã, Próximo sábado), hora e local. Aviso e agradecimento podem pular este passo.
-  3. **Como fica:** prévia grande e só duas escolhas: "Onde vai mandar?" (Status, Grupo, Cartaz) e a cor (as 6 paletas). Logo, cor livre e rodapé ficam em "Mais opções", fechado.
+  3. **Como fica:** prévia grande e só duas escolhas: "Onde vai mandar?" (Status, Grupo, Cartaz, três botões lado a lado) e a cor (as 6 paletas, em bolinhas com o nome lido pelo leitor de tela e ✓ na escolhida). Logo, cor livre e rodapé ficam em "Mais opções", fechado.
 - **Prévia sempre à vista:** nos passos 1 e 2, uma miniatura fixa no topo com "Ver maior".
-- **Começa preenchido:** cada porta abre com um exemplo pronto, em rodízio entre os tipos de organização; a pessoa troca o que quiser. Nada de tela em branco.
+- **Começa preenchido:** cada porta abre com um exemplo pronto, em rodízio entre os tipos de organização; a pessoa troca o que quiser ("Apagar o exemplo" é um link discreto abaixo do texto de abertura). Nada de tela em branco.
 - **Tela "Pronto"**: um botão principal, "Mandar no WhatsApp" (imagem + texto; com data e local, o texto leva o link do evento). Embaixo: Baixar a imagem, Copiar só o texto, Copiar o link, Imprimir cartaz para o mural. Depois, "Mudar algo" e "Fazer outro". Na reunião, a ponte "E depois da reunião? Fazer a ata", que já abre com a pauta.
 - **Ata (Depois da reunião):** o modelo de ata atual, recebendo a pauta da convocação só na mesma aba (regra da seção 3: nada vai para link nem sai do aparelho).
 - **Links que já circulam continuam valendo:** páginas de evento (`#/evento/...`) abrem igual; os endereços antigos das ferramentas levam ao ponto certo do fluxo.

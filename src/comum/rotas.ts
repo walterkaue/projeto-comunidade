@@ -68,3 +68,12 @@ export function parteDaRota(rota: Rota): Parte {
       return 'paginas';
   }
 }
+
+/**
+ * O rodapé comum (Sobre, Termos, Regras, Como denunciar) fica nas páginas, na ata e na página de um evento.
+ * Some no início (que tem o próprio rodapé) e em todo o fluxo, onde a pessoa está criando algo.
+ */
+export function mostraORodapeComum(rota: Rota): boolean {
+  const parte = parteDaRota(rota);
+  return parte !== 'inicio' && parte !== 'fluxo';
+}

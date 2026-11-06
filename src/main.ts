@@ -6,7 +6,7 @@ import './comum/tema.css';
 import './comum/componentes.css';
 import { prepararAviso } from './comum/aviso';
 import { ligarMetricas } from './comum/metricas';
-import { lerRota, linkPara, parteDaRota, type Parte, type Rota } from './comum/rotas';
+import { lerRota, linkPara, mostraORodapeComum, parteDaRota, type Parte, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
 import type { Limpeza, Tela } from './comum/tela';
 import { NOME } from './comum/marca';
@@ -97,7 +97,7 @@ function abrir(): void {
   const rota = lerRota(location.hash);
   const alvo = TELAS[parteDaRota(rota)];
   const minha = ++navegacao;
-  if (rodapeComum) rodapeComum.hidden = rota.nome === 'inicio' || parteDaRota(rota) === 'fluxo';
+  if (rodapeComum) rodapeComum.hidden = !mostraORodapeComum(rota);
   if (alvo === telaInicio) {
     mostrar(telaInicio, rota);
     return;

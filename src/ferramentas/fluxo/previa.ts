@@ -8,7 +8,7 @@ import { escalaDoFormato, type Formato } from '../cards/modelos';
 import { camposDoCard, type DadosDoFluxo } from './estado';
 import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, paletaDoFluxo } from './apoio';
 import { logoAtual } from './memoria';
-import { abreTeclado, tecladoAberto } from './teclado';
+import { abreTeclado, rolagemParaOCampo, tecladoAberto } from './teclado';
 
 let fontesProntas: Promise<unknown> | undefined;
 export function esperarFontes(): Promise<unknown> {
@@ -163,19 +163,38 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
     const a = document.activeElement;
     return a instanceof HTMLElement && abreTeclado(a.tagName, a instanceof HTMLInputElement ? a.type : '') ? a : null;
   };
+  // Maior altura visível vista (sem zoom) nesta largura: girar o celular muda a largura e recomeça a conta.
+  let alturaMaxima = 0;
+  let larguraDaConta = 0;
+  const escala = (): number => vv?.scale ?? 1;
   const atualizarTeclado = (): void => {
+    const alturaVisivel = vv?.height ?? window.innerHeight;
+    if (window.innerWidth !== larguraDaConta) {
+      larguraDaConta = window.innerWidth;
+      alturaMaxima = 0;
+    }
+    if (escala() <= 1.01) alturaMaxima = Math.max(alturaMaxima, alturaVisivel);
     html.classList.toggle(
       'fluxo-teclado',
       tecladoAberto({
-        alturaVisivel: vv?.height ?? window.innerHeight,
+        alturaVisivel,
         alturaDaJanela: window.innerHeight,
         campoDeTextoEmFoco: campoEmFoco() !== null,
+        alturaMaxima,
+        escala: escala(),
       }),
     );
   };
   const mostrarCampo = (): void => {
     const campo = campoEmFoco();
-    if (campo?.isConnected) campo.scrollIntoView({ block: 'nearest' });
+    // Com zoom de pinça, a pessoa está lendo outro trecho: não puxa a tela de volta para o campo.
+    if (!campo?.isConnected || escala() > 1.01) return;
+    campo.scrollIntoView({ block: 'nearest' });
+    // iPhone: a janela não encolhe; confere com a borda de baixo da área visível de verdade.
+    if (vv) {
+      const falta = rolagemParaOCampo(campo.getBoundingClientRect().bottom, vv.offsetTop, vv.height);
+      if (falta > 0) window.scrollBy(0, falta);
+    }
   };
   const aoFocar = (e: Event): void => {
     const alvo = e.target;

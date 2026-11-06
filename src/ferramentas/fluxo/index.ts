@@ -19,6 +19,14 @@ function trocarEndereco(endereco: string): void {
   location.replace(endereco);
 }
 
+/**
+ * Aviso de um redirecionamento: sai depois que o roteador monta o passo e põe o foco no título. Antes disso,
+ * o leitor de tela descarta a fala pendente quando o foco muda.
+ */
+function avisarDepoisDoTitulo(mensagem: string): void {
+  setTimeout(() => avisar(mensagem), 700);
+}
+
 export const tela: Tela = (raiz, rota) => {
   observarHash();
   const destino = lerDestino(rota);
@@ -46,14 +54,14 @@ export const tela: Tela = (raiz, rota) => {
       // Sem dados na memória desta aba (recarregou, marcador): começa pelo passo 1.
       if (destino.passo !== 1 && !existe(destino.modelo)) {
         trocarEndereco(enderecoDoPasso(destino.modelo, 1));
-        avisar('Comece pelo passo 1.');
+        avisarDepoisDoTitulo('Comece pelo passo 1.');
         return;
       }
       const d = dadosDo(destino.modelo);
       const antes = passoPendente(d, destino.passo);
       if (antes) {
         trocarEndereco(enderecoDoPasso(destino.modelo, antes));
-        avisar(`Falta preencher o passo ${antes}.`);
+        avisarDepoisDoTitulo(`Falta preencher o passo ${antes}.`);
         return;
       }
       limpeza = destino.passo === 'pronto' ? montarPronto(raiz, d) : montarPasso(raiz, d, destino.passo);

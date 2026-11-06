@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lerRota, linkPara, parteDaRota } from './rotas';
+import { lerRota, linkPara, mostraORodapeComum, parteDaRota } from './rotas';
 
 describe('rotas por #', () => {
   it('endereço vazio ou desconhecido vai para a inicial', () => {
@@ -47,5 +47,16 @@ describe('qual parte abre cada endereço', () => {
     expect(parte('#/')).toBe('inicio');
     expect(parte('#/termos')).toBe('paginas');
     expect(parte('#/denunciar/x')).toBe('paginas');
+  });
+});
+
+describe('mostraORodapeComum', () => {
+  const mostra = (hash: string) => mostraORodapeComum(lerRota(hash));
+  it('aparece nas páginas, na ata e na página de um evento', () => {
+    for (const h of ['#/sobre', '#/denunciar', '#/ata', '#/evento/abc123']) expect(mostra(h), h).toBe(true);
+  });
+  it('some no início e em todo o fluxo (passos, Pronto, editar, endereços antigos)', () => {
+    for (const h of ['#/', '#/fazer/reuniao', '#/fazer/aviso/3', '#/fazer/evento/pronto', '#/evento', '#/evento/editar/abc', '#/cards', '#/reuniao'])
+      expect(mostra(h), h).toBe(false);
   });
 });

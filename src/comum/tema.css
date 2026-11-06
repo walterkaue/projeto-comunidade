@@ -169,8 +169,8 @@ a {
 
 .inicio-portas {
   display: grid;
-  /* Duas colunas mesmo em 360 px; com texto muito ampliado cai para uma. */
-  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  /* Duas colunas mesmo em 360 px (nunca três, nem deitado); com texto muito ampliado cai para uma. */
+  grid-template-columns: repeat(auto-fit, minmax(max(9.5rem, 40%), 1fr));
   gap: 0.75rem;
 }
 
@@ -188,8 +188,7 @@ a {
 }
 
 .inicio-portas .botao-grande {
-  flex-direction: column;
-  align-items: flex-start;
+  justify-content: flex-start;
   min-height: var(--toque);
   padding: 0.875rem 1rem;
   gap: 0.5rem;
@@ -206,7 +205,8 @@ a {
 .porta-destaque .botao-grande {
   min-height: 6.5rem;
   background: var(--porta-fundo);
-  border-color: var(--porta-fundo);
+  /* contorno de tinta: no tema escuro, o fundo da porta quase some contra a página */
+  border-color: var(--tinta);
   color: var(--porta-texto);
 }
 

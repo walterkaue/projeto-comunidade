@@ -18,7 +18,7 @@ Nenhum.
 
 ## Pedidos atendidos
 
-No fluxo único (05/11/2026), as mudanças em código compartilhado (`src/comum/rotas.ts`, `src/main.ts`, `src/paginas/inicio.ts`, `tema.css`, `componentes.css`, `index.html`) foram feitas pela própria conversa de integração, sem pedido aberto: rotas `#/fazer` e `#/ata`, despacho por parte, partes já baixadas sem "Carregando…", `[hidden]` global, botões de 52 px, aviso falado acima da barra fixa e `interactive-widget=resizes-content` no viewport.
+No fluxo único (05/11/2026), as mudanças em código compartilhado (`src/comum/rotas.ts`, `src/main.ts`, `src/paginas/inicio.ts`, `tema.css`, `componentes.css`, `index.html`) foram feitas pela própria conversa de integração, sem pedido aberto: rotas `#/fazer` e `#/ata`, despacho por parte, partes já baixadas sem "Carregando…", `[hidden]` global, botões de 52 px, aviso falado acima da barra fixa e `interactive-widget=resizes-content` no viewport. Na aproximação do desenho aprovado (05/11/2026), também sem pedido: portas do início com destaque, ícones e tokens `--porta-*` em `tema.css`, rodapé comum escondido no fluxo (`mostraORodapeComum` em `rotas.ts`) e `ignoreVary` no `public/sw.js`.
 
 Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
 
