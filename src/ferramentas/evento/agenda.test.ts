@@ -177,14 +177,16 @@ describe('achados da simulação B de 06/11/2026', () => {
 
   it('B-22: já passou pelo fim, ou por início + 1 hora sem fim', () => {
     const em = (a: number, m: number, d: number, h: number, min: number) => new Date(a, m - 1, d, h, min);
-    expect(jaPassou(e, em(2026, 11, 14, 11, 59))).toBe(false);
-    expect(jaPassou(e, em(2026, 11, 14, 12, 0))).toBe(true);
+    // Termina às 12h: com a folga de 6 h do fuso, só passa às 18h.
+    expect(jaPassou(e, em(2026, 11, 14, 12, 0))).toBe(false);
+    expect(jaPassou(e, em(2026, 11, 14, 17, 59))).toBe(false);
+    expect(jaPassou(e, em(2026, 11, 14, 18, 0))).toBe(true);
     expect(jaPassou(e, em(2026, 11, 15, 9, 0))).toBe(true);
-    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 9, 29))).toBe(false);
-    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 9, 30))).toBe(true);
+    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 15, 29))).toBe(false);
+    expect(jaPassou({ ...e, fim: '' }, em(2026, 11, 14, 15, 30))).toBe(true);
     // Termina depois da meia-noite: o fim é no dia seguinte.
     const noite = { ...e, inicio: '22:00', fim: '02:00' };
-    expect(jaPassou(noite, em(2026, 11, 15, 1, 59))).toBe(false);
-    expect(jaPassou(noite, em(2026, 11, 15, 2, 0))).toBe(true);
+    expect(jaPassou(noite, em(2026, 11, 15, 7, 59))).toBe(false);
+    expect(jaPassou(noite, em(2026, 11, 15, 8, 0))).toBe(true);
   });
 });

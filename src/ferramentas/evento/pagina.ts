@@ -153,7 +153,7 @@ export function telaPagina(raiz: HTMLElement, dados: string): Limpeza {
       }
     } catch (erro) {
       console.error(erro);
-      if (vivo()) telaDeMensagem(raiz, 'Não deu para abrir este evento', MENSAGEM_DO_PROBLEMA.malformado, true, false, true);
+      if (vivo()) telaDeMensagem(raiz, 'Não deu para abrir este evento', MENSAGEM_DO_PROBLEMA.malformado, true);
     }
   })();
 

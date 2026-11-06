@@ -85,12 +85,16 @@ export function quandoNaPagina(e: Pick<Evento, 'data' | 'inicio' | 'fim'>): stri
   return `${dataPorExtenso(e.data)}, ${horarioPorExtenso(e.inicio, e.fim)} (horário do local do evento)`;
 }
 
-/** O evento já terminou pelo relógio de quem abre (fim, ou início + 1 hora sem fim; B-22). */
+/** Folga antes de dizer que passou: a hora do link é a do local do evento, e quem abre pode estar noutro fuso
+ * (no Brasil, até 2 horas de diferença). */
+export const FOLGA_DO_PASSOU_MS = 6 * 60 * 60 * 1000;
+
+/** O evento já terminou (fim, ou início + 1 hora sem fim; B-22), com a folga do fuso pelo relógio de quem abre. */
 export function jaPassou(e: Pick<Evento, 'data' | 'inicio' | 'fim'>, agora: Date): boolean {
   const f = horariosDaAgenda(e).fim;
   const n = (de: number, ate: number) => Number(f.slice(de, ate));
   const termino = new Date(n(0, 4), n(4, 6) - 1, n(6, 8), n(9, 11), n(11, 13));
-  return !Number.isNaN(termino.getTime()) && agora.getTime() >= termino.getTime();
+  return !Number.isNaN(termino.getTime()) && agora.getTime() >= termino.getTime() + FOLGA_DO_PASSOU_MS;
 }
 
 /** O que vai como descrição na agenda: o texto do evento e, se houver, a organização. */

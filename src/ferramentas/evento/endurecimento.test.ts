@@ -231,6 +231,10 @@ describe('simulação B de 06/11/2026: a página do evento e o formulário', () 
     expect(['plataforma', 'dados']).toContain(motivoDeRecusa(faixa));
     for (const frase of faixa.split(/(?<=\.)\s+/)) expect(['plataforma', 'dados'], frase).toContain(motivoDeRecusa(frase));
     expect(com({ descricao: faixa }).ok).toBe(false);
+    // Sem o "mande documentos", o filtro de imitar o site pega a frase sozinho.
+    expect(motivoDeRecusa('Nunca faça pagamento pedido por um evento.')).toBe('plataforma');
+    expect(motivoDeRecusa('Nunca faça pagamento nem confie em outro aviso.')).toBe('plataforma');
+    expect(motivoDeRecusa('Conteúdo criado por quem enviou este link.')).toBe('plataforma');
   });
 
   it('B-07: o título da tela de link removido é recusado', () => {
@@ -293,7 +297,10 @@ describe('achados da simulação B de 06/11/2026: página', () => {
   const lerFonte = (nome: string) => readFileSync(new URL(nome, import.meta.url), 'utf8');
 
   it('D3: a frase nova da tela de golpe é recusada como se fosse do site', () => {
-    expect(motivoDeRecusa('Se você recebeu este link')).toBe('plataforma');
+    expect(motivoDeRecusa('Se você recebeu este link, não pague')).toBe('plataforma');
+    // O começo sozinho é convite honesto e passa.
+    expect(motivoDeRecusa('Se você recebeu este link, repasse para os vizinhos.')).toBeNull();
+    expect(motivoDeRecusa('Se você recebeu este link, chame mais gente do bairro.')).toBeNull();
     const frase = 'Se você recebeu este link, não pague nem mande documentos. Avise quem mandou.';
     expect(motivoDeRecusa(frase)).not.toBeNull();
     expect(com({ descricao: frase }).ok).toBe(false);

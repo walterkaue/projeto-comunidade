@@ -7,8 +7,9 @@
 // O link NUNCA vai na linha de comando: ele vem do e-mail de uma pessoa desconhecida, e o shell (Bash ou
 // PowerShell) executaria um "$(…)" escondido nele antes de este script ler o texto
 // (docs/auditoria/2026-11-05/seguranca.md, achado A1). O arquivo pode ter o link quebrado em linhas pelo
-// e-mail e o link de "editar/". Os dados precisam ter só letras sem acento, números, "-" e "_"; com qualquer
-// outro sinal, o script para sem gravar.
+// e-mail e o link de "editar/". Os dados são só letras sem acento, números, "-" e "_": o que vem depois
+// (ponto, parêntese, "%20Obrigada!") é cortado, como a página faz. Se o que foi cortado tiver sinal de comando
+// ("$", "`", "(", ";", "|", "&", "<", ">") ou for comprido, o script avisa para não usar o link em comando nenhum.
 // Se o evento não puder ser lido, o script PARA sem gravar (o bloqueio não pegaria): confira o link. Para gravar
 // mesmo assim só a impressão do link exato, use --forcar.
 // Grava em public/bloqueados.json só impressões (SHA-256) e o motivo, nunca o conteúdo:
@@ -39,9 +40,24 @@ export function dadosDoLink(link) {
   const i = junto.indexOf(MARCA);
   if (i < 0) return '';
   // Corta no primeiro sinal fora do formato dos dados (ponto, parêntese, espaço, "%20Obrigada!"), como o site.
-  const resto = junto.slice(i + MARCA.length).replace(/^editar\//, '');
-  return /^[A-Za-z0-9_-]*/.exec(resto)[0];
+  return /^[A-Za-z0-9_-]*/.exec(restoDoLink(junto, i))[0];
 }
+
+function restoDoLink(junto, i) {
+  return junto.slice(i + MARCA.length).replace(/^editar\//, '');
+}
+
+/** O que foi cortado depois dos dados parece montado para rodar algo (sinal de comando ou texto comprido)? */
+export function sobraSuspeita(link) {
+  const junto = link.replace(/[ \t]*\r?\n[ \t]*/g, '');
+  const i = junto.indexOf(MARCA);
+  if (i < 0) return false;
+  const sobra = restoDoLink(junto, i).replace(/^[A-Za-z0-9_-]*/, '').trim();
+  return /[$`();|&<>]/.test(sobra) || sobra.length > 40;
+}
+
+export const ALERTA_DE_COMANDO =
+  'Atenção: depois dos dados, o link tinha outros sinais (eles foram cortados). Não use esse link em nenhum comando: ele pode ter sido montado para rodar algo no computador.';
 
 /** Os dados têm o formato de um link do site? Qualquer outro sinal ("$", "(", "'", ";") é recusado. */
 export const dadosValidos = (dados) => FORMATO_DOS_DADOS.test(dados);
@@ -109,6 +125,7 @@ function parar(...linhas) {
 async function bloquear(link, motivo, forcar) {
   const dados = dadosDoLink(link);
   if (!dados) parar('Isso não parece um link de evento (falta "#/evento/"). Nada foi gravado.');
+  if (sobraSuspeita(link)) console.error(ALERTA_DE_COMANDO);
   if (!dadosValidos(dados)) {
     parar(
       'Depois de "#/evento/", o link só pode ter letras sem acento, números, - e _.',
