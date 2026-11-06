@@ -150,8 +150,13 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
 
 // ---------- altura das faixas fixas ----------
 
-/** Parte da altura da tela que a miniatura e a barra fixas podem ocupar juntas antes de soltar. */
+/**
+ * Parte da altura da tela que a miniatura e a barra fixas podem ocupar juntas antes de soltar, e abaixo da qual
+ * voltam a ficar fixas. A folga entre as duas evita o pisca-pisca quando a barra de endereço do navegador some e
+ * volta (a altura da janela muda um pouco ao rolar).
+ */
 const LIMITE_DAS_FAIXAS = 0.4;
+const VOLTA_DAS_FAIXAS = 0.35;
 
 /**
  * Mede a miniatura e a barra fixa (a altura muda com o tamanho do texto e com a quebra dos botões) e grava em
@@ -171,8 +176,9 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
       html.style.setProperty('--altura-barra', `${Math.max(0, barra.offsetHeight - recuo)}px`);
     }
     // Texto grande: se as faixas fixas comerem mais de 40% da tela, elas soltam (rolam com a página).
-    const fixas = (mini?.offsetHeight ?? 0) + (barra?.offsetHeight ?? 0);
-    html.classList.toggle('fluxo-faixas-soltas', fixas > LIMITE_DAS_FAIXAS * window.innerHeight);
+    const parte = ((mini?.offsetHeight ?? 0) + (barra?.offsetHeight ?? 0)) / Math.max(1, window.innerHeight);
+    const soltas = html.classList.contains('fluxo-faixas-soltas');
+    html.classList.toggle('fluxo-faixas-soltas', parte > (soltas ? VOLTA_DAS_FAIXAS : LIMITE_DAS_FAIXAS));
   };
   let obs: ResizeObserver | undefined;
   if (typeof ResizeObserver === 'function') {

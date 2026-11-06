@@ -177,8 +177,8 @@
 
 /* ---------- passo 3 ---------- */
 /* Prévia menor ao lado do "Ver a prévia maior": em 360 × 640, "Onde vai mandar?" e a cor cabem acima da barra.
-   A altura sobra do que vem em volta (cerca de 32,5rem), nunca passa de 40% da tela nem fica abaixo de 7rem. */
-.fluxo-moldura-passo3 {
+   A altura sobra do que vem em volta (cerca de 31,5rem), nunca passa de 40% da tela nem fica abaixo de 7rem. */
+.fluxo-moldura.fluxo-moldura-passo3 {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
@@ -189,10 +189,10 @@
 
 .fluxo-moldura.fluxo-moldura-passo3 canvas {
   max-width: 60%;
-  max-height: min(40dvh, max(7rem, 100dvh - 32.5rem));
+  max-height: min(40dvh, max(7rem, 100dvh - 31.5rem));
 }
 
-.fluxo-moldura-passo3 .fluxo-ver {
+.fluxo-moldura.fluxo-moldura-passo3 .fluxo-ver {
   flex: 1 1 7rem;
   width: auto;
   margin: 0;

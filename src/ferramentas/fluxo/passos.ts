@@ -145,10 +145,16 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   const form = q<HTMLFormElement>('fluxo-form');
   const entrada = (id: string) => q<HTMLInputElement | HTMLTextAreaElement>(id);
   const mini = ligarMiniatura(raiz, () => d);
-  // O aviso do link da reunião também descreve a pauta (antes da dica dela).
-  const pauta = raiz.querySelector<HTMLTextAreaElement>('[id="fluxo-pauta"]');
-  if (pauta && raiz.querySelector('[id="fluxo-aviso-do-link"]')) {
-    pauta.setAttribute('aria-describedby', `fluxo-aviso-do-link ${pauta.getAttribute('aria-describedby') ?? ''}`.trim());
+  // O aviso do link da reunião também descreve o título (depois da dica dele) e a pauta (antes da dica dela):
+  // quem pula de campo em campo ouve o aviso antes de escrever.
+  if (raiz.querySelector('[id="fluxo-aviso-do-link"]')) {
+    const descrever = (id: string, antes: boolean): void => {
+      const el = raiz.querySelector(`[id="${id}"]`);
+      const ids = (el?.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean);
+      el?.setAttribute('aria-describedby', (antes ? ['fluxo-aviso-do-link', ...ids] : [...ids.slice(0, 1), 'fluxo-aviso-do-link', ...ids.slice(1)]).join(' '));
+    };
+    descrever('fluxo-titulo', false);
+    descrever('fluxo-pauta', true);
   }
   const medidas = medirFaixasFixas(raiz);
 
@@ -337,12 +343,12 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const estado = q('fluxo-estado');
   const medidas = medirFaixasFixas(raiz);
   let vivo = true;
-  // A prévia daqui já é desenhada no tamanho de verdade (só a tela a reduz): o diálogo mostra uma cópia dela.
+  // O diálogo desenha de novo, com o mesmo link (o QR do cartaz): nunca mostra um desenho pela metade.
   const fecharDialogo = ligarDialogo(raiz, (grande) => {
-    grande.width = canvas.width;
-    grande.height = canvas.height;
-    grande.getContext('2d')?.drawImage(canvas, 0, 0);
-    grande.setAttribute('aria-label', canvas.getAttribute('aria-label') ?? 'Prévia grande do card');
+    const link = linkAindaVale(d) ? d.link : '';
+    desenharCardEm(grande, d, d.formato, escalaDoFormato(d.formato, nivel), link)
+      .then((r) => grande.setAttribute('aria-label', descricaoDaImagem(d, d.formato, link, !!link && !!r && !r.semQr && d.formato === 'cartaz')))
+      .catch(() => undefined);
   });
 
   // Mensagem importante: fica na tela e também vai pelo aviso falado (uma vez por mensagem nova).

@@ -72,6 +72,9 @@ for (const escala of [100, 200] as const) {
         await page.waitForTimeout(200);
         const letra = await page.evaluate(() => getComputedStyle(document.documentElement).fontSize);
         expect(letra, 'tamanho do texto').toBe(escala === 200 ? '32px' : '16px');
+        // Texto grande: a miniatura e a barra somam mais de 40% da tela e soltam.
+        if (escala === 200) await expect(page.locator('html')).toHaveClass(/fluxo-faixas-soltas/);
+        else await expect(page.locator('html')).not.toHaveClass(/fluxo-faixas-soltas/);
 
         // 1. Passo 1: o primeiro campo inteiro; a dica do exemplo e "Apagar o exemplo" na mesma linha.
         await inteiroATela(page, page.locator('.campo:has(#fluxo-titulo)'), 'passo 1: campo do título', semRolar);
@@ -83,13 +86,14 @@ for (const escala of [100, 200] as const) {
           expect(ca.top < cd.bottom && cd.top < ca.bottom, 'a dica e "Apagar o exemplo" na mesma linha').toBe(true);
         }
         if (porta.tipo === 'reuniao') {
-          // O aviso do link fica num quadro logo acima da pauta, com o mesmo texto, e é lido junto com ela.
+          // O aviso do link fica num quadro logo acima da pauta, com o mesmo texto, e é lido junto com ela e com o título.
           const aviso = page.locator('#fluxo-aviso-do-link');
           await expect(aviso).toHaveText(
             'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.',
           );
           await expect(page.locator('#fluxo-aviso-do-link + .campo:has(#fluxo-pauta)')).toHaveCount(1);
           await expect(page.locator('#fluxo-pauta')).toHaveAttribute('aria-describedby', /^fluxo-aviso-do-link /);
+          await expect(page.locator('#fluxo-titulo')).toHaveAttribute('aria-describedby', /fluxo-aviso-do-link/);
         }
         if (escala === 200) await conferirTela(page, `${porta.tipo}: passo 1 a 200%`);
 
@@ -109,6 +113,11 @@ for (const escala of [100, 200] as const) {
         const dialogo = page.getByRole('dialog', { name: 'Como está ficando' });
         await expect(dialogo).toBeVisible();
         await page.getByRole('button', { name: 'Fechar a prévia' }).click();
+        await expect(dialogo).toBeHidden();
+        await expect(verMaior).toBeFocused();
+        await verMaior.click();
+        await expect(dialogo).toBeVisible();
+        await page.keyboard.press('Escape');
         await expect(dialogo).toBeHidden();
         await expect(verMaior).toBeFocused();
         if (escala === 200) await conferirTela(page, `${porta.tipo}: passo 3 a 200%`);
