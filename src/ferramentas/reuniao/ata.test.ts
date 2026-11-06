@@ -113,8 +113,10 @@ describe('rodapé do PDF da ata', () => {
 
 // Auditoria de segurança, 05/11/2026, B9: a ata copiada leva a lista de presença para a área de transferência.
 describe('aviso ao copiar a ata', () => {
-  it('fala do histórico da área de transferência, sem termo técnico em inglês', () => {
-    expect(AVISO_AO_COPIAR_A_ATA).toMatch(/histórico da área de transferência/);
+  it('diz onde o texto fica, por que importa e o que fazer no lugar, sem termo em inglês', () => {
+    expect(AVISO_AO_COPIAR_A_ATA).toMatch(/histórico do aparelho \(área de transferência\)/);
+    expect(AVISO_AO_COPIAR_A_ATA).toMatch(/nomes de quem estava/);
+    expect(AVISO_AO_COPIAR_A_ATA).toMatch(/PDF/);
     expect(AVISO_AO_COPIAR_A_ATA).not.toMatch(/clipboard/i);
   });
 });

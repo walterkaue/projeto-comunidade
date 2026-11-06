@@ -39,7 +39,8 @@ export const RODAPE_DO_PDF = 'Modelo de ata gratuito. Não substitui o que o est
  * Perto de "Copiar o texto" (auditoria de segurança, B9): no Windows e em alguns teclados de celular, o que se copia
  * fica guardado e pode ir para a nuvem. A ata tem a lista de presença.
  */
-export const AVISO_AO_COPIAR_A_ATA = 'O texto copiado pode ficar no histórico da área de transferência do aparelho.';
+export const AVISO_AO_COPIAR_A_ATA =
+  'O texto copiado pode ficar guardado no histórico do aparelho (área de transferência). A ata tem os nomes de quem estava. Se preferir, salve em PDF.';
 
 export const MAXIMOS = { pontos: 30, encaminhamentos: 30, presentes: 6000, texto: 3000 } as const;
 

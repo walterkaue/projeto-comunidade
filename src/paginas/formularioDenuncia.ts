@@ -84,9 +84,12 @@ function jeitosDeEnviar(d: Denuncia): string {
     ${BOTAO_DE_COPIAR}`;
 }
 
-/** Link comprido (auditoria de segurança, B8): o aplicativo de e-mail pode cortar. Gmail e copiar vêm antes. */
+/** E-mail comprido (auditoria de segurança, B8): o aplicativo de e-mail pode cortar. Gmail e copiar vêm antes. */
 function jeitosParaLinkComprido(d: Denuncia): string {
-  return `<p><strong>Este link é muito comprido.</strong> O aplicativo de e-mail pode cortar o link, e aí não dá para conferir a denúncia. Use "Enviar pelo Gmail no navegador" ou "Copiar o texto".</p>
+  const aviso = d.link
+    ? '<strong>Este link é muito comprido.</strong> O aplicativo de e-mail pode cortar o link, e aí não dá para conferir a denúncia.'
+    : '<strong>Este texto é muito comprido.</strong> O aplicativo de e-mail pode cortar o fim do texto.';
+  return `<p>${aviso} Use "Enviar pelo Gmail no navegador" ou "Copiar o texto".</p>
     ${botaoDoGmail(d, 'botao')}
     ${NOTA_DO_GMAIL}
     ${BOTAO_DE_COPIAR}
