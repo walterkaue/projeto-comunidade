@@ -30,7 +30,8 @@ Os três pontos médios:
 | M2 | Corrigido em 06/11/2026 no fluxo; a parte do `scripts/bloquear.mjs` ficou de fora (ver abaixo) |
 | M3 | Corrigido em 06/11/2026, sem "Mandar sem o link" (ver abaixo) |
 | B1 e B3 | Corrigidos em 06/11/2026, com o M2 |
-| B2, B4 a B7 | Abertos |
+| B2, B4, B5 e B6 | Corrigidos em 06/11/2026 (ver abaixo) |
+| B7 | Aberto (arquivos compartilhados) |
 
 ### Correções de 06/11/2026 (M1 e M3)
 
@@ -87,6 +88,17 @@ Feitas na pasta do fluxo e revisadas pelos três revisores; os achados deles já
 **B3:** a tela "Este link foi removido e não pode ser usado como modelo." mostra o motivo e como pedir revisão (`textosDoRemovido`). Ela tem o botão "Ver as Regras de uso" e a saída "Fazer um evento".
 
 **Conferido no navegador** (por script, com o painel do navegador oculto): "Criar outro" a partir de um link gerado no fluxo. A nota aparece nos passos 1 e 3, a dica no passo 3, e o Pronto mostra a frase do link original e o mesmo link.
+
+### Correções de 06/11/2026 (B2, B4, B5 e B6)
+
+Feitas na pasta do fluxo e em `cards/modelos.ts` e `cards/exemplos.ts`, revisadas pelo `revisor` e pelo `revisor-privacidade-neutralidade`. `npm test`: 47 arquivos, 630 testes passando.
+
+- **B2:** o Pronto confere o link novo (texto e forma canônica) com `motivoDoLinkBloqueado`. Na lista: sem link, "Um evento igual a este foi removido do site. O link não vai abrir." e o botão "Ver as Regras de uso". Se a lista não puder ser lida, o link segue. O Pronto de reunião e evento agora lê `bloqueados.json` do próprio site (sem dado do evento na requisição). Frase da linha "Tamanho" de `docs/proximos-passos.md` corrigida.
+- **B4:** dicas "O que o grupo conseguiu." e "A quem o grupo agradece e pelo quê. Prefira o nome do grupo. Nome de criança ou adolescente nunca."
+- **B5:** organizações de exemplo com lugares inventados (Vila Cantinho Sereno, Vale das Pedras Mansas, Flor do Pomar, Morro do Tatu-Bola, Riacho Cinco Pedras). Os revisores apontaram "Pedrinhas" (município) e "Verdes"/"Estrela" (lembram partidos); trocados. Nenhum nome novo foi buscado na internet: a conferência é de bom senso.
+- **B6:** "Terminou? Toque em Fazer outro para apagar o que você escreveu neste aparelho." junto de "Fazer outro".
+
+Sem teste de montagem da tela Pronto: a ligação do B2 e do B6 com a tela é coberta por teste do texto e do código-fonte, não do DOM.
 
 ## O que bloqueia o beta
 

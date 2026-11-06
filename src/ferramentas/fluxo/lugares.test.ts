@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ORGANIZACOES } from '../cards/exemplos';
 
 // B5: os exemplos usam lugares inventados. Estes nomes existem de verdade (bairro, município, religião).
-const LUGARES_REAIS = ['Jardim das Flores', 'Vale Azul', 'Luz do Amanhecer', 'Zona Norte', 'Rio Claro'];
+const LUGARES_REAIS = ['Jardim das Flores', 'Vale Azul', 'Luz do Amanhecer', 'Zona Norte', 'Rio Claro', 'Pedrinhas'];
 
 describe('organizações de exemplo', () => {
   it('não usam nomes de lugar que existem', () => {

@@ -3,9 +3,9 @@
 import type { CamposDoCard, ModeloDeCard } from './modelos';
 
 export const ORGANIZACOES = [
-  'Associação de Moradores Vila Pedrinhas Verdes',
+  'Associação de Moradores Vila Cantinho Sereno',
   'Sindicato dos Metalúrgicos Vale das Pedras Mansas',
-  'Grupo de Oração Estrela do Pomar',
+  'Grupo de Oração Flor do Pomar',
   'Núcleo de Bairro Morro do Tatu-Bola',
   'Coletivo Palco Aberto',
   'Instituto Rede Viva',
