@@ -11,6 +11,7 @@ import { escalaDoFormato } from '../cards/modelos';
 import { rascunho } from '../reuniao/rascunho';
 import { temConteudo } from '../reuniao/ata';
 import {
+  AVISO_FAZER_OUTRO,
   avisoDoCompartilhamento,
   descricaoDaImagem,
   enderecoDaPaginaDoEvento,
@@ -75,8 +76,9 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
     <div class="fluxo-acoes">
       <button type="button" class="botao botao-sec" id="fluxo-mudar">Mudar algo</button>
-      <button type="button" class="botao botao-sec" id="fluxo-outro">Fazer outro</button>
+      <button type="button" class="botao botao-sec" id="fluxo-outro" aria-describedby="fluxo-outro-dica">Fazer outro</button>
     </div>
+    <p class="campo-dica" id="fluxo-outro-dica">${esc(AVISO_FAZER_OUTRO)}</p>
     ${
       d.tipo === 'reuniao'
         ? `<section class="fluxo-ata" aria-labelledby="fluxo-ata-titulo">
