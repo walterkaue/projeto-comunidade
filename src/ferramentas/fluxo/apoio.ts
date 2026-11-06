@@ -37,9 +37,32 @@ export const avisoDeErros = (n: number): string => `Confira ${n} ${n === 1 ? 'ca
 
 /** Aviso depois de "Mandar no WhatsApp". Vazio = a pessoa cancelou, não avisar. */
 export function avisoDoCompartilhamento(r: Resultado): string {
+  if (r === 'texto') return 'A imagem não foi junto. Toque em Baixar a imagem e mande no WhatsApp.';
   if (r === 'copiado') return 'Texto copiado. Baixe a imagem e mande junto no WhatsApp.';
   if (r === 'falhou') return 'Não deu para abrir o menu. Use Baixar a imagem e Copiar só o texto.';
   return mensagemDoResultado(r);
+}
+
+/** O aparelho tem menu de compartilhar? É a mesma condição com que `compartilhar` cai na cópia do texto. */
+export const temMenuDeCompartilhar = (nav: { share?: unknown } = navigator): boolean => typeof nav.share === 'function';
+
+/** Dica embaixo de "Mandar no WhatsApp", conforme o aparelho e o formato escolhido. */
+export function dicaDoMandar(formato: Formato, temMenu: boolean): string {
+  if (!temMenu) return 'Copia o texto. Depois, baixe a imagem e mande as duas no WhatsApp.';
+  if (formato === 'status') return 'Abre o menu do celular. Escolha o WhatsApp e depois o seu status.';
+  return 'Abre o menu do celular. Escolha o WhatsApp e a conversa.';
+}
+
+export const MENSAGEM_DE_BAIXAR = 'Se a imagem não aparecer em Downloads ou na galeria, abra este site no Chrome ou no Safari.';
+
+/** Nota embaixo de "Imprimir cartaz": o que o cartaz corta com "…". Vazio = não corta nada. */
+export function notaDoCorte(cortes: readonly ('local' | 'organizacao')[]): string {
+  const local = cortes.includes('local');
+  const org = cortes.includes('organizacao');
+  if (local && org) return 'O cartaz corta o endereço e o nome da organização. Encurte os dois.';
+  if (local) return 'O cartaz corta o endereço. Encurte o local.';
+  if (org) return 'O cartaz corta o nome da organização. Encurte a organização.';
+  return '';
 }
 
 export const MENSAGEM_DO_LINK_GRANDE = 'O link ficou grande demais. Encurte a pauta ou o texto em Mudar algo.';
@@ -47,18 +70,25 @@ export const MENSAGEM_DO_LINK_GRANDE = 'O link ficou grande demais. Encurte a pa
  * O toque num botão do Pronto precisa antes perguntar? Sim enquanto algum campo for do exemplo e a pessoa ainda
  * não confirmou nesta visita ao Pronto (quem monta a tela guarda o "já confirmou"; visita nova começa sem ele).
  */
-export const precisaConfirmar = (camposDoExemplo: readonly unknown[], jaConfirmou: boolean): boolean =>
-  camposDoExemplo.length > 0 && !jaConfirmou;
+export const precisaConfirmar = (camposDoExemplo: readonly unknown[], jaConfirmou: boolean, semLink = false): boolean =>
+  (camposDoExemplo.length > 0 || semLink) && !jaConfirmou;
+
+export const AVISO_SEM_LINK_NO_PAINEL = 'A mensagem vai sem o link do evento.';
+
+/** Frase do painel de confirmação: o aviso do link que falta (se faltar) e a frase do exemplo (se houver). */
+export const frasePainel = (semLink: boolean, fraseDoExemplo: string): string =>
+  [semLink ? AVISO_SEM_LINK_NO_PAINEL : '', fraseDoExemplo].filter(Boolean).join(' ');
 
 /** Ids do `aria-describedby`: o aviso do exemplo primeiro (se houver), depois as dicas do próprio botão. */
 export const idsDaDescricao = (temAviso: boolean, ...dicas: string[]): string =>
   [...(temAviso ? ['fluxo-aviso-exemplo'] : []), ...dicas].join(' ');
 
-export const AVISO_FAZER_OUTRO = 'Terminou? Toque em Fazer outro para apagar o que você escreveu neste aparelho.';
+export const AVISO_FAZER_OUTRO = 'Fazer outro apaga tudo o que você escreveu neste aparelho.';
 
 export const MENSAGEM_LINK_COM_EXEMPLO = 'O link é criado quando você trocar o exemplo pelo seu.';
 export const MENSAGEM_LINK_REMOVIDO = 'Um evento igual a este foi removido do site. O link não vai abrir.';
 export const MENSAGEM_SEM_LINK = 'Não deu para criar o link do evento. Confira o texto em Mudar algo.';
+export const MENSAGEM_SEM_INTERNET = 'Sem internet: o link do evento não foi criado. Toque em Tentar de novo quando a rede voltar.';
 
 /**
  * Endereço interno da página do evento ("#/evento/<dados>"). `base` é o endereço DESTE site (location.href ou

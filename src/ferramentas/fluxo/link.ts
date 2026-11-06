@@ -3,7 +3,7 @@
 
 import type { MotivoDaRemocao } from '../../comum/entreTelas';
 import { validarEvento, type Evento } from '../evento/validar';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_INTERNET, MENSAGEM_SEM_LINK } from './apoio';
 import { assinatura, eventoDoFluxo, exemploNoLink, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
 
 export interface ResultadoDoLink {
@@ -13,6 +13,8 @@ export interface ResultadoDoLink {
   aviso: string;
   /** Presente quando o link novo é igual a um evento removido do site (não há link). */
   removido?: MotivoDaRemocao;
+  /** Faltou o link porque não deu para baixar o formato do evento (sem internet). Tentar de novo pode resolver. */
+  semRede?: true;
 }
 
 export interface DependenciasDoLink {
@@ -26,13 +28,14 @@ export interface DependenciasDoLink {
 }
 
 async function padrao(): Promise<DependenciasDoLink> {
-  const [f, b] = await Promise.all([import('../evento/formato'), import('../evento/bloqueio')]);
+  // A lista de bloqueio que não baixa não trava: segue sem conferir. O formato que não baixa é "sem internet".
+  const [f, b] = await Promise.all([import('../evento/formato'), import('../evento/bloqueio').catch(() => undefined)]);
   return {
     codificar: (e) => f.codificar(e),
     completo: f.linkCompleto,
     maximo: f.LINK_MAXIMO,
     canonico: f.dadosCanonicos,
-    bloqueado: (dados) => b.motivoDoLinkBloqueado(dados),
+    bloqueado: b ? (dados) => b.motivoDoLinkBloqueado(dados) : undefined,
   };
 }
 
@@ -41,20 +44,30 @@ async function padrao(): Promise<DependenciasDoLink> {
  * pela MESMA regra da página do evento e codifica. Guarda o resultado em `d` (link e assinaturaDoLink).
  * Nunca lança erro.
  */
-export async function linkDoFluxo(d: DadosDoFluxo, base: string, deps?: DependenciasDoLink): Promise<ResultadoDoLink> {
+export async function linkDoFluxo(
+  d: DadosDoFluxo,
+  base: string,
+  deps?: DependenciasDoLink,
+  carregar: () => Promise<DependenciasDoLink> = padrao,
+): Promise<ResultadoDoLink> {
   if (!temAgenda(d.tipo)) return { link: '', aviso: '' };
   // O link é o que circula: com a organização do exemplo, não sai (docs/produto.md 7.6).
   if (exemploNoLink(d)) return { link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO };
   if (linkAindaVale(d)) {
     // O link original pode passar do máximo (o QR do cartaz falharia). Não gera outro: ele seria outro evento.
     // Se o formato não carregar (sem rede), fica com o original: é ele que a lista de bloqueio conhece.
-    const maximo = deps?.maximo ?? (await padrao().then((p) => p.maximo, () => Number.POSITIVE_INFINITY));
+    const maximo = deps?.maximo ?? (await carregar().then((p) => p.maximo, () => Number.POSITIVE_INFINITY));
     return d.link.length > maximo ? { link: '', aviso: MENSAGEM_DO_LINK_GRANDE } : { link: d.link, aviso: '' };
   }
   try {
     const r = validarEvento(eventoDoFluxo(d));
     if (!r.ok) return { link: '', aviso: MENSAGEM_SEM_LINK };
-    const dp = deps ?? (await padrao());
+    let dp: DependenciasDoLink;
+    try {
+      dp = deps ?? (await carregar());
+    } catch {
+      return { link: '', aviso: MENSAGEM_SEM_INTERNET, semRede: true };
+    }
     const link = dp.completo(await dp.codificar(r.evento), base);
     if (link.length > dp.maximo) return { link: '', aviso: MENSAGEM_DO_LINK_GRANDE };
     // Um evento igual a um removido não ganha link: quem recebe só veria "removido" (conferência falha = segue).

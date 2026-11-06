@@ -7,10 +7,15 @@ import {
   enderecoDaPaginaDoEvento,
   escalaDaMiniatura,
   esperaDoRedesenho,
+  dicaDoMandar,
+  frasePainel,
   idsDaDescricao,
+  MENSAGEM_DE_BAIXAR,
   nomeDoArquivoDoFluxo,
+  notaDoCorte,
   paletaDoFluxo,
   precisaConfirmar,
+  temMenuDeCompartilhar,
 } from './apoio';
 import { exemploDoFluxo } from './estado';
 
@@ -66,6 +71,24 @@ describe('avisos', () => {
     expect(avisoDoCompartilhamento('falhou')).toMatch(/Baixar a imagem/);
     expect(avisoDoCompartilhamento('cancelado')).toBe('');
     expect(avisoDoCompartilhamento('arquivo')).toMatch(/Pronto/);
+  });
+  it('imagem recusada pelo menu (só o texto foi): diz o que fazer, sem "texto enviado"', () => {
+    expect(avisoDoCompartilhamento('texto')).toBe('A imagem não foi junto. Toque em Baixar a imagem e mande no WhatsApp.');
+    expect(avisoDoCompartilhamento('copiado')).toBe('Texto copiado. Baixe a imagem e mande junto no WhatsApp.');
+  });
+  it('a dica do "Mandar" depende do menu e do formato', () => {
+    expect(dicaDoMandar('status', false)).toBe('Copia o texto. Depois, baixe a imagem e mande as duas no WhatsApp.');
+    expect(dicaDoMandar('cartaz', false)).toBe(dicaDoMandar('conversa', false));
+    expect(dicaDoMandar('status', true)).toBe('Abre o menu do celular. Escolha o WhatsApp e depois o seu status.');
+    expect(dicaDoMandar('conversa', true)).toBe('Abre o menu do celular. Escolha o WhatsApp e a conversa.');
+    expect(dicaDoMandar('cartaz', true)).toBe('Abre o menu do celular. Escolha o WhatsApp e a conversa.');
+  });
+  it('menu de compartilhar: a mesma condição de compartilhar.ts (existir share)', () => {
+    expect(temMenuDeCompartilhar({})).toBe(false);
+    expect(temMenuDeCompartilhar({ share: async () => undefined })).toBe(true);
+  });
+  it('baixar não diz "baixada": manda abrir no Chrome ou no Safari', () => {
+    expect(MENSAGEM_DE_BAIXAR).toBe('Se a imagem não aparecer em Downloads ou na galeria, abra este site no Chrome ou no Safari.');
   });
 });
 
@@ -152,10 +175,36 @@ describe('confirmação do Pronto (sem DOM)', () => {
 describe('aviso de apagar no Pronto (B6)', () => {
   it('o texto é o do relatório e a tela o usa junto de "Fazer outro"', async () => {
     const { AVISO_FAZER_OUTRO } = await import('./apoio');
-    expect(AVISO_FAZER_OUTRO).toBe('Terminou? Toque em Fazer outro para apagar o que você escreveu neste aparelho.');
+    expect(AVISO_FAZER_OUTRO).toBe('Fazer outro apaga tudo o que você escreveu neste aparelho.');
     const { readFileSync } = await import('node:fs');
     const fonte = readFileSync(new URL('./pronto.ts', import.meta.url), 'utf8');
     expect(fonte).toContain('esc(AVISO_FAZER_OUTRO)');
     expect(fonte).toContain('aria-describedby="fluxo-outro-dica"');
+  });
+});
+
+describe('nota do corte do cartaz (B-04)', () => {
+  it('uma frase para cada caso, vazia sem corte', () => {
+    expect(notaDoCorte([])).toBe('');
+    expect(notaDoCorte(['local'])).toBe('O cartaz corta o endereço. Encurte o local.');
+    expect(notaDoCorte(['organizacao'])).toBe('O cartaz corta o nome da organização. Encurte a organização.');
+    expect(notaDoCorte(['local', 'organizacao'])).toBe('O cartaz corta o endereço e o nome da organização. Encurte os dois.');
+    expect(notaDoCorte(['organizacao', 'local'])).toBe(notaDoCorte(['local', 'organizacao']));
+  });
+});
+
+describe('confirmação sem o link (C-01)', () => {
+  it('sem link pede confirmação mesmo sem exemplo; confirmado, não pergunta de novo', () => {
+    expect(precisaConfirmar([], false, true)).toBe(true);
+    expect(precisaConfirmar([], true, true)).toBe(false);
+    expect(precisaConfirmar([], false)).toBe(false);
+    expect(precisaConfirmar(['titulo'], false)).toBe(true);
+  });
+  it('a frase junta o aviso do link e a do exemplo', () => {
+    expect(frasePainel(true, '')).toBe('A mensagem vai sem o link do evento.');
+    expect(frasePainel(false, 'Isto ainda tem partes do exemplo: local.')).toBe('Isto ainda tem partes do exemplo: local.');
+    expect(frasePainel(true, 'Isto ainda tem partes do exemplo: local.')).toBe(
+      'A mensagem vai sem o link do evento. Isto ainda tem partes do exemplo: local.',
+    );
   });
 });

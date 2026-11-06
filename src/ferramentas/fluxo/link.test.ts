@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_INTERNET, MENSAGEM_SEM_LINK } from './apoio';
 import { camposDoExemplo, dadosDoCardPreparado, dadosDoEvento, exemploDoFluxo, linkAindaVale, type DadosDoFluxo, type Tipo } from './estado';
 import { linkDoFluxo, type DependenciasDoLink } from './link';
 
@@ -97,6 +97,24 @@ describe('linkDoFluxo', () => {
     const d = daPessoa('evento');
     d.texto = 'Ligue para (11) 91234-5678';
     const r = await linkDoFluxo(d, BASE, deps());
+    expect(r).toEqual({ link: '', aviso: MENSAGEM_SEM_LINK });
+  });
+
+  it('sem rede (o formato do evento não baixa): sem link, com a mensagem de internet e semRede', async () => {
+    const d = daPessoa('evento');
+    const r = await linkDoFluxo(d, BASE, undefined, () => Promise.reject(new Error('rede')));
+    expect(r).toEqual({ link: '', aviso: MENSAGEM_SEM_INTERNET, semRede: true });
+    expect(d.link).toBe('');
+    // quando a rede volta, a mesma chamada gera o link
+    const de_novo = await linkDoFluxo(d, BASE, undefined, async () => deps());
+    expect(de_novo.link).toContain('#/evento/');
+    expect(de_novo.semRede).toBeUndefined();
+  });
+
+  it('texto recusado não é "sem rede", mesmo com a rede caída', async () => {
+    const d = daPessoa('evento');
+    d.texto = 'Ligue para (11) 91234-5678';
+    const r = await linkDoFluxo(d, BASE, undefined, () => Promise.reject(new Error('rede')));
     expect(r).toEqual({ link: '', aviso: MENSAGEM_SEM_LINK });
   });
 
