@@ -88,6 +88,12 @@ describe('modelos e limites', () => {
     expect(r.titulo).toHaveLength(TAMANHO_MAXIMO.titulo);
     expect(r.texto).toHaveLength(140);
   });
+  it('o que passa do limite corta numa palavra inteira, com reticências (B-04)', () => {
+    const organizacao = 'Associação dos Moradores do Conjunto Jardim das Acácias e Arredores';
+    const r = aplicarLimites({ modelo: 'evento', data: '', hora: '', local: '', organizacao, link: '', titulo: 'x', texto: '' });
+    expect(r.organizacao).toBe('Associação dos Moradores do Conjunto Jardim das Acácias e…');
+    expect(r.organizacao.length).toBeLessThanOrEqual(TAMANHO_MAXIMO.organizacao);
+  });
   it('aparelho leve desenha menor', () => {
     for (const f of FORMATOS) expect(escalaDoFormato(f, 'leve')).toBeLessThan(escalaDoFormato(f, 'normal'));
   });

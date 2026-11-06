@@ -67,9 +67,18 @@ export interface CamposDoCard {
   pauta?: readonly string[];
 }
 
-/** Corta cada campo no limite (por letra). */
+/**
+ * Corta cada campo no limite (por letra). O que passa do limite (dados de link antigos ou montados à mão) corta
+ * na última palavra inteira, com "…": nunca no meio da palavra (B-04). Palavra única maior que o limite corta nela.
+ */
 export function aplicarLimites(c: CamposDoCard): CamposDoCard {
-  const cortar = (s: string, n: number) => letras(s).slice(0, n).join('');
+  const cortar = (s: string, n: number): string => {
+    const l = letras(s);
+    if (l.length <= n) return s;
+    const cabe = l.slice(0, n - 1);
+    const espaco = cabe.lastIndexOf(' ');
+    return `${(espaco > 0 ? cabe.slice(0, espaco) : cabe).join('').trimEnd()}…`;
+  };
   return {
     ...c,
     titulo: cortar(c.titulo, TAMANHO_MAXIMO.titulo),

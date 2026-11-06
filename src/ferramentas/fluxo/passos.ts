@@ -602,7 +602,10 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       // O arquivo recusado não troca nada: se já havia logo, o de antes continua (e "Tirar o logo" também).
       const base = 'Esse arquivo não deu.';
       const pedido = 'Escolha uma foto ou um desenho: PNG, JPG ou SVG.';
-      mostrarErro(form, 'fluxo-logo', logoAtual() ? `${base} O logo de antes continua. ${pedido}` : `${base} ${pedido}`);
+      const mensagem = logoAtual() ? `${base} O logo de antes continua. ${pedido}` : `${base} ${pedido}`;
+      mostrarErro(form, 'fluxo-logo', mensagem);
+      // Troca o aviso que ainda podia estar na tela ("Logo colocado na imagem.", do logo de antes).
+      avisar(mensagem);
     }
   });
   q('fluxo-logo-tirar').addEventListener('click', () => {
