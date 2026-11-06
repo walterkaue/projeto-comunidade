@@ -154,9 +154,19 @@ export async function decodificar(dados: string): Promise<Leitura> {
   }
 }
 
-/** Endereço completo do evento: o site (sem o #) + "#/evento/<dados>". */
+/**
+ * O começo de `resto` até o primeiro caractere fora do alfabeto do base64url (A-Z, a-z, 0-9, "-" e "_", só
+ * ASCII). Link colado numa mensagem costuma levar ponto, vírgula, parêntese, "%20Obrigada!" ou "%0A" no fim;
+ * isto tira o que não é dado. Não mexe no formato: `decodificar` continua estrito.
+ */
+export function cortarDadosDoLink(resto: string): string {
+  const m = /^[A-Za-z0-9_-]*/.exec(resto);
+  return m ? m[0] : '';
+}
+
+/** Endereço completo do evento: o site (sem o #) + "#/evento/<dados>" (sem o que colou no fim dos dados). */
 export function linkCompleto(dados: string, base: string): string {
-  return new URL(`#/evento/${dados}`, base).href;
+  return new URL(`#/evento/${cortarDadosDoLink(dados)}`, base).href;
 }
 
 export const MENSAGEM_DO_PROBLEMA: Record<ProblemaDoLink, string> = {

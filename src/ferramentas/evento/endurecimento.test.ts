@@ -144,7 +144,7 @@ describe('abrirEvento: lista e leitura juntas', () => {
 
   it('abre o que não está na lista', async () => {
     const dados = await codificar(sempre(bom));
-    expect(await abrirEvento(dados, deps())).toEqual({ estado: 'ok', evento: sempre(bom) });
+    expect(await abrirEvento(dados, deps())).toEqual({ estado: 'ok', evento: sempre(bom), dados });
   });
 
   it('bloqueia pelo texto do link como veio', async () => {

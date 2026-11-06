@@ -4,6 +4,7 @@ import {
   JSON_MAXIMO,
   LINK_IDEAL,
   codificar,
+  cortarDadosDoLink,
   decodificar,
   deBase64Url,
   linkCompleto,
@@ -200,5 +201,31 @@ describe('linkCompleto', () => {
     expect(linkCompleto('1rAAAA', 'https://walterkaue.github.io/projeto-comunidade/index.html')).toBe(
       'https://walterkaue.github.io/projeto-comunidade/index.html#/evento/1rAAAA',
     );
+  });
+
+  it('tira o que colou no fim dos dados', () => {
+    expect(linkCompleto('1rAAAA.', 'https://walterkaue.github.io/projeto-comunidade/')).toBe(
+      'https://walterkaue.github.io/projeto-comunidade/#/evento/1rAAAA',
+    );
+  });
+});
+
+describe('cortarDadosDoLink', () => {
+  const dados = '1rABC-d_9';
+  for (const sufixo of ['.', ')', ',', '%20Obrigada!', '%0A', '?x=1', ' ', ' Obrigada']) {
+    it(`corta ${JSON.stringify(sufixo)} do fim`, () => {
+      expect(cortarDadosDoLink(dados + sufixo)).toBe(dados);
+    });
+  }
+  it('dados sem nada colado ficam iguais', () => {
+    expect(cortarDadosDoLink(dados)).toBe(dados);
+  });
+  it('começo inválido dá texto vazio', () => {
+    expect(cortarDadosDoLink('(1rABC')).toBe('');
+    expect(cortarDadosDoLink('')).toBe('');
+    expect(cortarDadosDoLink('%20')).toBe('');
+  });
+  it('letra fora do alfabeto ASCII também corta', () => {
+    expect(cortarDadosDoLink('1rABCção')).toBe('1rABC');
   });
 });
