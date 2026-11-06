@@ -27,9 +27,10 @@ Os três pontos médios:
 | Achado | Situação |
 |---|---|
 | M1 | Corrigido em 06/11/2026 (ver abaixo) |
-| M2 | Aberto (bloqueia a divulgação) |
+| M2 | Corrigido em 06/11/2026 no fluxo; a parte do `scripts/bloquear.mjs` ficou de fora (ver abaixo) |
 | M3 | Corrigido em 06/11/2026, sem "Mandar sem o link" (ver abaixo) |
-| B1 a B7 | Abertos |
+| B1 e B3 | Corrigidos em 06/11/2026, com o M2 |
+| B2, B4 a B7 | Abertos |
 
 ### Correções de 06/11/2026 (M1 e M3)
 
@@ -64,6 +65,28 @@ Feitas na pasta do fluxo. Revisadas pelo `revisor`, pelo `revisor-acessibilidade
 - o aviso novo do passo 1.
 
 Falta ver o desenho a 360 px e testar o leitor de tela no aparelho.
+
+### Correções de 06/11/2026 (M2, B1 e B3)
+
+Feitas na pasta do fluxo e revisadas pelos três revisores; os achados deles já foram aplicados. `npm test`: 45 arquivos, 622 testes passando.
+
+**M2:**
+- "Fazer o card deste evento" e "Criar outro a partir deste" guardam o link original e a assinatura dos dados como chegaram. Isso vale mesmo quando o evento tem hora de fim, quebra de linha ou descrição longa.
+- Enquanto a pessoa não mudar título, dia, hora, local, texto ou organização, o Pronto usa o link original. O QR, o "Copiar o link" e o texto do "Mandar" usam o mesmo link, e o bloqueio pega todos eles. Mudou um desses campos, sai um link novo, que é outro evento. Formato e cor não contam.
+- O Pronto diz quando o link é o original: "O link é o mesmo do evento que você recebeu e leva tudo o que está nele."
+- A nota do passo 1 também diz que, sem mudança, o link continua levando o evento inteiro.
+- Um link original maior que o máximo do QR não vira outro link: o Pronto fica sem link e explica por quê.
+- `docs/moderacao.md` diz exatamente que cópias o bloqueio pega.
+
+**Ficou de fora, de propósito:**
+- **As impressões das cópias no `scripts/bloquear.mjs`.** Elas só pegariam cópias feitas pela versão de 05 e 06/11/2026, quando o site ainda não tinha sido divulgado. Decisão do Kauê.
+- **Um link entre 4000 e 6000 caracteres** (montado à mão) perde o link original em "Fazer o card", porque `TAMANHO_MAXIMO.link` de `src/comum/entreTelas.ts` é 4000. Fica um pedido em `docs/pedidos-comum.md`.
+
+**B1:** a nota "Estes dados vieram de um link de evento. Confira tudo antes de mandar." aparece também no passo 3 (acima da dica) e no Pronto.
+
+**B3:** a tela "Este link foi removido e não pode ser usado como modelo." mostra o motivo e como pedir revisão (`textosDoRemovido`). Ela tem o botão "Ver as Regras de uso" e a saída "Fazer um evento".
+
+**Conferido no navegador** (por script, com o painel do navegador oculto): "Criar outro" a partir de um link gerado no fluxo. A nota aparece nos passos 1 e 3, a dica no passo 3, e o Pronto mostra a frase do link original e o mesmo link.
 
 ## O que bloqueia o beta
 

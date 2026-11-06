@@ -60,3 +60,9 @@ Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
 - **Por quê:** achados da revisão de acessibilidade (WCAG 2.4.3, 4.1.2, 2.4.5). A tela do evento já tem os links "Conhecer o Projeto Comunidade" e "Denunciar".
 
 Nenhum.
+
+### 2026-11-06 · sessão correções do fluxo · limite do link em `src/comum/entreTelas.ts` menor que o da página do evento
+- **O que precisa:** `TAMANHO_MAXIMO.link` (4000) é menor que o que a página do evento aceita (dados de até 6000). Igualar o limite ao da página, ou recusar na leitura links acima de `LINK_MAXIMO`.
+- **Por quê:** "Fazer o card" de um link entre 4000 e 6000 perde o link original, e o Pronto gera outro evento, que escapa do bloqueio.
+- **Sugestão de assinatura:** nenhuma; só alinhar a constante (ou a conferência de `conferirDadosDoCard`) com `LINK_MAXIMO`.
+- **Cópia provisória:** nenhuma.

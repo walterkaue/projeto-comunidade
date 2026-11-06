@@ -22,10 +22,11 @@ import {
 } from './apoio';
 import {
   avisoDoExemplo,
-  avisoDoLinkNoPronto,
+  fraseDoLinkNoPronto,
   camposDoExemplo,
   convocacaoDoFluxo,
   fraseDaConfirmacao,
+  NOTA_DO_LINK,
   PORTAS,
   temAgenda,
   textoParaMandar,
@@ -46,6 +47,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
   raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
     <h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">: </span><span class="fluxo-pronto-titulo">Pronto!</span></h1>
+    ${d.origem === 'link' ? `<p class="fluxo-nota">${esc(NOTA_DO_LINK)}</p>` : ''}
     ${aviso ? `<p class="fluxo-nota" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
     <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
@@ -53,7 +55,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
     <button type="button" class="botao" id="fluxo-mandar" aria-describedby="${esc(idsDaDescricao(!!aviso, 'fluxo-mandar-dica'))}">Mandar no WhatsApp</button>
     <p class="campo-dica" id="fluxo-mandar-dica">Abre o menu do celular. Escolha o WhatsApp e a conversa.</p>
-    <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(avisoDoLinkNoPronto(d.tipo))}</p>
+    <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(fraseDoLinkNoPronto(d))}</p>
 
     <div class="fluxo-saidas">
       <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>

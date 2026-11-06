@@ -4,7 +4,9 @@
 
 import { avisar } from '../../comum/aviso';
 import { esc } from '../../comum/html';
+import { linkPara } from '../../comum/rotas';
 import type { Aberto } from '../evento/abrir';
+import { textosDoRemovido } from '../evento/removido';
 import { dadosDoEvento, enderecoDoPasso, type DadosDoFluxo } from './estado';
 import { trocarPorDadosDeLink } from './memoria';
 import { zerarPassos } from './navegacao';
@@ -41,7 +43,22 @@ async function padrao(): Promise<DependenciasDeEditar> {
 export function telaSemModelo(raiz: HTMLElement, titulo: string): void {
   raiz.innerHTML = `<main class="tela fluxo">
     <h1 tabindex="-1">${esc(titulo)}</h1>
-    <a class="botao" href="${esc(enderecoDoPasso('evento', 1))}">Começar um evento novo</a>
+    <a class="botao" href="${esc(enderecoDoPasso('evento', 1))}">Fazer um evento</a>
+  </main>`;
+  raiz.querySelector<HTMLElement>('h1')?.focus();
+}
+
+/**
+ * Link removido: mantém o título, diz o motivo e como pedir revisão (como a página do evento removido) e deixa
+ * a saída para um evento novo. Os parágrafos vêm de textosDoRemovido; tudo passa por esc.
+ */
+export function telaDeBloqueado(raiz: HTMLElement, motivo: Parameters<typeof textosDoRemovido>[0]): void {
+  const t = textosDoRemovido(motivo);
+  raiz.innerHTML = `<main class="tela fluxo">
+    <h1 tabindex="-1">${esc('Este link foi removido e não pode ser usado como modelo.')}</h1>
+    ${t.paragrafos.map((p) => `<p>${esc(p)}</p>`).join('')}
+    <a class="botao" href="${esc(linkPara('regras'))}">Ver as Regras de uso</a>
+    <a class="botao botao-sec" href="${esc(enderecoDoPasso('evento', 1))}">Fazer um evento</a>
   </main>`;
   raiz.querySelector<HTMLElement>('h1')?.focus();
 }
@@ -64,7 +81,7 @@ export async function abrirParaEditar(
       dp.ir(enderecoDoPasso('evento', 1));
       dp.avisar(trocou ? 'Dados do evento carregados. Mude o que quiser.' : 'Você ficou com o que estava fazendo.');
     } else if (r.estado === 'bloqueado') {
-      telaSemModelo(raiz, 'Este link foi removido e não pode ser usado como modelo.');
+      telaDeBloqueado(raiz, r.motivo);
     } else {
       telaSemModelo(raiz, 'Não deu para abrir os dados desse link.');
     }

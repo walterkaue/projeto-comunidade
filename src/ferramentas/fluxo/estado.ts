@@ -54,6 +54,8 @@ export interface DadosDoFluxo {
    */
   link: string;
   assinaturaDoLink: string;
+  /** O link guardado é o que veio com o evento recebido (não um que o Pronto gerou). */
+  linkOriginal?: boolean;
   /**
    * Cópia dos campos do exemplo de onde a pessoa partiu (dados de link não têm). Serve só para dizer o que ainda é
    * do exemplo (camposDoExemplo). Fica na memória da aba e NUNCA entra no evento, na assinatura, no texto, no nome
@@ -162,13 +164,14 @@ const APARENCIA_PADRAO = { formato: 'conversa' as Formato, paletaId: PALETAS[0]!
 
 /**
  * Dados que outra tela preparou na memória da aba (prepararCard, já conferidos por conferirDadosDoCard).
- * Nunca reaproveita o link que veio junto: o texto do card chega cortado e sem hora de fim, então o link de antes
- * não descreve estes dados. O Pronto sempre gera um novo.
+ * Guarda o link que veio junto (já conferido como link de evento do próprio site) e a assinatura dos dados como
+ * chegaram. Enquanto a pessoa não muda nada, o Pronto usa o link original, que leva o evento inteiro e é o que pode
+ * ser denunciado e bloqueado. Mudou algum campo, sai um link novo.
  */
 export function dadosDoCardPreparado(d: DadosDoCard): DadosDoFluxo | null {
   if (!d.modelo || !d.titulo) return null;
   const tipo = d.modelo;
-  return {
+  const dados: DadosDoFluxo = {
     tipo,
     origem: 'link',
     ficouDeFora: '',
@@ -183,6 +186,12 @@ export function dadosDoCardPreparado(d: DadosDoCard): DadosDoFluxo | null {
     link: '',
     assinaturaDoLink: '',
   };
+  if (d.link && temAgenda(tipo)) {
+    dados.link = d.link;
+    dados.assinaturaDoLink = assinatura(dados);
+    dados.linkOriginal = true;
+  }
+  return dados;
 }
 
 /** "Pauta: a; b; c" (texto do card da convocação) volta a ser um item por linha. */
@@ -213,10 +222,12 @@ export function dadosDoEvento(e: Evento, link: string, base: string): DadosDoFlu
     link: '',
     assinaturaDoLink: '',
   };
-  // A descrição do link pode ter até 400 letras; se coube inteira no texto do card, o link de antes segue valendo.
-  if (ehLinkDoEvento(link, base) && dados.texto === e.descricao.trim() && !e.fim) {
+  // O link de antes segue valendo enquanto a pessoa não muda nada, mesmo que hora de fim, quebras de linha ou
+  // descrição longa tenham ficado de fora do card: é ele que leva o evento inteiro e pode ser denunciado.
+  if (ehLinkDoEvento(link, base)) {
     dados.link = link;
     dados.assinaturaDoLink = assinatura(dados);
+    dados.linkOriginal = true;
   }
   return dados;
 }
@@ -226,20 +237,46 @@ const textoDoEvento = (e: Pick<Evento, 'descricao'>): string => e.descricao.repl
 
 /**
  * O que um evento aberto por "criar outro a partir deste" tem e o fluxo não leva: a hora de fim e a parte da
- * descrição que passa do texto curto. Vazio quando coube tudo. Texto fixo, para a nota do passo 1.
+ * descrição que passa do texto curto. Vazio quando coube tudo. Texto fixo, para a nota do passo 1. Sem mudança, o
+ * link original segue valendo e leva o evento inteiro; a nota diz isso.
  */
 export function oQueFicouDeFora(e: Pick<Evento, 'fim' | 'descricao'>): string {
   const fim = !!e.fim;
   const descricao = letras(textoDoEvento(e)).length > LIMITES.texto;
-  if (fim && descricao) return 'A hora de fim e parte da descrição não cabem aqui e ficaram de fora.';
-  if (fim) return 'A hora de fim não cabe aqui e ficou de fora.';
-  if (descricao) return 'Parte da descrição não cabe aqui e ficou de fora.';
+  if (fim && descricao) return 'A hora de fim e parte da descrição não cabem no card. Sem mudança, o link continua levando o evento inteiro.';
+  if (fim) return 'A hora de fim não cabe no card. Sem mudança, o link continua levando o evento inteiro.';
+  if (descricao) return 'Parte da descrição não cabe no card. Sem mudança, o link continua levando o evento inteiro.';
   return '';
 }
 
 export const NOTA_DO_LINK = 'Estes dados vieram de um link de evento. Confira tudo antes de mandar.';
 export const avisoDoLinkNoPronto = (tipo: ModeloDeCard): string =>
   `O link leva título, dia, hora, local e ${tipo === 'reuniao' ? 'a pauta' : 'o texto'}. Quem receber pode repassar.`;
+
+/** Frase do Pronto sobre o link: se ele é o original de um evento recebido, diz isso; senão, a de sempre. */
+export const FRASE_DO_LINK_ORIGINAL =
+  'O link é o mesmo do evento que você recebeu e leva tudo o que está nele. Quem receber pode repassar.';
+export const fraseDoLinkNoPronto = (d: DadosDoFluxo): string =>
+  d.origem === 'link' && d.linkOriginal && linkAindaVale(d) ? FRASE_DO_LINK_ORIGINAL : avisoDoLinkNoPronto(d.tipo);
+
+const DICA_DO_PASSO: Record<1 | 2 | 3, string> = {
+  1: 'Já vem com um exemplo. Troque pelo que for seu.',
+  2: 'Toque em Hoje, Amanhã ou Próximo sábado para escolher mais rápido.',
+  3: 'Escolha onde vai mandar e a cor. O resto já está pronto.',
+};
+
+/**
+ * Nota e dica do alto de cada passo. Dados de link: a nota "Confira tudo" (com o que ficou de fora, só no passo 1)
+ * vem no passo 1, no lugar da dica, e no passo 3, acima da dica. O passo 2 e os dados que não são de link só têm dica.
+ */
+export function notaEDicaDoPasso(
+  d: Pick<DadosDoFluxo, 'origem' | 'ficouDeFora'>,
+  passo: 1 | 2 | 3,
+): { nota: string; dica: string } {
+  const doLink = d.origem === 'link' && (passo === 1 || passo === 3);
+  const nota = doLink ? [NOTA_DO_LINK, passo === 1 ? d.ficouDeFora : ''].filter(Boolean).join(' ') : '';
+  return { nota, dica: passo === 1 && doLink ? '' : DICA_DO_PASSO[passo] };
+}
 export const PERGUNTA_DA_TROCA_DO_RASCUNHO = 'Trocar o que você estava fazendo pelos dados deste evento?';
 
 /** A pessoa mudou um campo dos passos 1 e 2: o exemplo passa a ser dela. Dados de link continuam de link. */

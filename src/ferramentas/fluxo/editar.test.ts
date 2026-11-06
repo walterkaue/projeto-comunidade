@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Aberto } from '../evento/abrir';
 import type { Evento } from '../evento/validar';
+import { esc } from '../../comum/html';
+import { linkPara } from '../../comum/rotas';
+import { textosDoRemovido } from '../evento/removido';
 import { abrirParaEditar, type DependenciasDeEditar } from './editar';
 
 const BASE = 'https://exemplo.test/projeto/';
@@ -49,13 +52,29 @@ describe('abrirParaEditar', () => {
 
   it('bloqueado: tela de aviso, sem guardar nem navegar', async () => {
     const { raiz, foco } = raizFalsa();
-    const { d, tipada } = deps({ estado: 'bloqueado', motivo: 'regra-1' } as unknown as Aberto);
+    const { d, tipada } = deps({ estado: 'bloqueado', motivo: { tipo: 'regra', regra: 5 } } as Aberto);
     await abrirParaEditar(raiz, '1rABC', () => true, tipada);
     expect(raiz.innerHTML).toContain('foi removido');
-    expect(raiz.innerHTML).toContain('Começar um evento novo');
+    expect(raiz.innerHTML).toContain('Fazer um evento');
+    // O motivo e o caminho para pedir revisão, como na página do evento removido.
+    for (const p of textosDoRemovido({ tipo: 'regra', regra: 5 }).paragrafos) expect(raiz.innerHTML).toContain(esc(p));
+    expect(raiz.innerHTML).toContain(`href="${esc(linkPara('regras'))}"`);
+    expect(raiz.innerHTML).toContain('Ver as Regras de uso');
     expect(foco).toHaveBeenCalled();
     expect(d.guardar).not.toHaveBeenCalled();
     expect(d.ir).not.toHaveBeenCalled();
+  });
+
+  it('bloqueado a pedido ou sem motivo: mostra o texto de cada um e o caminho da revisão', async () => {
+    for (const motivo of [{ tipo: 'pedido' }, { tipo: 'sem-motivo' }] as const) {
+      const { raiz } = raizFalsa();
+      const { d, tipada } = deps({ estado: 'bloqueado', motivo } as Aberto);
+      await abrirParaEditar(raiz, '1rABC', () => true, tipada);
+      for (const p of textosDoRemovido(motivo).paragrafos) expect(raiz.innerHTML).toContain(esc(p));
+      expect(raiz.innerHTML).toContain(`href="${esc(linkPara('regras'))}"`);
+      expect(raiz.innerHTML).toContain('Fazer um evento');
+      expect(d.guardar).not.toHaveBeenCalled();
+    }
   });
 
   it('problema no link: tela de aviso', async () => {

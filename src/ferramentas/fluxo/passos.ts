@@ -22,7 +22,7 @@ import {
   linkAindaVale,
   marcarMudanca,
   NOME_DO_FORMATO,
-  NOTA_DO_LINK,
+  notaEDicaDoPasso,
   PORTAS,
   podePularOPasso2,
   rotuloDeApagar,
@@ -47,22 +47,13 @@ type PassoNumerado = 1 | 2 | 3;
 const NOME_DO_PASSO = (d: DadosDoFluxo, passo: PassoNumerado): string =>
   passo === 1 ? 'O quê' : passo === 2 ? tituloDoPasso2(d.tipo) : 'Como fica';
 
-const DICA_DO_PASSO: Record<PassoNumerado, string> = {
-  1: 'Já vem com um exemplo. Troque pelo que for seu.',
-  2: 'Toque em Hoje, Amanhã ou Próximo sábado para escolher mais rápido.',
-  3: 'Escolha onde vai mandar e a cor. O resto já está pronto.',
-};
-
 /**
  * Título da tela: o verbo da porta, "Passo N de 3" e o nome do passo, tudo dentro do h1 (o leitor de tela lê
  * "Chamar para uma reunião. Passo 1 de 3: O quê"). Os separadores só aparecem para o leitor de tela.
  */
 function cabecalho(d: DadosDoFluxo, passo: PassoNumerado): string {
-  // Dados de um link: nota fixa no lugar da dica do exemplo (passo 1).
-  const aviso =
-    passo === 1 && d.origem === 'link'
-      ? `<p class="fluxo-nota">${esc([NOTA_DO_LINK, d.ficouDeFora].filter(Boolean).join(' '))}</p>`
-      : `<p class="fluxo-dica">${esc(DICA_DO_PASSO[passo])}</p>`;
+  const { nota, dica } = notaEDicaDoPasso(d, passo);
+  const aviso = `${nota ? `<p class="fluxo-nota">${esc(nota)}</p>` : ''}${dica ? `<p class="fluxo-dica">${esc(dica)}</p>` : ''}`;
   return `<h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">. </span><span class="fluxo-passo">Passo ${passo} de 3</span><span class="fluxo-so-leitor">: </span><span class="fluxo-nome">${esc(NOME_DO_PASSO(d, passo))}</span></h1>
     ${aviso}`;
 }

@@ -23,6 +23,11 @@ import {
   linkAindaVale,
   marcarMudanca,
   oQueFicouDeFora,
+  fraseDoLinkNoPronto,
+  notaEDicaDoPasso,
+  NOTA_DO_LINK,
+  avisoDoLinkNoPronto,
+  FRASE_DO_LINK_ORIGINAL,
   passoAnterior,
   passoPendente,
   podePularOPasso2,
@@ -225,7 +230,7 @@ describe('dados que chegam de outra tela', () => {
   const link = `${BASE}#/evento/1rABCdef`;
   const ev = { titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '', local: 'Quadra', descricao: 'Traga um prato', organizacao: 'Coletivo' };
 
-  it('o card preparado nunca reaproveita o link (o texto chega cortado e sem hora de fim)', () => {
+  it('o card preparado guarda o link original; sem mudança ele vale, com mudança não', () => {
     const d = dadosDoCardPreparado({
       modelo: 'evento',
       titulo: 'Mutirão',
@@ -236,10 +241,18 @@ describe('dados que chegam de outra tela', () => {
       organizacao: 'Associação',
       link,
     })!;
-    expect(d.link).toBe('');
-    expect(d.assinaturaDoLink).toBe('');
-    expect(linkAindaVale(d)).toBe(false);
+    expect(d.link).toBe(link);
+    expect(d.assinaturaDoLink).toBe(assinatura(d));
+    expect(linkAindaVale(d)).toBe(true);
     expect(d.origem).toBe('link');
+    d.titulo = 'Outro título';
+    expect(linkAindaVale(d)).toBe(false);
+  });
+
+  it('o card preparado sem link não inventa um', () => {
+    const d = dadosDoCardPreparado({ modelo: 'evento', titulo: 'Mutirão' })!;
+    expect(d.link).toBe('');
+    expect(linkAindaVale(d)).toBe(false);
   });
 
   it('sem nada preparado, não abre nada', () => {
@@ -250,21 +263,71 @@ describe('dados que chegam de outra tela', () => {
     const d = dadosDoEvento(ev, link, BASE);
     expect(d).toMatchObject({ tipo: 'evento', titulo: 'Festa', hora: '18:00', texto: 'Traga um prato', origem: 'link', ficouDeFora: '' });
     expect(linkAindaVale(d)).toBe(true);
-    // Descrição maior que o texto do card ou hora de fim: o link de antes não descreve o que sai; gera outro.
-    expect(linkAindaVale(dadosDoEvento({ ...ev, fim: '20:00' }, link, BASE))).toBe(false);
-    expect(linkAindaVale(dadosDoEvento({ ...ev, descricao: 'x'.repeat(200) }, link, BASE))).toBe(false);
     expect(assinatura(d)).toBe(d.assinaturaDoLink);
+  });
+
+  it('criar outro, sem mudança, mantém o link original mesmo com hora de fim, quebra de linha e descrição longa', () => {
+    const longo = { ...ev, fim: '20:00', descricao: `Linha um\nLinha dois ${'x'.repeat(200)}` };
+    const d = dadosDoEvento(longo, link, BASE);
+    expect(d.link).toBe(link);
+    expect(linkAindaVale(d)).toBe(true);
+    d.titulo = 'Outra festa';
+    expect(linkAindaVale(d)).toBe(false);
+  });
+
+  it('link que não é do próprio site não é reaproveitado', () => {
+    expect(dadosDoEvento(ev, 'https://outro.test/#/evento/1rABC', BASE).link).toBe('');
   });
 
   it('diz o que ficou de fora, só a parte que vale', () => {
     const longa = 'x'.repeat(200);
     expect(oQueFicouDeFora(ev)).toBe('');
-    expect(oQueFicouDeFora({ ...ev, fim: '20:00' })).toBe('A hora de fim não cabe aqui e ficou de fora.');
-    expect(oQueFicouDeFora({ ...ev, descricao: longa })).toBe('Parte da descrição não cabe aqui e ficou de fora.');
+    expect(oQueFicouDeFora({ ...ev, fim: '20:00' })).toBe('A hora de fim não cabe no card. Sem mudança, o link continua levando o evento inteiro.');
+    expect(oQueFicouDeFora({ ...ev, descricao: longa })).toBe('Parte da descrição não cabe no card. Sem mudança, o link continua levando o evento inteiro.');
     expect(oQueFicouDeFora({ ...ev, fim: '20:00', descricao: longa })).toBe(
-      'A hora de fim e parte da descrição não cabem aqui e ficaram de fora.',
+      'A hora de fim e parte da descrição não cabem no card. Sem mudança, o link continua levando o evento inteiro.',
     );
     expect(dadosDoEvento({ ...ev, fim: '20:00' }, link, BASE).ficouDeFora).toMatch(/hora de fim/);
+  });
+});
+
+describe('link original e notas de dados de link', () => {
+  const link = `${BASE}#/evento/1rABCdef`;
+  const ev = { titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '20:00', local: 'Quadra', descricao: 'Traga um prato', organizacao: 'Coletivo' };
+
+  it('card preparado de tipo sem agenda não guarda o link', () => {
+    const d = dadosDoCardPreparado({ modelo: 'aviso', titulo: 'Aviso', link })!;
+    expect(d.link).toBe('');
+  });
+
+  it('a frase do Pronto diz "mesmo link" só enquanto o link original vale', () => {
+    const d = dadosDoEvento(ev, link, BASE);
+    expect(fraseDoLinkNoPronto(d)).toBe(FRASE_DO_LINK_ORIGINAL);
+    d.titulo = 'Outra festa';
+    expect(fraseDoLinkNoPronto(d)).toBe(avisoDoLinkNoPronto('evento'));
+    // Link que o Pronto gerou depois de uma mudança não é o original.
+    d.link = 'x';
+    d.assinaturaDoLink = assinatura(d);
+    d.linkOriginal = false;
+    expect(fraseDoLinkNoPronto(d)).toBe(avisoDoLinkNoPronto('evento'));
+    expect(fraseDoLinkNoPronto(exemploDoFluxo('evento', 0, QUINTA))).toBe(avisoDoLinkNoPronto('evento'));
+  });
+
+  it('nota e dica do passo: link no passo 1 troca a dica; no 3 vem acima dela; no 2 e sem link, só a dica', () => {
+    const doLink = { origem: 'link' as const, ficouDeFora: 'Algo ficou.' };
+    const p1 = notaEDicaDoPasso(doLink, 1);
+    expect(p1).toEqual({ nota: `${NOTA_DO_LINK} Algo ficou.`, dica: '' });
+    const p3 = notaEDicaDoPasso(doLink, 3);
+    expect(p3.nota).toBe(NOTA_DO_LINK);
+    expect(p3.dica).toMatch(/Escolha onde vai mandar/);
+    const p2 = notaEDicaDoPasso(doLink, 2);
+    expect(p2.nota).toBe('');
+    expect(p2.dica).not.toBe('');
+    for (const passo of [1, 2, 3] as const) {
+      const sem = notaEDicaDoPasso({ origem: 'pessoa', ficouDeFora: '' }, passo);
+      expect(sem.nota).toBe('');
+      expect(sem.dica).not.toBe('');
+    }
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
-import { camposDoExemplo, exemploDoFluxo, linkAindaVale, type DadosDoFluxo, type Tipo } from './estado';
+import { camposDoExemplo, dadosDoCardPreparado, dadosDoEvento, exemploDoFluxo, linkAindaVale, type DadosDoFluxo, type Tipo } from './estado';
 import { linkDoFluxo, type DependenciasDoLink } from './link';
 
 const HOJE = new Date(2026, 10, 5);
@@ -44,6 +44,46 @@ describe('linkDoFluxo', () => {
     expect(linkAindaVale(d)).toBe(false);
     await linkDoFluxo(d, BASE, dp);
     expect(dp.codificar).toHaveBeenCalledTimes(2);
+  });
+
+  it('"Fazer o card" sem mudança devolve o link original sem codificar; mudar o título gera link novo', async () => {
+    const original = `${BASE}#/evento/1rORIGINAL`;
+    const d = dadosDoCardPreparado({ modelo: 'evento', titulo: 'Mutirão', data: '2026-11-14', hora: '09:00', local: 'Praça', texto: 'Traga luvas', organizacao: 'Coletivo da Horta', link: original })!;
+    const dp = deps();
+    expect(await linkDoFluxo(d, BASE, dp)).toEqual({ link: original, aviso: '' });
+    expect(dp.codificar).not.toHaveBeenCalled();
+    d.titulo = 'Outro título';
+    expect((await linkDoFluxo(d, BASE, dp)).link).toBe(`${BASE}#/evento/1rDADOS`);
+    expect(dp.codificar).toHaveBeenCalledTimes(1);
+  });
+
+  it('"Criar outro" de evento com fim, quebra de linha e descrição longa devolve o link original sem mudança', async () => {
+    const original = `${BASE}#/evento/1rORIGINAL`;
+    const ev = { titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '20:00', local: 'Quadra', descricao: `Um\nDois ${'coisa boa '.repeat(30)}`, organizacao: 'Coletivo da Horta' };
+    const d = dadosDoEvento(ev, original, BASE);
+    const dp = deps();
+    expect(await linkDoFluxo(d, BASE, dp)).toEqual({ link: original, aviso: '' });
+    expect(dp.codificar).not.toHaveBeenCalled();
+    d.titulo = 'Outra festa';
+    expect((await linkDoFluxo(d, BASE, dp)).link).toBe(`${BASE}#/evento/1rDADOS`);
+  });
+
+  it('link original maior que o máximo: sem link e com a mensagem, sem gerar outro', async () => {
+    const original = `${BASE}#/evento/1r${'A'.repeat(100)}`;
+    const d = dadosDoCardPreparado({ modelo: 'evento', titulo: 'Mutirão', organizacao: 'Coletivo da Horta', link: original })!;
+    const dp = deps(50);
+    expect(await linkDoFluxo(d, BASE, dp)).toEqual({ link: '', aviso: MENSAGEM_DO_LINK_GRANDE });
+    expect(dp.codificar).not.toHaveBeenCalled();
+  });
+
+  it('organização do catálogo com link original presente: sem link, com o aviso do exemplo', async () => {
+    const original = `${BASE}#/evento/1rORIGINAL`;
+    const org = exemploDoFluxo('evento', 0, HOJE).organizacao;
+    const d = dadosDoCardPreparado({ modelo: 'evento', titulo: 'Mutirão', organizacao: org, link: original })!;
+    expect(d.link).toBe(original);
+    const dp = deps();
+    expect(await linkDoFluxo(d, BASE, dp)).toEqual({ link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO });
+    expect(dp.codificar).not.toHaveBeenCalled();
   });
 
   it('passou do máximo: sem link e com a mensagem', async () => {

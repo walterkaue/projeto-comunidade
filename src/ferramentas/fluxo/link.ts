@@ -30,9 +30,14 @@ async function padrao(): Promise<DependenciasDoLink> {
  */
 export async function linkDoFluxo(d: DadosDoFluxo, base: string, deps?: DependenciasDoLink): Promise<ResultadoDoLink> {
   if (!temAgenda(d.tipo)) return { link: '', aviso: '' };
-  // O link é o que circula: com título ou organização do exemplo, não sai (docs/produto.md 7.6).
+  // O link é o que circula: com a organização do exemplo, não sai (docs/produto.md 7.6).
   if (exemploNoLink(d)) return { link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO };
-  if (linkAindaVale(d)) return { link: d.link, aviso: '' };
+  if (linkAindaVale(d)) {
+    // O link original pode passar do máximo (o QR do cartaz falharia). Não gera outro: ele seria outro evento.
+    // Se o formato não carregar (sem rede), fica com o original: é ele que a lista de bloqueio conhece.
+    const maximo = deps?.maximo ?? (await padrao().then((p) => p.maximo, () => Number.POSITIVE_INFINITY));
+    return d.link.length > maximo ? { link: '', aviso: MENSAGEM_DO_LINK_GRANDE } : { link: d.link, aviso: '' };
+  }
   try {
     const r = validarEvento(eventoDoFluxo(d));
     if (!r.ok) return { link: '', aviso: MENSAGEM_SEM_LINK };
@@ -41,6 +46,7 @@ export async function linkDoFluxo(d: DadosDoFluxo, base: string, deps?: Dependen
     if (link.length > dp.maximo) return { link: '', aviso: MENSAGEM_DO_LINK_GRANDE };
     d.link = link;
     d.assinaturaDoLink = assinatura(d);
+    d.linkOriginal = false;
     return { link, aviso: '' };
   } catch {
     return { link: '', aviso: MENSAGEM_SEM_LINK };
