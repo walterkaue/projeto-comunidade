@@ -183,7 +183,7 @@ for (const [aparelho, marca] of [
 
         if (nome === 'futuro-21-11') {
           const antes = await texto(page);
-          await page.getByRole('button', { name: 'Compartilhar este link' }).click();
+          await page.getByRole('button', { name: /^(Compartilhar este link|Copiar o link)$/ }).click();
           await page.waitForTimeout(400);
           const aviso2 = await page.locator('#aviso-vivo').innerText().catch(() => '');
           const clip = await page.evaluate(() => navigator.clipboard.readText().catch((e: unknown) => `(erro: ${String(e)})`)).catch((e) => `(erro: ${String(e)})`);

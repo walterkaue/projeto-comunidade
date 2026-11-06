@@ -478,9 +478,9 @@ test('C4: ata (vazia, com erro, pronta), páginas do rodapé e Como denunciar', 
   await page.waitForTimeout(600);
   await tela(page, 'Ata: pronta');
   await foto(page, 'c4-ata-pronta', true);
-  await page.getByRole('button', { name: 'Imprimir ou salvar em PDF' }).click();
+  await page.getByRole('button', { name: 'Salvar em PDF' }).click();
   await page.waitForTimeout(600);
-  await tela(page, 'Ata: depois de "Imprimir ou salvar em PDF"');
+  await tela(page, 'Ata: depois de "Salvar em PDF"');
   await page.getByRole('button', { name: 'Apagar a ata' }).click();
   await page.waitForTimeout(500);
   await tela(page, 'Ata: depois de "Apagar a ata"');
@@ -653,10 +653,15 @@ for (const rodada of [1, 2]) {
     await page.waitForFunction(() => document.getElementById('aviso-vivo')?.classList.contains('aviso-vivo-visivel'), null, { timeout: 20_000 });
     const texto = await page.evaluate(() => document.getElementById('aviso-vivo')?.textContent ?? '');
     const apareceu = Date.now() - t0;
+    // Desde a correção de C-05 (06/11/2026): aviso com instrução fica até o próximo toque; o resto, 1 s por palavra (mín. 5 s).
+    await page.waitForTimeout(8_000);
+    const aindaVisivel = await page.evaluate(() => !!document.getElementById('aviso-vivo')?.classList.contains('aviso-vivo-visivel'));
+    if (aindaVisivel) await page.mouse.click(5, 5);
     await page.waitForFunction(() => !document.getElementById('aviso-vivo')?.classList.contains('aviso-vivo-visivel'), null, { timeout: 30_000 });
     const visivelMs = Date.now() - t0 + 0;
     const palavras = contaPalavras(texto);
-    const linha = `Rodada ${rodada}: aviso "${texto}" (${palavras} palavras, leitura a 3 palavras por segundo = ${(palavras / 3).toFixed(1)} s). Ficou visível ${(visivelMs / 1000).toFixed(1)} s (a contar do toque).`;
+    const textoDepois = await page.evaluate(() => document.getElementById('aviso-vivo')?.textContent ?? '');
+    const linha = `Rodada ${rodada}: aviso "${texto}" (${palavras} palavras, leitura a 3 palavras por segundo = ${(palavras / 3).toFixed(1)} s). ${aindaVisivel ? 'Ainda à vista depois de 8 s; sumiu com o toque' : 'Sumiu sozinho'} em ${(visivelMs / 1000).toFixed(1)} s (a contar do toque). Texto na região viva depois: "${textoDepois}".`;
     console.log(linha);
     appendFileSync(join(SAIDA, 'c4-tempo-aviso.md'), `${linha}\n`);
     expect(apareceu).toBeLessThan(20_000);

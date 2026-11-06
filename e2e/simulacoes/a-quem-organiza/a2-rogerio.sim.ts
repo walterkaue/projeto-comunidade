@@ -199,7 +199,7 @@ test.describe('A2 Rogério', () => {
     cron.marca('ata-preenchida');
     await tocar(page.getByRole('button', { name: 'Ver a ata pronta' }));
     await foto(page, 'ata-pronta', true);
-    await tocar(page.getByRole('button', { name: 'Imprimir ou salvar em PDF' }));
+    await tocar(page.getByRole('button', { name: 'Salvar em PDF' }));
     await expect.poll(() => page.evaluate(() => window.__impressoes)).toBeGreaterThan(0);
     const pdfAta = await salvarPdf(page, 'ata.pdf');
     registrar('ata-pdf', { pdf: pdfAta });
