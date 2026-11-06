@@ -86,7 +86,10 @@ function cancelar(e: Estado): void {
 }
 
 function campoComFoco(doc: Document): Element | null {
-  return doc.activeElement ?? null;
+  const foco = doc.activeElement ?? null;
+  // Sem nada focado, o foco é o body (a caixa da página inteira): não há campo para desviar.
+  if (!foco || foco === doc.body || foco === doc.documentElement) return null;
+  return foco;
 }
 
 /** O campo com foco está na metade de baixo da tela (onde o aviso ficaria por cima)? */

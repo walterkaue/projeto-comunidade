@@ -31,7 +31,7 @@ function docFalso(altura = 640) {
     }
   }
   const criados: FakeEl[] = [];
-  const estado = { foco: null as Foco | null };
+  const estado = { foco: null as Foco | 'body' | null };
   const doc = {
     getElementById: (id: string) => elementos.get(id) ?? null,
     createElement: () => {
@@ -39,11 +39,12 @@ function docFalso(altura = 640) {
       criados.push(e);
       return e;
     },
-    body: { append: (e: FakeEl) => elementos.set(e.id, e) },
+    body: { append: (e: FakeEl) => elementos.set(e.id, e), getBoundingClientRect: () => ({ top: 0, height: 3000, width: 360 }), getAttribute: () => null },
     defaultView: { innerHeight: altura },
     get activeElement() {
       const f = estado.foco;
       if (!f) return null;
+      if (f === 'body') return doc.body;
       return {
         getBoundingClientRect: () => ({ top: f.top, height: f.height, width: 200 }),
         getAttribute: (n: string) => (n === 'aria-invalid' && f.invalido ? 'true' : null),
@@ -204,6 +205,14 @@ describe('avisar', () => {
     expect(criados[0]?.classes.has('aviso-vivo-alto')).toBe(true);
   });
 
+  it('sem nada focado (foco no body, a página inteira), o aviso fica embaixo', () => {
+    const { doc, criados, estado } = docFalso(640);
+    estado.foco = 'body';
+    avisar('Ata apagada.', doc);
+    vi.advanceTimersByTime(20);
+    expect(criados[0]?.classes.has('aviso-vivo-alto')).toBe(false);
+  });
+
   it('com erro escrito no campo com foco, ou soLeitor, o aviso fica só para o leitor', () => {
     const a = docFalso();
     a.estado.foco = { top: 300, height: 52, invalido: true };
@@ -261,7 +270,9 @@ describe('componentes.css', () => {
     const caixa = bloco(c, '.folha-caixa');
     expect(caixa).toMatch(/max-height:\s*100%/);
     expect(caixa).toMatch(/overflow-y:\s*auto/);
-    expect(bloco(c, '.folha-caixa strong')).toMatch(/overflow-wrap:\s*normal/);
+    expect(bloco(c, '.folha-caixa strong')).toMatch(/overflow-wrap:\s*break-word/);
+    // Navegador sem "safe" fica com a linha de antes.
+    expect(folha).toMatch(/align-items:\s*flex-end;[\s\S]*align-items:\s*safe flex-end/);
   });
   it('caixa de marcar com 48 px, radio como está', async () => {
     const c = await css();

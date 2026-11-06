@@ -78,6 +78,8 @@ html {
   inset: 0;
   z-index: 70;
   display: flex;
+  align-items: flex-end;
+  /* "safe": caixa mais alta que a tela começa no topo (rolável), não acima dele. Navegador sem "safe" fica com a linha de cima. */
   align-items: safe flex-end;
   justify-content: center;
   overflow-y: auto;
@@ -107,7 +109,8 @@ html {
 
 /* O domínio só quebra nos pontos (<wbr> depois de cada ponto, em saida.ts). */
 .folha-caixa strong {
-  overflow-wrap: normal;
+  /* Quebra nos pontos (<wbr>); dentro de um pedaço, só se ele sozinho não couber na linha. */
+  overflow-wrap: break-word;
   word-break: normal;
 }
 
