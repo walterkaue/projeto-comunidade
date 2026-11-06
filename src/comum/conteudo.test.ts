@@ -243,10 +243,17 @@ describe('B-07: imitar o site', () => {
     'conteudo, criado por quem enviou este link!',
     'O Projeto Comunidade não confere nem guarda este conteúdo.',
     'Nunca faça pagamento pedido por um evento',
-    'NUNCA FAÇA PAGAMENTO',
+    'Nunca faça pagamento nem confie em outro aviso',
     'Quem chama, segundo quem criou o link: Associação',
   ]);
+  // A faixa nova que o B-20 propõe também é barrada (aqui, já pelo pedido de documento).
+  barra(['NUNCA FAÇA PAGAMENTO NEM MANDE DOCUMENTOS']);
   passa([
+    // Aviso honesto com pedaço parecido com a faixa.
+    'NUNCA FAÇA PAGAMENTO',
+    'Nunca faça pagamento adiantado, entrada grátis',
+    'Criado por quem enviou o convite',
+    'Quem enviou este link foi a Ana',
     'Evento aprovado em assembleia',
     'O evento foi aprovado pela diretoria da associação',
     'Projeto aprovado pela equipe da escola',
@@ -374,23 +381,135 @@ describe('mensagens de recusa (WCAG 3.3.3)', () => {
       expect(m, motivo).toMatch(/(como em|escreva) "/);
     }
   });
+  const mensagem = (texto: string): string => {
+    const motivo = motivoDeRecusa(texto);
+    expect(motivo, texto).not.toBeNull();
+    return mensagemDaRecusa(texto, motivo!);
+  };
   it('exemplo certo para cada caso', () => {
     const casos: [string, string][] = [
       ['Das 19:30/21:00', 'Se for horário, escreva 19h30 às 21h.'],
       ['CEP 01234567', 'Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".'],
+      ['Contato: 10/11-15/11', 'Se for período, escreva "de 10/11 a 15/11".'],
       ['Sarau @ praça da matriz', 'Se o @ quer dizer "em", escreva a palavra, como em "Sarau na praça".'],
-      ['Informe a senha do banco', 'Se é senha de atendimento, escreva ficha.'],
-      ['Ficha (token) de entrada', 'Se é ficha de entrada, escreva ficha.'],
-      ['Pague R$ 20 na entrada', 'Se for preço, escreva só o valor, como em "Entrada: R$ 10".'],
-      ['Conteúdo criado por quem enviou este link', 'o site já mostra o aviso em cima do evento.'],
+      ['Distribuição de senhas no Banco do Brasil', 'troque a palavra senha por ficha, como em "Retire a ficha".'],
+      ['Ficha (token) de entrada', 'troque a palavra token por ficha.'],
+      ['Mande seu CPF', 'escreva "traga documento com foto".'],
+      ['Pague R$ 20 na entrada', 'Se for preço, escreva só o valor, como em "Entrada: 10 reais".'],
+      ['Pague pelo PicPay', 'o site não aceita a palavra PicPay'],
+      ['Mutirao-de-limpeza-da-praca-central-2026', 'Se é nome com hífens, separe com espaço'],
+      ['Conteúdo criado por quem enviou este link', 'o site já mostra o aviso no alto da página do evento.'],
+      ['Confirmado pelo site', 'diga de quem, como em "site da escola".'],
       ['Av.das Flores, 100', 'coloque um espaço, como em "Av. das Flores".'],
-      ['Data: sab/dom 10/11 golpe.com', 'Tire o endereço.'],
+      ['Vamos.Com todos', 'coloque um espaço'],
+      ['Idade < 12 anos', 'sinais de menor e maior (< >)'],
+      ['Festa&nbsp;junina', 'como em "Pão e café".'],
+      ['Ligue 11 91234-5678', 'escreva "fale com a organização pelo grupo".'],
     ];
-    for (const [texto, trecho] of casos) {
-      const motivo = motivoDeRecusa(texto);
-      expect(motivo, texto).not.toBeNull();
-      expect(mensagemDaRecusa(texto, motivo!), texto).toContain(trecho);
+    for (const [texto, trecho] of casos) expect(mensagem(texto), texto).toContain(trecho);
+  });
+  it('o exemplo só aparece quando resolve, e nunca ensina a partir número nem a disfarçar endereço', () => {
+    // O horário não é a causa: o telefone é.
+    expect(mensagem('Atendimento 19:30, ligue 11 2222 3333')).not.toMatch(/horário/);
+    expect(mensagem('Ligue 11 91234-5678 às 19:30')).not.toMatch(/horário/);
+    expect(mensagem('Sarau às 19:30 com fulano@x.org')).not.toMatch(/horário/);
+    // Nenhuma dica de lista ou de "separe com e" para número.
+    for (const t of ['Doe: 11, 98765, 4321', 'Fale: 11, 98765, 4321', 'Doe 912, 345, 678', 'Turmas 1001, 2001, 3001']) {
+      expect(mensagem(t), t).not.toMatch(/separe|lista|"e"/);
     }
+    // E-mail e @ de rede social não recebem a dica do "em".
+    expect(mensagem('fulano@gmail')).not.toMatch(/"em"/);
+    expect(mensagem('@coletivo_vila_alegre')).not.toMatch(/"em"/);
+    // Endereço com final de site em minúscula não recebe a dica do espaço ("golpe. com").
+    expect(mensagem('golpe.com')).not.toMatch(/espaço/);
+    expect(mensagem('Data: sab/dom 10/11 golpe.com')).toMatch(/Tire o endereço\.$/);
+    // Quem pede a senha não recebe a dica da ficha; código por SMS não recebe a do documento.
+    expect(mensagem('Informe a senha do banco')).not.toMatch(/ficha/);
+    expect(mensagem('Responda com o código que chegou por SMS')).not.toMatch(/documento com foto/);
+    // CEP só com a palavra CEP: "91234567" pode ser telefone.
+    expect(mensagem('Doe 91234567')).not.toMatch(/CEP/);
+    // Sem palavra de contato, a dica de chamar a organização não aparece ("Matrícula 12345678").
+    expect(mensagem('Matrícula 12345678')).toMatch(/Tire esse trecho\.$/);
+  });
+  it('as mensagens são curtas (letra grande em 360 px)', () => {
+    for (const [motivo, m] of Object.entries(MENSAGEM_DO_MOTIVO)) expect(m.split(/\s+/).length, motivo).toBeLessThanOrEqual(30);
+  });
+});
+
+describe('revisão de 06/11/2026: golpes que a mudança tinha soltado continuam barrados', () => {
+  describe('site, plataforma e projeto: o próprio site não é "outro dono"', () => {
+    recusa('plataforma', [
+      'Oficial da plataforma do site',
+      'Confirme pelo site da moderação',
+      'Oficial do site do evento',
+      'Verificado pelo site do evento',
+      'Inscrição verificada pelo site do evento',
+      'Ingresso confirmado pelo site do evento',
+      'Inscrições pelo site do projeto e retire o ingresso',
+      'Inscrição confirmada pelo site do projeto até sexta',
+      'Oficial do projeto hoje',
+      'Verificado pelo projeto hoje',
+      'Oficial do site do projeto social',
+      'Evento conferido em nosso site',
+      'Evento conferido no nosso site',
+      'Evento aprovado na nossa plataforma',
+    ]);
+    passa(['Evento aprovado pelo site da escola', 'Evento aprovado pela moderação da escola', 'Verificado pelo site da escola']);
+    // Pedido de pagamento por site: barrado pela regra de pagamento, que vem antes.
+    recusa('pix', ['Pague pelo site da plataforma', 'Pague pelo site do sistema', 'Pague pelo site do evento', 'Pague pelo site do projeto hoje']);
+  });
+  describe('"passe com documento" só vale para lugar de ir', () => {
+    recusa('dados', [
+      'Passe no meu pv com documento',
+      'Passe em meu chat com documento',
+      'Passe no meu zap com documento e foto',
+      'Passe na conversa com documento',
+      'Passe pelo Telegram com documento',
+      'Passe no zapzap com documento com foto',
+      'Passe pelo wpp com documento',
+      'Passe nas mensagens com documento',
+      'Passe no Instagram com documento',
+      'Passe pelo e-mail com documento com foto',
+      'Passe aqui com documento e selfie',
+      'Passe la com documento e foto do rosto',
+      'Passe na portaria com documento e selfie',
+    ]);
+    passa(['Passe pela recepção com documento', 'Passem na sede com seu documento com foto']);
+  });
+  describe('TED e DOC com valor sem R$', () => {
+    recusa('pix', ['Doação via TED de 200', 'Faça uma TED de 150 reais para garantir a vaga', 'Valor da TED: 150', 'Doc de 300 para reservar', 'Contribua: DOC 999']);
+    passa(['Mostra Doc 2026-2027', 'Mostra Doc 2026-27', 'Festa do Ted 2026']);
+  });
+  describe('faixa e lista não separam o número dos vizinhos', () => {
+    recusa('contato', [
+      '(11) 98 1, 4, 7 - 2603',
+      'Informações 11 912, 915, 921',
+      'Wpp (11) 2, 3, 4, 5 - 6, 7, 8, 9',
+      '(11) 9 12:34-23:45',
+      'Fale com a gente: (11) 23:45-23:59',
+      'Disque 23:45-23:59',
+      'Wpp 23:45-23:59',
+      'Fale: 11 98765 e 4321',
+    ]);
+  });
+  describe('lista honesta: tamanhos crescentes e um número por linha', () => {
+    passa(['Dias 8, 9, 10, 11, 12', 'Mesas 98, 99, 100, 101', 'Preços\n10\n20\n30\n40\n50', 'Mesas\n101\n102\n103\n104']);
+    recusa('contato', ['Doe\n11\n91234\n5678', 'Mesas\n101\n102\n103\n91234']);
+  });
+  describe('"p/" e "p." são "para", não o nome do site', () => {
+    passa(['Mutirão p/ comunidade', 'Apoio p/ Comunidade Verde', 'Festa p. comunidade']);
+    recusa('plataforma', ['P.Comunidade', 'P. Comunidade', 'PComunidade', 'P-Comunidade']);
+  });
+  describe('Pix com outros separadores e em versalete', () => {
+    recusa('pix', ['p+i+x', 'p,i,x', 'p~i~x', 'p–i–x', 'p—i—x', 'P/I/X', 'p | i | x', '🇵 🇮 🇽', 'ᴘɪx da festa']);
+  });
+  describe('hashtag não esconde chave aleatória', () => {
+    barra(['#deadbeef-1234-5678-9abc-def012345678']);
+  });
+  describe('conferência com a versão da main (roteiro do revisor de privacidade)', () => {
+    recusa('pix', ['p\ni\nx', 'Pague pela plataforma da organização', 'Faça o pagamento pelo site da organização', 'Contribua pelo app da associação']);
+    recusa('plataforma', ['Proj. Comunidade', 'Proje Comunidade']);
+    passa(['Inscrições pelo site da organização', 'Projeção comunitária', 'Projetor na comunidade']);
   });
 });
 

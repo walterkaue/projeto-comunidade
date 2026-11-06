@@ -277,7 +277,8 @@ describe('simulação B de 06/11/2026: a página do evento e o formulário', () 
     );
     expect(erro({ local: 'Rua 7, CEP 01234567' }, 'local')).toContain('Escreva o CEP com hífen ou tire o CEP');
     expect(erro({ descricao: 'Das 19:30/21:00' }, 'descricao')).toContain('Se for horário, escreva 19h30 às 21h.');
-    expect(erro({ descricao: 'Informe a senha do banco' }, 'descricao')).toContain('Se é senha de atendimento, escreva ficha.');
+    expect(erro({ descricao: 'Distribuição de senhas no Banco do Brasil' }, 'descricao')).toContain('troque a palavra senha por ficha');
+    expect(erro({ descricao: 'Informe a senha do banco' }, 'descricao')).not.toContain('ficha');
     for (const campos of [{ titulo: 'Festa do Pix' }, { descricao: 'Mande seu CPF' }, { local: 'golpe.com' }, { organizacao: 'Projeto Comunidade' }]) {
       const r = com(campos);
       expect(r.ok).toBe(false);

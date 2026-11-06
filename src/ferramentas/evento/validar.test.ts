@@ -201,7 +201,7 @@ describe('endurecimento da conferência (conteúdo.ts)', () => {
   it('recusa evento que se passa pela plataforma, com mensagem própria', () => {
     const r = com({ organizacao: 'Projeto Comunidade' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.erros.organizacao).toMatch(/não pode usar o nome deste site nem dizer que foi conferido/);
+    if (!r.ok) expect(r.erros.organizacao).toMatch(/o nome deste site e frases como "evento verificado" não podem entrar/);
     expect(com({ titulo: 'Evento oficial' }).ok).toBe(false);
   });
   it('texto legítimo passa no formulário', () => {

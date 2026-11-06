@@ -82,14 +82,19 @@ const PAGAMENTO = [
   ),
   // Siglas curtas, que também são palavras comuns: só com número de 3+ dígitos ou valor em reais.
   new RegExp(`${INICIO}(?:ag|cc)${FIM}${ENTRE}(?:\\d{3}|r\\$\\s*\\d)`, 'u'),
-  // "Doc" e "Ted" também são nome ("Mostra Doc 2026", "Festa do Ted 2026"; B-09): só com valor em reais ou com
-  // número de conta (5 algarismos ou mais, como "TED 12345-6").
-  new RegExp(`${INICIO}(?:ted|doc)${FIM}${ENTRE}(?:r\\$\\s*\\d|\\d(?:[.\\-\\s]?\\d){4,})`, 'u'),
+  // Pagamento por um site, de qualquer dono ("pague pela plataforma da organização"): o site de outro dono só
+  // passa para inscrição e informação (B-10), nunca para pagamento.
+  new RegExp(`${INICIO}(?:pague|paguem|pagar|pagamento|pagamentos|deposite|transfira|contribua)${FIM}.{0,40}${INICIO}pel[oa]\\s+(?:site|plataforma|sistema|aplicativo|app)${FIM}`, 'u'),
+  // "Doc" e "Ted" também são nome ("Mostra Doc 2026", "Festa do Ted 2026"; B-09): contam com valor em reais ou
+  // número de 3+ algarismos ("TED de 200", "TED 12345-6"), menos quando o número é um ano.
+  new RegExp(`${INICIO}(?:ted|doc)${FIM}${ENTRE}(?:r\\$\\s*\\d|(?!(?:19|20)\\d{2}(?!\\d))\\d{3})`, 'u'),
 ];
 
 // A palavra PIX (e PicPay), com ou sem separador entre as letras. Fica barrada mesmo sem chave, até em nome de
 // evento ("Festa do Pix"): decisão D2 da simulação de 06/11/2026.
-const PIX_PALAVRA = [/\bpix\b/iu, /\bpicpay\b/iu, /(?<![\p{L}\p{N}])p[\s.\-_*]?[i1l!][\s.\-_*]?x(?![\p{L}\p{N}])/iu];
+// Entre as letras, até 3 sinais quaisquer, quebra de linha inclusive ("p-i-x", "p | i | x", "p⏎i⏎x").
+const PIX_PALAVRA = [/\bpix\b/iu, /\bpicpay\b/iu, /(?<![\p{L}\p{N}])p[^\p{L}\p{N}]{0,3}[i1l!][^\p{L}\p{N}]{0,3}x(?![\p{L}\p{N}])/iu];
+const temPicPay = (t: string): boolean => /\bpicpay\b/iu.test(t);
 
 // Chave aleatória ou código comprido. Linha só de traços ou de enfeite não é código (B-09).
 const CODIGO = [
@@ -99,8 +104,8 @@ const CODIGO = [
 ];
 
 // Hashtag feita só de letras, com até 4 algarismos no fim ("#EncontroDosMoradores2026"): não é código (B-09).
-// Chave aleatória tem algarismos no meio e não cabe aqui.
-const HASHTAG = /(?<![\p{L}\p{N}])#\p{L}+\d{0,4}(?![\p{L}\p{N}])/gu;
+// Chave aleatória tem algarismos no meio (ou hífen depois, como num UUID) e não cabe aqui.
+const HASHTAG = /(?<![\p{L}\p{N}])#\p{L}+\d{0,4}(?![\p{L}\p{N}-])/gu;
 
 const temPix = (t: string): boolean => PIX_PALAVRA.some((re) => re.test(t));
 const temPagamento = (t: string): boolean => PAGAMENTO.some((re) => re.test(t));
@@ -120,12 +125,27 @@ const palavrasDoNome = (s: string): string[] =>
   s.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean).map(escapar);
 const NOME_P = palavrasDoNome(NOME);
 const CURTO_P = palavrasDoNome(NOME_CURTO);
-// O nome inteiro; a primeira palavra pode vir só com a inicial ("P.Comunidade", "P Comunidade"). B-07.
-const NOME_RE = NOME_P.map((p, i) => (i < NOME_P.length - 1 ? `(?:${p}|${p.charAt(0)})` : p)).join(JUNTA);
+// O nome inteiro, com qualquer sinal ou nada entre as palavras ("Projeto-Comunidade", "ProjetoComunidade"). B-07.
+// A primeira palavra também vale abreviada com 4 letras ou mais ("Proj. Comunidade").
+const abreviada = (p: string): string =>
+  p.length > 4 ? `(?:${p}|${Array.from({ length: p.length - 4 }, (_, i) => p.slice(0, 4 + i)).join('|')}\\.?)` : p;
+const NOME_RE = NOME_P.map((p, i) => (i === 0 && NOME_P.length > 1 ? abreviada(p) : p)).join(JUNTA);
 const CURTO_RE = CURTO_P.join(JUNTA);
-// "Este site" depois de "do/da": o nome curto, o nome inteiro, ou só a primeira palavra do nome sem outra
-// palavra depois ("pelo site do projeto"). "Projeto da horta" e "escola" são de outro dono.
-const ESTE_SITE = `(?:${CURTO_RE}${DEPOIS}|${NOME_RE}${DEPOIS}|${NOME_P[0] ?? CURTO_RE}${DEPOIS}(?!\\s+\\p{L}))`;
+// O nome com a primeira palavra só na inicial MAIÚSCULA, seguida de ponto, espaço, hífen ou nada ("P.Comunidade",
+// "P Comunidade"). Conferido no texto com as maiúsculas, para "p/ comunidade" e "p. comunidade" ("para") passarem.
+const semCaixa = (p: string): string => p.replace(/\p{Ll}/gu, (c) => `[${c}${c.toUpperCase()}]`);
+const NOME_COM_INICIAL =
+  NOME_P.length > 1
+    ? new RegExp(
+        `(?<![\\p{L}\\p{N}])${NOME_P[0]!.charAt(0).toUpperCase()}(?:\\.\\s*|\\s+|[-_])?${NOME_P.slice(1).map(semCaixa).join(JUNTA)}(?![\\p{L}\\p{N}])`,
+        'u',
+      )
+    : null;
+// "Este site" depois de "do/da": o nome curto, o nome inteiro, palavras que falam do próprio site ou da página
+// do evento ("site da plataforma", "site do evento", "site da moderação") ou a primeira palavra do nome sem
+// "de/da/do" depois ("pelo site do projeto", "do projeto hoje"). "Projeto da horta" e "escola" são de outro dono.
+const PALAVRAS_DESTE_SITE = '(?:site|plataforma|sistema|moderacao|moderadores?|equipe|evento|pagina|link|convite)';
+const ESTE_SITE = `(?:${CURTO_RE}${DEPOIS}|${NOME_RE}${DEPOIS}|${PALAVRAS_DESTE_SITE}s?${DEPOIS}|${NOME_P[0] ?? CURTO_RE}${DEPOIS}(?!\\s+d[aeo]s?\\s+\\p{L}))`;
 // "Site da escola", "plataforma da prefeitura": site de outro dono não conta (B-10).
 const DE_OUTRO = String.raw`(?!\s+d[aeo]s?\s+(?!${ESTE_SITE})\p{L})`;
 const VERIFICOU = '(?:conferid|checad|aprovad|verificad|validad|certificad|homologad|autorizad|confirmad|garantid|removid)[oa]s?';
@@ -135,17 +155,21 @@ const PLATAFORMA = [
   // ou ao próprio conteúdo ("evento verificado", "conteúdo oficial", "oficial do site"). "Oficial do projeto
   // da horta" e "oficial do site da escola" falam de outro dono (B-10).
   new RegExp(
-    `${ANTES}(?:oficia(?:l|is)|verificad[oa]s?)\\s+(?:d[oa]|pel[oa])\\s+(?:(?:site|plataforma|sistema)${DEPOIS}${DE_OUTRO}|${NOME_P[0] ?? 'projeto'}${DEPOIS}(?!\\s+(?!${CURTO_RE}${DEPOIS})\\p{L}))`,
+    `${ANTES}(?:oficia(?:l|is)|verificad[oa]s?)\\s+(?:d[oa]|pel[oa])\\s+(?:site|plataforma|sistema|${NOME_P[0] ?? 'projeto'})${DEPOIS}${DE_OUTRO}`,
     'u',
   ),
   new RegExp(`${ANTES}(?:conteudo|evento|link|pagina|anuncio)s?\\s+(?:oficia(?:l|is)|verificad[oa]s?)${DEPOIS}`, 'u'),
-  new RegExp(`${ANTES}(?:conferid|aprovad|validad|certificad|homologad|autorizad)[oa]s?\\s+(?:pel[oa]|por)\\s+(?:site|plataforma|projeto|sistema|ferramenta)`, 'u'),
+  new RegExp(
+    `${ANTES}(?:conferid|aprovad|validad|certificad|homologad|autorizad)[oa]s?\\s+(?:pel[oa]|por)\\s+(?:(?:site|plataforma|sistema)${DEPOIS}${DE_OUTRO}|projeto|ferramenta)`,
+    'u',
+  ),
   new RegExp(`${ANTES}pel[oa]\\s+(?:site|plataforma)${DEPOIS}${DE_OUTRO}`, 'u'),
   // "Este evento foi conferido", "conteúdo checado", "evento aprovado" (B-07). "Evento aprovado em assembleia"
   // e "aprovado pela diretoria" dizem quem aprovou e não é o site: passam.
   new RegExp(
     `${ANTES}(?:conteudo|evento|link|pagina|anuncio|convite)s?(?:\\s+(?:foi|foram|ja|esta|estao|e|sao|sera|serao|tambem|devidamente|totalmente|todo|todos)){0,3}\\s+${VERIFICOU}${DEPOIS}` +
-      String.raw`(?!\s+(?:pel[oa]s?|por|em|na|no|nas|nos|d[aeo]s?|durante|com)\s+(?!(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS})\p{L})`,
+      // "em nosso site", "na nossa plataforma": até duas palavras antes do site ainda é o site.
+      String.raw`(?!\s+(?:pel[oa]s?|por|em|na|no|nas|nos|d[aeo]s?|durante|com)\s+(?!(?:\p{L}+\s+){0,2}(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS}${DE_OUTRO})\p{L})`,
     'u',
   ),
   // "Checado pela equipe do site", "aprovado pela moderação" (B-07): quem conferiu é o site.
@@ -154,15 +178,16 @@ const PLATAFORMA = [
 ];
 
 // Frases do aviso da página do evento e da tela de link removido (src/ferramentas/evento/pagina.ts e
-// removido.ts), comparadas sem pontuação: quem copia a faixa faz parecer que o site conferiu (B-07). Um teste
-// em endurecimento.test.ts confere que a faixa de pagina.ts continua barrada.
+// removido.ts), comparadas sem pontuação: quem copia a faixa faz parecer que o site conferiu (B-07). Trechos
+// longos o bastante para não pegar aviso honesto ("Nunca faça pagamento adiantado"). Um teste em
+// endurecimento.test.ts confere que a faixa de pagina.ts continua barrada.
 const FRASES_DO_SITE = new RegExp(
   `${ANTES}(?:` +
     [
-      'criado por quem enviou',
-      'quem enviou este link',
+      'criado por quem enviou este link',
       'nao confere nem guarda',
-      'nunca faca pagamento',
+      'nunca faca pagamento pedido por',
+      'nunca faca pagamento nem',
       'segundo quem criou o link',
       'removido apos denuncia',
       'removido a pedido de quem o criou',
@@ -176,8 +201,9 @@ const FRASES_DO_SITE = new RegExp(
 const NOME_EM_QUALQUER_LUGAR = new RegExp(`${ANTES}${NOME_RE}${DEPOIS}`, 'u');
 const CURTO_SOZINHO = new RegExp(`^[^\\p{L}\\p{N}]*${CURTO_RE}[^\\p{L}\\p{N}]*$`, 'u');
 
-function imitaPlataforma(t: string): boolean {
+function imitaPlataforma(t: string, texto: string): boolean {
   if (NOME_RE && NOME_EM_QUALQUER_LUGAR.test(t)) return true;
+  if (NOME_COM_INICIAL?.test(texto.normalize('NFKC').replace(IGNORAVEIS, ''))) return true;
   if (CURTO_RE && CURTO_SOZINHO.test(t)) return true;
   if (FRASES_DO_SITE.test(t.replace(/[^\p{L}\p{N}]+/gu, ' '))) return true;
   return PLATAFORMA.some((re) => re.test(t));
@@ -212,7 +238,10 @@ const MINIMO_DE_DIGITOS = 8;
 const SEQUENCIA = /\d(?:[^\p{L}\d\n]{0,3}\d)*/gu;
 // O mesmo, aceitando também "e"/"ou" entre os grupos ("Zap 98765 e 4321").
 const SEQUENCIA_COM_LIGACAO = /\d(?:[^\p{L}\d\n]{0,3}\d|\s+(?:e|ou|mais)\s+\d)*/gu;
-const PALAVRA_DE_CONTATO = /(?<![a-z])(?:zap|zapzap|whats|whatsapp|ligue|ligar|liga|contato|contate|tel|telefone|fone|cel|celular|chame|chama)(?![a-z])/;
+// Palavras de contato (sem acento, minúsculas). Com uma delas no texto, faixa de horário e lista em ordem voltam a
+// contar como número, e "e"/"ou" junta os grupos ("Fale: 11 98765 e 4321").
+const PALAVRA_DE_CONTATO =
+  /(?<![a-z])(?:zap|zapzap|zapp|whats|whatsapp|wats|uats|wpp|ligue|ligar|liga|contato|contate|tel|telefone|fone|cel|celular|chame|chama|disque|disk|fale|falar|mensagem|mensagens|sms|ramal|telegram|insta|instagram|direct|dm|inbox|pv|privado|e-?mail)(?![a-z])/;
 
 const contaDigitos = (s: string): number => s.replace(/\D/g, '').length;
 
@@ -223,32 +252,47 @@ const contaDigitos = (s: string): number => s.replace(/\D/g, '').length;
 const HORA_SO = String.raw`(?:[01]?\d|2[0-3]):[0-5]\d`;
 const DATA_SO = String.raw`(?:0?[1-9]|[12]\d|3[01])[./](?:0?[1-9]|1[0-2])(?:[./](?:(?:19|20)\d{2}|\d{2}))?`;
 const FAIXA = new RegExp(`^(?:${HORA_SO}[-–—]${HORA_SO}|${DATA_SO}[-–—]${DATA_SO})$`);
-// - Lista com vírgula: 3 ou mais números do mesmo tamanho (até 4 algarismos), em ordem crescente e de 1 a 10
-//   em 10 ("Dias 10, 11, 12, 13", "Salas 101, 102, 103", "Dias 10, 17, 24, 31"). Telefone partido com vírgula
-//   ("11, 91234, 5678", "12, 34, 56, 78") não fica assim.
+// - Lista com vírgula (ou um número por linha): 3 ou mais números de até 4 algarismos, em ordem crescente, de 1
+//   a 10 em 10, sem encolher ("Dias 8, 9, 10, 11", "Salas 101, 102, 103", "Dias 10, 17, 24, 31"). Telefone
+//   partido ("11, 91234, 5678", "12, 34, 56, 78") não fica assim.
 const LISTA = /(?<![\p{L}\p{N}.,/:-])\d{1,4}(?:\s*,\s*\d{1,4}){2,}(?!\p{N}|[.,/:-]\d)/gu;
+const LISTA_EM_LINHAS = /(?:^|\n)[^\S\n]*\d{1,4}[^\S\n]*(?:\n[^\S\n]*\d{1,4}[^\S\n]*){2,}(?=\n|$)/g;
 const SALTO_MAXIMO_DA_LISTA = 10;
 function ehListaEmOrdem(trecho: string): boolean {
-  const partes = trecho.split(/\s*,\s*/);
-  const tamanho = partes[0]!.length;
+  const partes = trecho.trim().split(/\s*[,\n]\s*/);
   return partes.every((p, i) => {
-    if (p.length !== tamanho) return false;
     if (i === 0) return true;
-    const salto = Number(p) - Number(partes[i - 1]);
-    return salto > 0 && salto <= SALTO_MAXIMO_DA_LISTA;
+    const antes = partes[i - 1]!;
+    const salto = Number(p) - Number(antes);
+    return p.length >= antes.length && salto > 0 && salto <= SALTO_MAXIMO_DA_LISTA;
   });
 }
 
-function temNumeroLongo(texto: string): boolean {
+/** Há algarismo a até 4 sinais (sem letra) antes ou depois do trecho `s[i, i + n)`? */
+function temNumeroDoLado(s: string, i: number, n: number): boolean {
+  return /\d[^\p{L}\d]{0,4}$/u.test(s.slice(Math.max(0, i - 5), i)) || /^[^\p{L}\d]{0,4}\d/u.test(s.slice(i + n, i + n + 5));
+}
+
+/**
+ * Tem telefone, CPF ou outro número comprido? Com `juntarLinhas`, confere também o texto com as quebras de linha
+ * trocadas por espaço (telefone partido em linhas, B-06); a lista de um número por linha, em ordem, não conta.
+ */
+function temNumeroLongo(texto: string, juntarLinhas = false): boolean {
   const rigido = PALAVRA_DE_CONTATO.test(texto);
+  let base = texto;
+  if (juntarLinhas) {
+    if (!rigido) base = base.replace(LISTA_EM_LINHAS, (l, i: number, s: string) => (ehListaEmOrdem(l) && !temNumeroDoLado(s, i, l.length) ? '\n' : l));
+    base = base.replace(/\s*\n\s*/g, ' ');
+  }
   // Tira só o que é, sozinho, data, CEP ou hora; espaço no lugar para não juntar o que sobra com o que não é.
-  let limpo = texto
+  // A faixa e a lista só saem sem número colado do lado ("(11) 98 1, 4, 7 - 2603" continua contando).
+  let limpo = base
     .replace(/[^\S\n]+/g, ' ')
-    .replace(/[^\s]+/g, (palavra) => {
+    .replace(/[^\s]+/g, (palavra, i: number, s: string) => {
       const p = palavra.replace(PONTUACAO_DA_BORDA, '');
-      return ISOLADO.test(p) || (!rigido && FAIXA.test(p)) ? ' ' : palavra;
+      return ISOLADO.test(p) || (!rigido && FAIXA.test(p) && !temNumeroDoLado(s, i, palavra.length)) ? ' ' : palavra;
     });
-  if (!rigido) limpo = limpo.replace(LISTA, (l) => (ehListaEmOrdem(l) ? ' ' : l));
+  if (!rigido) limpo = limpo.replace(LISTA, (l, i: number, s: string) => (ehListaEmOrdem(l) && !temNumeroDoLado(s, i, l.length) ? ' ' : l));
   for (const m of limpo.matchAll(SEQUENCIA)) if (contaDigitos(m[0]) >= MINIMO_DE_DIGITOS) return true;
   // Com palavra de contato logo antes, "e"/"ou" também junta os grupos.
   for (const m of limpo.matchAll(SEQUENCIA_COM_LIGACAO)) {
@@ -262,11 +306,18 @@ function temNumeroLongo(texto: string): boolean {
 // Letras de enfeite que o NFKC não desfaz (B-27): letras de bandeira (🇵🇮🇽), letras em quadrado ou círculo
 // cheio (🅿🅸🆇, 🅟) e letras entre parênteses (🄟, ⒫). Viram letras comuns.
 const letraDesde = (inicio: number) => (c: string) => String.fromCharCode(97 + c.codePointAt(0)! - inicio);
+// Versaletes ("ᴘɪx"): letras pequenas em forma de maiúscula, que o NFKC também não desfaz.
+const VERSALETES: Record<string, string> = {
+  ᴀ: 'a', ʙ: 'b', ᴄ: 'c', ᴅ: 'd', ᴇ: 'e', ꜰ: 'f', ɢ: 'g', ʜ: 'h', ɪ: 'i', ᴊ: 'j', ᴋ: 'k', ʟ: 'l', ᴍ: 'm', ɴ: 'n',
+  ᴏ: 'o', ᴘ: 'p', ǫ: 'q', ʀ: 'r', ꜱ: 's', ᴛ: 't', ᴜ: 'u', ᴠ: 'v', ᴡ: 'w', ʏ: 'y', ᴢ: 'z',
+};
+const VERSALETE = new RegExp(`[${Object.keys(VERSALETES).join('')}]`, 'gu');
 function letrasDeEnfeite(s: string): string {
   return (
     s
-      // Duas letras de bandeira certas viram bandeira (🇧🇷), não palavra: ficam entre espaços para não
-      // grudar no texto em volta ("Brasil.🇧🇷" não vira "brasil.br").
+      .replace(VERSALETE, (c) => VERSALETES[c] ?? c)
+      // Letras de bandeira viram letras comuns entre espaços: duas certas aparecem como bandeira (🇧🇷), e o
+      // espaço não deixa grudar no texto em volta ("Brasil.🇧🇷" vira "brasil. br ", não "brasil.br").
       .replace(/[\u{1F1E6}-\u{1F1FF}]+/gu, (l) => ` ${Array.from(l, letraDesde(0x1f1e6)).join('')} `)
       .replace(/[\u{1F110}-\u{1F129}]/gu, letraDesde(0x1f110))
       .replace(/[\u{1F130}-\u{1F149}]/gu, letraDesde(0x1f130))
@@ -311,30 +362,38 @@ const F = String.raw`(?![\p{L}\p{N}])`;
 // "Banco do Brasil" e "banco digital" continuam contando.
 const BANCO = String.raw`(?:banco(?!\s+d[eoa]s?\s+(?:alimentos?|sangue|leite|roupas?|livros?|sementes?|horas?|tempo|talentos?|brinquedos?|racao|agasalhos?|doacoes?|praca|jardim|madeira|cimento|concreto)${F})|bancari[oa])`;
 // "Passe na portaria com documento com foto" é ir à portaria levando o documento, não mandar o documento (B-10).
-// Só vale para "passe/passem" + lugar + "com documento", sem outro dado depois; "passe no privado" não conta.
-const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em|aqui|ali|la)\s+(?!(?:privado|pv|inbox|direct|dm|zap|whats|whatsapp|chat|mensagem)${F})[^\n]{0,40}?${B}com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo)${F}))`;
+// Só vale para "passe/passem" + um lugar de uma lista fechada (portaria, recepção, secretaria...) + "com
+// documento", sem palavra de conversa no meio ("passe no meu pv com documento" conta) e sem outro dado depois.
+const LUGAR_DE_IR = '(?:portaria|recepcao|entrada|balcao|secretaria|guiche|sede|salao|biblioteca|escola|igreja|quadra|sala)';
+const CONVERSA = '(?:privado|pv|inbox|direct|dm|zap|zapzap|whats|whatsapp|chat|conversa|mensagem|telefone|celular|grupo)';
+const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em)\s+(?:(?:nossa|nosso|sua|seu)\s+)?${LUGAR_DE_IR}${F}(?![^\n]{0,40}${B}${CONVERSA}${F})[^\n]{0,40}?${B}com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo|selfie|rosto)${F}))`;
 const DADOS: readonly RegExp[] = [
   new RegExp(String.raw`${B}senhas?${F}.{0,40}${B}(cartao|cartoes|${BANCO}|pix)`, 'u'),
   new RegExp(String.raw`${B}(cartao|cartoes|${BANCO}|pix)${F}.{0,40}${B}senhas?${F}`, 'u'),
   new RegExp(String.raw`${B}(numero|numeros|dados|foto|fotos)\s+d[oe]s?\s+(seu\s+|teu\s+)?cartao\s+(de\s+(credito|debito)|do\s+banco|bancario)${F}`, 'u'),
   new RegExp(String.raw`${B}(cvv|cvc|codigo\s+de\s+seguranca|token)${F}`, 'u'),
   new RegExp(String.raw`${B}codigos?${F}.{0,30}${B}(sms|chegar|chegou|receber|recebeu|mensagem)${F}`, 'u'),
-  new RegExp(String.raw`${B}(mande|mandem|manda|envie|enviem|envia|informe|informem|repasse|passem?${F}${PASSE_NA_PORTARIA})${F}.{0,40}${B}(cpf|rg|documento|documentos|senha|senhas|cartao|codigo)${F}`, 'u'),
 ];
+// Pedido de mandar documento, senha, cartão ou código ("mande seu CPF", "informe a senha").
+const PEDE_DADO = new RegExp(
+  String.raw`${B}(mande|mandem|manda|envie|enviem|envia|informe|informem|repasse|passem?${F}${PASSE_NA_PORTARIA})${F}.{0,40}${B}(cpf|rg|documento|documentos|senha|senhas|cartao|codigo)${F}`,
+  'u',
+);
+const temPedidoDeDado = (t: string): boolean => PEDE_DADO.test(t) || DADOS.some((re) => re.test(t));
 
 /** O motivo, olhando o texto como está (`t` já passou por paraConferir). */
 function motivoNoTexto(t: string, texto: string): Motivo | null {
   if (/[<>]/.test(t) || /&#?\w+;/.test(t)) return 'html';
   // Telefone partido em linhas ("Chame no zap" / "11" / "91234" / "5678") também conta (B-06).
-  if (/@\s*[\p{L}\p{N}_.]/u.test(t) || temNumeroLongo(t) || (t.includes('\n') && temNumeroLongo(t.replace(/\s*\n\s*/g, ' ')))) {
+  if (/@\s*[\p{L}\p{N}_.]/u.test(t) || temNumeroLongo(t) || (t.includes('\n') && temNumeroLongo(t, true))) {
     return 'contato';
   }
   // "palavra.xx" sem espaço (letras minúsculas), como "centro.br": quase sempre é endereço de site.
   const semInvisiveis = texto.normalize('NFKC').replace(IGNORAVEIS, '');
   if (LINK.some((re) => re.test(t)) || /[\p{L}\p{N}]\.[a-z]{2,}(?![\p{L}\p{N}])/u.test(semInvisiveis)) return 'link';
   if (temPix(t) || temPagamento(t) || temCodigo(t)) return 'pix';
-  if (DADOS.some((re) => re.test(t))) return 'dados';
-  if (imitaPlataforma(t)) return 'plataforma';
+  if (temPedidoDeDado(t)) return 'dados';
+  if (imitaPlataforma(t, texto)) return 'plataforma';
   return null;
 }
 
@@ -350,7 +409,7 @@ const SEP = String.raw`[^\p{L}\p{N}]*`;
 const ORGAO_PUBLICO = new RegExp(
   `${B}(?:` +
     [
-      'prefeituras?',
+      '(?:sub)?prefeituras?',
       `defesa${SEP}civil`,
       'governos?',
       'inss',
@@ -375,60 +434,92 @@ export function citaOrgaoPublico(texto: string): boolean {
   return ORGAO_PUBLICO.test(paraConferir(texto));
 }
 
-// Mensagens de recusa (WCAG 3.3.3): dizem o que trocar, com um exemplo curto, sem acusar quem escreveu.
+// Mensagens de recusa (WCAG 3.3.3): dizem o que trocar, com um exemplo curto, sem acusar quem escreveu. O
+// exemplo do caso só aparece quando resolve: o texto, com a troca sugerida, não seria recusado pelo mesmo
+// motivo. Nenhum exemplo ensina a partir número (o 3.3.3 dispensa a sugestão que tira a segurança).
 // Começam em minúscula: validar.ts põe "Confira o título: " antes.
 const PEDIDO: Record<Motivo, string> = {
   dados: 'o evento não pode pedir senha, cartão, código recebido por mensagem nem documento. Tire esse pedido.',
-  html: 'não use os sinais < e > nem códigos como &amp;.',
-  link: 'parece ter um link ou endereço de site, e o evento não aceita links. Tire o endereço.',
-  contato: 'parece ter telefone, e-mail, @ ou outro número comprido, e o evento não aceita contato. Tire esse trecho.',
+  html: 'não use os sinais de menor e maior (< >) nem códigos com & e ponto e vírgula.',
+  link: 'parece ter link ou endereço de site, e o evento não aceita links. Tire o endereço.',
+  contato: 'parece ter telefone, e-mail, @ ou número comprido, e o evento não aceita contato. Tire esse trecho.',
   pix: 'parece ter pagamento, chave ou código comprido, e o evento não aceita isso. Tire esse trecho.',
-  plataforma: 'o evento não pode usar o nome deste site nem dizer que foi conferido por ele. Tire o nome do site e frases como "evento verificado".',
+  plataforma: 'o nome deste site e frases como "evento verificado" não podem entrar. Tire essa parte.',
 };
 const EXEMPLO: Record<Motivo, string> = {
   dados: 'Se é para levar documento, escreva "traga documento com foto".',
   html: 'Escreva com palavras, como em "menos de 12 anos".',
-  link: 'Se foi um ponto sem espaço depois, coloque um espaço, como em "Av. das Flores".',
-  contato: 'Se for lista, separe com "e", como em "salas 101 e 102".',
-  pix: 'Se for preço, escreva só o valor, como em "Entrada: R$ 10".',
+  link: 'Se foi um ponto sem espaço, coloque um espaço, como em "Av. das Flores".',
+  contato: 'Se era para chamar a organização, escreva "fale com a organização pelo grupo".',
+  pix: 'Se for preço, escreva só o valor, como em "Entrada: 10 reais".',
   plataforma: 'Se fala do site de outro lugar, diga de quem, como em "site da escola".',
 };
 const MOTIVOS = Object.keys(PEDIDO) as Motivo[];
 export const MENSAGEM_DO_MOTIVO = Object.fromEntries(MOTIVOS.map((m) => [m, `${PEDIDO[m]} ${EXEMPLO[m]}`])) as Record<Motivo, string>;
 
-/** A mensagem de recusa com o exemplo que mais ajuda para este texto (horário, CEP, Pix, senha...). */
+/** A troca sugerida resolve? O texto trocado não seria recusado pelo mesmo motivo. */
+const resolve = (texto: string, motivo: Motivo, troca: (s: string) => string): boolean => {
+  const novo = troca(texto);
+  return novo !== texto && motivoDeRecusa(novo) !== motivo;
+};
+// Ponto sem espaço antes de palavra que começa com maiúscula ("Vamos.Com todos") ou que não é final de endereço
+// ("Av.das Flores"). Antes de "com", "br" e parecidos em minúscula não há dica: seria ensinar "golpe. com".
+const PONTO_COLADO = new RegExp(String.raw`[\p{L}\p{N}]\.(?:\p{Lu}\p{Ll}|(?!(?:${TLDS})(?![\p{L}\p{N}]))\p{Ll})`, 'u');
+
+/** A mensagem de recusa com o exemplo que resolve este texto (horário, CEP, Pix, senha...), ou só o pedido. */
 export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
   const t = paraConferir(texto);
-  const base = MENSAGEM_DO_MOTIVO[motivo];
-  const trocarExemplo = (frase: string): string => `${PEDIDO[motivo]} ${frase}`;
+  const pedido = PEDIDO[motivo];
+  const com = (frase: string): string => `${pedido} ${frase}`;
+  const palavra = (re: string): boolean => new RegExp(`(?<![\\p{L}\\p{N}])(?:${re})(?![\\p{L}\\p{N}])`, 'u').test(t);
   switch (motivo) {
     case 'contato':
-      if (/\d{1,2}:\d{2}/.test(t)) return trocarExemplo('Se for horário, escreva 19h30 às 21h.');
-      if (/(?<![\p{L}\p{N}])cep(?![\p{L}\p{N}])/u.test(t) || /(?<!\d)0\d{7}(?!\d)/.test(t)) {
-        return trocarExemplo('Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".');
+      if (resolve(texto, motivo, (s) => s.replace(/(\d{1,2}):(\d{2})/g, '$1h$2'))) return com('Se for horário, escreva 19h30 às 21h.');
+      if (palavra('cep') && resolve(texto, motivo, (s) => s.replace(/(?<!\d)(\d{5})(\d{3})(?!\d)/g, '$1-$2'))) {
+        return com('Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".');
       }
-      if (/\d{1,2}\/\d{1,2}\s*[-–—]\s*\d/.test(t)) return trocarExemplo('Se for período, escreva "de 10/11 a 15/11".');
-      if (t.includes('@')) return trocarExemplo('Se o @ quer dizer "em", escreva a palavra, como em "Sarau na praça".');
-      return base;
+      if (resolve(texto, motivo, (s) => s.replace(/(\d{1,2}\/\d{1,2})\s*[-–—]\s*(\d{1,2}\/\d{1,2})/g, 'de $1 a $2'))) {
+        return com('Se for período, escreva "de 10/11 a 15/11".');
+      }
+      // Só o @ solto, entre espaços: num e-mail ou num @ de rede social, a dica ensinaria a disfarçar o contato.
+      if (/(?:^|\s)@(?:\s|$)/u.test(texto) && resolve(texto, motivo, (s) => s.replace(/@/g, ' em '))) {
+        return com('Se o @ quer dizer "em", escreva a palavra, como em "Sarau na praça".');
+      }
+      return PALAVRA_DE_CONTATO.test(t) || t.includes('@') ? com(EXEMPLO.contato) : pedido;
     case 'pix':
+      if (temPicPay(t)) return 'o site não aceita a palavra PicPay, nem em nome de evento. Troque a palavra.';
       if (temPix(t)) return 'o site não aceita a palavra Pix, nem em nome de evento. Troque a palavra.';
       if (temPagamento(t)) return `o evento não aceita pedido de pagamento nem dado de banco. Tire esse trecho. ${EXEMPLO.pix}`;
-      return 'parece ter um código ou chave comprida, e o evento não aceita isso. Tire o código ou separe as palavras com espaço.';
-    case 'dados':
-      if (/(?<![\p{L}\p{N}])senhas?(?![\p{L}\p{N}])/u.test(t)) return trocarExemplo('Se é senha de atendimento, escreva ficha.');
-      if (/(?<![\p{L}\p{N}])token(?![\p{L}\p{N}])/u.test(t)) return trocarExemplo('Se é ficha de entrada, escreva ficha.');
-      return base;
-    case 'link':
-      if (!/[\p{L}\p{N}]\.\p{L}/u.test(t) && /\p{L}\/\p{L}/u.test(t)) {
-        return trocarExemplo('Se a barra separa palavras, troque por "e", como em "sábado e domingo".');
+      if (/(?<!\S)(?=\S*-)\S{30,}/u.test(t) && resolve(texto, motivo, (s) => s.replace(/-/g, ' '))) {
+        return 'parece ter um código ou chave comprida, e o evento não aceita isso. Se é nome com hífens, separe com espaço, como em "Mutirão de limpeza".';
       }
-      return base;
+      return 'parece ter um código ou chave comprida, e o evento não aceita isso. Tire o código.';
+    case 'dados':
+      // Quem pede a senha ("informe a senha") não recebe a dica da ficha: ela só serve à senha da fila.
+      if (!PEDE_DADO.test(t) && resolve(texto, motivo, (s) => s.replace(/(?<![\p{L}\p{N}])senha(s?)(?![\p{L}\p{N}])/giu, 'ficha$1'))) {
+        return com('Se é a senha da fila, troque a palavra senha por ficha, como em "Retire a ficha".');
+      }
+      if (resolve(texto, motivo, (s) => s.replace(/(?<![\p{L}\p{N}])token(?![\p{L}\p{N}])/giu, 'ficha'))) {
+        return com('Se é uma ficha de entrada, troque a palavra token por ficha.');
+      }
+      return palavra('cpf|rg|documentos?') ? com(EXEMPLO.dados) : pedido;
+    case 'link': {
+      const nfkc = texto.normalize('NFKC');
+      if (PONTO_COLADO.test(nfkc) && resolve(texto, motivo, (s) => s.replace(/([\p{L}\p{N}])\.(?=\p{L})/gu, '$1. '))) return com(EXEMPLO.link);
+      if (resolve(texto, motivo, (s) => s.replace(/(\p{L})\/(?=\p{L})/gu, '$1 e '))) {
+        return com('Se a barra separa palavras, troque por "e", como em "sábado e domingo".');
+      }
+      return pedido;
+    }
     case 'plataforma':
       if (FRASES_DO_SITE.test(t.replace(/[^\p{L}\p{N}]+/gu, ' '))) {
-        return 'o evento não pode repetir o aviso do site. Tire essa frase: o site já mostra o aviso em cima do evento.';
+        return 'o evento não pode repetir o aviso do site. Tire essa frase: o site já mostra o aviso no alto da página do evento.';
       }
-      return base;
+      return palavra('site|plataforma') ? com(EXEMPLO.plataforma) : pedido;
+    case 'html':
+      if (/[<>]/.test(t)) return 'não use os sinais de menor e maior (< >). Escreva com palavras, como em "menos de 12 anos".';
+      return 'não use códigos com & e ponto e vírgula. Escreva só o texto, como em "Pão e café".';
     default:
-      return base;
+      return MENSAGEM_DO_MOTIVO[motivo];
   }
 }

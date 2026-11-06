@@ -2,7 +2,7 @@
 // deixar o que veio depois entrar no evento nem escapar da lista de bloqueio.
 
 import { describe, expect, it } from 'vitest';
-import { abrirEvento } from './abrir';
+import { abrirEvento, SOBRA_MAXIMA, sobraAceitavel } from './abrir';
 import { codificar, dadosCanonicos, decodificar } from './formato';
 import { validarEvento, type Evento } from './validar';
 
@@ -21,7 +21,19 @@ const sempre = (e: Evento): Evento => {
   return r.evento;
 };
 
-const SUFIXOS = ['.', ')', ',', '%20Obrigada!', '%0A', '?x=1', ' ', '%20pix%2012345678909'];
+// Resto de mensagem colado no fim: abre.
+const INOFENSIVOS = ['.', ')', ',', '%20Obrigada!', '%0A', '?x=1', ' ', '.%20Valeu,%20at%C3%A9%20amanh%C3%A3!'];
+// Conteúdo que o evento não aceita, texto comprido ou escape quebrado: não abre, porque a página ainda repassa o
+// endereço inteiro no QR e no "Compartilhar" (revisão de privacidade de 06/11/2026).
+const COM_CONTEUDO = [
+  '%20pix%2012345678909',
+  '.%20Chame%20no%20zap%2011%2098765-4321',
+  '%20golpe.com',
+  '%20Projeto%20Comunidade%20conferiu',
+  '%20' + 'Obrigada'.repeat(6),
+  '%E0%A4%A',
+];
+const SUFIXOS = [...INOFENSIVOS, ...COM_CONTEUDO];
 const SEM_MOTIVO = { tipo: 'sem-motivo' } as const;
 const BLOQUEADO = { estado: 'bloqueado', motivo: SEM_MOTIVO };
 
@@ -39,7 +51,7 @@ function deps(...bloqueados: string[]) {
 }
 
 describe('abrirEvento: lixo colado no fim do link', () => {
-  for (const sufixo of SUFIXOS) {
+  for (const sufixo of INOFENSIVOS) {
     it(`abre com ${JSON.stringify(sufixo)} e devolve os dados limpos`, async () => {
       const dados = await codificar(sempre(bom));
       const r = await abrirEvento(dados + sufixo, deps());
@@ -51,7 +63,26 @@ describe('abrirEvento: lixo colado no fim do link', () => {
       const r = await abrirEvento(dados + sufixo, deps());
       expect(r).toEqual({ estado: 'ok', evento: sempre(bom), dados });
     });
+  }
 
+  for (const sufixo of COM_CONTEUDO) {
+    it(`não abre com ${JSON.stringify(sufixo)} no fim`, async () => {
+      for (const comprimir of [false, true]) {
+        const dados = await codificar(sempre(bom), { comprimir });
+        expect(await abrirEvento(dados + sufixo, deps())).toEqual({ estado: 'problema', problema: 'malformado' });
+      }
+    });
+  }
+
+  it('o limite do que pode sobrar no fim', () => {
+    expect(sobraAceitavel('')).toBe(true);
+    const cabe = ' ' + 'oi '.repeat(SOBRA_MAXIMA).slice(0, SOBRA_MAXIMA - 1);
+    expect(Array.from(cabe).length).toBe(SOBRA_MAXIMA);
+    expect(sobraAceitavel(encodeURIComponent(cabe))).toBe(true);
+    expect(sobraAceitavel(encodeURIComponent(cabe + 'x'))).toBe(false);
+  });
+
+  for (const sufixo of SUFIXOS) {
     it(`continua bloqueado com ${JSON.stringify(sufixo)} (pela impressão do link limpo)`, async () => {
       const dados = await codificar(sempre(bom));
       expect(await abrirEvento(dados + sufixo, deps(dados))).toEqual(BLOQUEADO);
@@ -71,9 +102,11 @@ describe('abrirEvento: lixo colado no fim do link', () => {
 
   it('o texto depois do corte nunca entra no evento', async () => {
     const dados = await codificar(sempre(bom));
-    const r = await abrirEvento(dados + '%20pix%2012345678909', deps());
-    expect(r.estado === 'ok' && r.evento).toEqual(sempre(bom));
-    expect(JSON.stringify(r)).not.toMatch(/pix|12345678909/);
+    for (const sufixo of SUFIXOS) {
+      const r = await abrirEvento(dados + sufixo, deps());
+      if (r.estado === 'ok') expect(r.evento).toEqual(sempre(bom));
+      expect(JSON.stringify(r)).not.toMatch(/pix|12345678909|98765|golpe|Obrigada|Valeu/);
+    }
   });
 
   it('sufixo que é base64url válido não traz conteúdo novo', async () => {
