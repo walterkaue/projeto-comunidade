@@ -24,6 +24,8 @@ const LISTA = caminho('bloqueados.json').href;
 /**
  * A lista de bloqueio só vale em JSON. Wi-Fi com página de login (hotel, rodoviária) responde 200 com HTML para
  * qualquer endereço: guardar isso no lugar da lista faria um link removido voltar.
+ * Premissa: o servidor manda o .json com "content-type" de JSON (o GitHub Pages manda "application/json"). Ao
+ * trocar de hospedagem, confira; senão a lista nunca fica guardada e, sem rede, o bloqueio não vale.
  */
 const ehJson = (resp) => !!resp && resp.ok && (resp.headers.get('content-type') ?? '').includes('json');
 
@@ -91,16 +93,28 @@ self.addEventListener('activate', (evento) => {
 // Se a lista de bloqueio não veio na instalação (rede caiu bem nessa hora), a cópia da versão anterior passa
 // para a nova antes de os caches velhos serem apagados: sem nenhuma cópia, sem rede, um link removido
 // apareceria (auditoria de segurança, B2).
+// Só vale cópia em JSON (um service worker antigo guardava qualquer resposta, até o HTML de um Wi-Fi com página
+// de login). Com mais de uma versão velha, fica a cópia com mais links bloqueados.
 async function guardarListaDeBloqueio(velhos) {
   const novo = await caches.open(CACHE_ARQUIVOS);
   if (await novo.match(LISTA, { ignoreVary: true })) return;
+  let melhor = null;
+  let maisItens = -1;
   for (const nome of velhos) {
     const copia = await (await caches.open(nome)).match(LISTA, { ignoreVary: true });
-    if (copia) {
-      await novo.put(LISTA, copia);
-      return;
+    if (!ehJson(copia)) continue;
+    let itens;
+    try {
+      itens = (await copia.clone().json())?.bloqueados;
+    } catch {
+      continue;
+    }
+    if (Array.isArray(itens) && itens.length > maisItens) {
+      melhor = copia;
+      maisItens = itens.length;
     }
   }
+  if (melhor) await novo.put(LISTA, melhor);
 }
 
 self.addEventListener('fetch', (evento) => {

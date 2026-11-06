@@ -151,6 +151,36 @@ describe('service worker: a lista de bloqueio sobrevive à troca de versão (aud
     expect(await (await caches.get('pc-v2-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["nova"]}');
   });
 
+  it('não copia HTML guardado por um service worker antigo, e prefere a cópia com mais bloqueios', async () => {
+    const LISTA_HTML = new CacheFalso();
+    await LISTA_HTML.put(LISTA, html('<h1>Entre para usar o Wi-Fi</h1>'));
+    const curta = new CacheFalso();
+    await curta.put(LISTA, json('{"bloqueados":["a"]}'));
+    const longa = new CacheFalso();
+    await longa.put(LISTA, json('{"bloqueados":["a","b"]}'));
+    const caches = new Map<string, CacheFalso>([
+      ['pc-v0-arquivos', LISTA_HTML],
+      ['pc-v1-arquivos', longa],
+      ['pc-v9-arquivos', curta],
+    ]);
+    const site = siteNoAr();
+    const v2 = montar('pc-v2', { caches, rede: (url) => (url === LISTA ? null : site(url)) });
+    await v2.instalar();
+    await v2.ativar();
+    expect(await (await caches.get('pc-v2-arquivos')!.match(LISTA))!.text()).toBe('{"bloqueados":["a","b"]}');
+  });
+
+  it('só com HTML velho, fica sem cópia (melhor que guardar o HTML)', async () => {
+    const velho = new CacheFalso();
+    await velho.put(LISTA, html('<h1>Entre para usar o Wi-Fi</h1>'));
+    const caches = new Map<string, CacheFalso>([['pc-v1-arquivos', velho]]);
+    const site = siteNoAr();
+    const v2 = montar('pc-v2', { caches, rede: (url) => (url === LISTA ? null : site(url)) });
+    await v2.instalar();
+    await v2.ativar();
+    expect(await caches.get('pc-v2-arquivos')!.match(LISTA)).toBeUndefined();
+  });
+
   it('não mexe nos caches de outros projetos do mesmo endereço', async () => {
     const caches = new Map<string, CacheFalso>([['outro-projeto', new CacheFalso()]]);
     const v1 = montar('pc-v1', { caches, rede: siteNoAr() });
