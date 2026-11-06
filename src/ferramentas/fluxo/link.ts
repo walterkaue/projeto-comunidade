@@ -27,17 +27,25 @@ export interface DependenciasDoLink {
   bloqueado?: (dados: string[]) => Promise<MotivoDaRemocao | null>;
 }
 
-async function padrao(): Promise<DependenciasDoLink> {
-  // A lista de bloqueio que não baixa não trava: segue sem conferir. O formato que não baixa é "sem internet".
-  const [f, b] = await Promise.all([import('../evento/formato'), import('../evento/bloqueio').catch(() => undefined)]);
+/**
+ * As peças do evento que baixam sob demanda. O formato e o pedaço da lista de bloqueio que não baixam são "sem
+ * internet" (a promessa recusa). Só a falha de LER a lista (bloqueados.json) segue sem conferir: isso fica dentro
+ * de motivoDoLinkBloqueado, que devolve null.
+ */
+export async function dependenciasPadrao(
+  carregarFormato: () => Promise<typeof import('../evento/formato')> = () => import('../evento/formato'),
+  carregarBloqueio: () => Promise<typeof import('../evento/bloqueio')> = () => import('../evento/bloqueio'),
+): Promise<DependenciasDoLink> {
+  const [f, b] = await Promise.all([carregarFormato(), carregarBloqueio()]);
   return {
     codificar: (e) => f.codificar(e),
     completo: f.linkCompleto,
     maximo: f.LINK_MAXIMO,
     canonico: f.dadosCanonicos,
-    bloqueado: b ? (dados) => b.motivoDoLinkBloqueado(dados) : undefined,
+    bloqueado: (dados) => b.motivoDoLinkBloqueado(dados),
   };
 }
+const padrao = (): Promise<DependenciasDoLink> => dependenciasPadrao();
 
 /**
  * O link do evento destes dados. Se o link de antes ainda vale (os campos não mudaram), usa ele; senão valida

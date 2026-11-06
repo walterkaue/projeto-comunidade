@@ -153,3 +153,24 @@ for (const escala of [100, 200] as const) {
     }
   });
 }
+
+test('320 px: as seis cores ficam lado a lado, com o nome inteiro, e a tela não rola para o lado', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await abrirPorta(page, PORTAS[2]);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 3 de 3');
+  const itens = await page.locator('.fluxo-bola-item').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect();
+      const nome = el.querySelector('.fluxo-bola-nome')!;
+      return { top: Math.round(r.top), right: r.right, sobra: nome.scrollWidth - nome.clientWidth };
+    }),
+  );
+  expect(itens).toHaveLength(6);
+  expect(new Set(itens.map((i) => i.top)).size, 'as seis na mesma linha').toBe(1);
+  expect(Math.max(...itens.map((i) => i.right))).toBeLessThanOrEqual(320);
+  const largura = await page.evaluate(() => ({ p: document.documentElement.scrollWidth, t: document.documentElement.clientWidth }));
+  expect(largura.p).toBeLessThanOrEqual(largura.t);
+});

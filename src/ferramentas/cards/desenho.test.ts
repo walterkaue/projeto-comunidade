@@ -87,6 +87,12 @@ describe('pauta no card (A-10, B-13)', () => {
     const p = linhasDaPauta(medir, ['Limpeza do córrego', 'Coleta'], 936, 6);
     expect(p).toEqual({ linhas: ['1. Limpeza do córrego', '2. Coleta'], fora: 0 });
   });
+  it('um só assunto de duas linhas num espaço de uma: nunca "e mais 0 assuntos"', () => {
+    const longo = Array.from({ length: 40 }, (_, i) => `palavra${i}`).join(' ');
+    const p = linhasDaPauta(medir, [longo], 936, 1);
+    expect(p.fora).toBe(0);
+    expect(p.linhas.some((l) => l.startsWith('e mais'))).toBe(false);
+  });
   it('item longo quebra em 2 linhas e corta numa palavra inteira com "…"', () => {
     const longo = Array.from({ length: 40 }, (_, i) => `palavra${i}`).join(' ');
     const p = linhasDaPauta(medir, [longo], 936, 6);

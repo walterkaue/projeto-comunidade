@@ -19,6 +19,9 @@ test.describe('as cinco portas com o exemplo', () => {
       const painel = page.locator('#fluxo-confirma');
       await expect(painel).toBeVisible();
       await expect(painel).toContainText('Isto ainda tem partes do exemplo');
+      // O foco vai para o grupo (o leitor lê a pergunta); o Tab leva ao primeiro botão.
+      await expect(painel).toBeFocused();
+      await page.keyboard.press('Tab');
       await expect(painel.getByRole('button', { name: 'Mudar algo' })).toBeFocused();
       expect(await partilhas(page)).toEqual([]);
       await conferirTela(page, `${porta.tipo}: painel do exemplo`);
@@ -122,8 +125,56 @@ test('C-01: sem as partes do evento, avisa, mandar sem link pergunta e "Tentar d
   await expect(page.locator('#fluxo-link-estado')).toHaveText('');
   await expect(page.getByRole('button', { name: 'Copiar o link' })).toBeVisible();
   await expect(tentar).toBeHidden();
+  // O botão que sumiu tinha o foco: ele vai para "Mandar no WhatsApp", e o link novo é anunciado.
+  await expect(page.getByRole('button', { name: 'Mandar no WhatsApp' })).toBeFocused();
   const texto = await mandar(page);
   expect(linkNoTexto(texto)).toMatch(/^http:\/\/localhost:\d+\/#\/evento\/[A-Za-z0-9_-]+$/);
+});
+
+test('C-01: sem link, só Mandar e Copiar o texto perguntam; Baixar não; falta só a rede: o primeiro botão é "Tentar de novo"', async ({ page }) => {
+  const evento = PORTAS[1];
+  const partes = '**/assets/{partes,formato,bloqueio}-*.js';
+  await page.route(partes, (rota) => rota.abort());
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
+  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await page.locator('#fluxo-texto').fill('Traga uma cadeira e um prato');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+  await page.locator('#fluxo-local').fill('Salão da associação, Rua dos Ipês, 12');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Ficou bom' }).click();
+  await esperarOPronto(page, evento);
+  await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
+  await expect(page.locator('#fluxo-aviso-exemplo')).toHaveCount(0);
+  const painel = page.locator('#fluxo-confirma');
+
+  // Baixar a imagem não pergunta pela falta do link.
+  const baixou = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Baixar a imagem' }).click();
+  await baixou;
+  await expect(painel).toBeHidden();
+
+  // Copiar só o texto pergunta; a rede é o único motivo, então o primeiro botão tenta de novo.
+  await page.getByRole('button', { name: 'Copiar só o texto' }).click();
+  await expect(painel).toBeVisible();
+  await expect(painel).toContainText('A mensagem vai sem o link do evento.');
+  await expect(painel.locator('#fluxo-confirma-mudar')).toHaveText('Tentar de novo');
+});
+
+test('C-01: sem rede E com partes do exemplo, o primeiro botão do painel é "Mudar algo"', async ({ page }) => {
+  const evento = PORTAS[1];
+  await page.route('**/assets/{partes,formato,bloqueio}-*.js', (rota) => rota.abort());
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
+  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await irAteOPronto(page, evento);
+  await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
+  await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
+  const painel = page.locator('#fluxo-confirma');
+  await expect(painel).toContainText('A mensagem vai sem o link do evento.');
+  await expect(painel).toContainText('Isto ainda tem partes do exemplo');
+  await expect(painel.locator('#fluxo-confirma-mudar')).toHaveText('Mudar algo');
 });
 
 // ---------- D1: título que fala em nome de órgão público ----------
@@ -137,6 +188,8 @@ test('D1: órgão público no título abre a pergunta; "Seguir" avança e o mesm
   const orgao = page.locator('#fluxo-orgao');
   await expect(orgao).toBeVisible();
   await expect(titulo(page)).toContainText('Passo 1 de 3');
+  await expect(orgao).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(orgao.getByRole('button', { name: 'Mudar' })).toBeFocused();
   await conferirTela(page, 'passo 1: pergunta do órgão público');
 
@@ -149,6 +202,55 @@ test('D1: órgão público no título abre a pergunta; "Seguir" avança e o mesm
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
   await expect(page.locator('#fluxo-orgao')).toBeHidden();
+});
+
+test('D1: com letra a 200%, depois de abrir a pergunta do órgão, o começo dela está à vista e o foco está no grupo', async ({ page }) => {
+  await page.addInitScript(() => {
+    const aplicar = () => document.documentElement.style.setProperty('font-size', '200%');
+    if (document.documentElement) aplicar();
+    else document.addEventListener('DOMContentLoaded', aplicar);
+  });
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill('Defesa Civil: evacuação');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+
+  const orgao = page.locator('#fluxo-orgao');
+  await expect(orgao).toBeVisible();
+  await expect(orgao).toBeFocused();
+  await page.waitForTimeout(150);
+  const noAlto = await page.evaluate(() => {
+    const texto = document.querySelector('#fluxo-orgao-texto')!;
+    const r = texto.getBoundingClientRect();
+    // O ponto no começo da pergunta tem de cair na própria pergunta (nenhuma faixa fixa por cima).
+    const naFrente = document.elementFromPoint(r.left + 8, Math.max(0, r.top) + 4);
+    return { top: r.top, altura: window.innerHeight, dela: naFrente === texto || !!texto.contains(naFrente) };
+  });
+  expect(noAlto.top, 'a pergunta começa dentro da tela').toBeGreaterThanOrEqual(0);
+  expect(noAlto.top, 'a pergunta começa dentro da tela').toBeLessThan(noAlto.altura * 0.5);
+  expect(noAlto.dela, 'nada cobre o começo da pergunta').toBe(true);
+
+  // Esc fecha e devolve o foco.
+  await page.keyboard.press('Escape');
+  await expect(orgao).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Continuar' })).toBeFocused();
+});
+
+test('passo 1: o Tab passa por "Ver a prévia maior" e "Apagar o exemplo" antes do Título, mas a leitura começa no h1', async ({ page }) => {
+  await abrirPorta(page, PORTAS[2]);
+  await page.locator('h1').focus();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Ver a prévia maior' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Apagar o exemplo' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#fluxo-titulo')).toBeFocused();
+  // No código, o h1 vem primeiro e a miniatura logo depois dele.
+  const ordem = await page.evaluate(() => {
+    const todos = [...document.querySelectorAll('h1, .fluxo-mini, .fluxo-dica-linha')];
+    return todos.map((el) => el.tagName === 'H1' ? 'h1' : el.className);
+  });
+  expect(ordem).toEqual(['h1', 'fluxo-mini', 'fluxo-dica-linha']);
 });
 
 // ---------- D7: apagar e Desfazer ----------

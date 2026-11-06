@@ -364,6 +364,16 @@ export function apagarOPasso1(d: DadosDoFluxo): void {
 /** Nome do botão que esvazia os campos do passo 1. */
 export const rotuloDeApagar = (origem: Origem): string => (origem === 'exemplo' ? 'Apagar o exemplo' : 'Apagar tudo');
 
+/** Título, organização, texto e pauta já estavam vazios? Então apagar não tem o que desfazer. */
+export const passo1Vazio = (d: DadosDoFluxo): boolean => ![d.titulo, d.organizacao, d.texto, d.pauta].some((t) => t.trim() !== '');
+
+/** Aviso depois de apagar, com o prazo do "Desfazer" (10 s). Sem cópia guardada, não fala em Desfazer. */
+export const PRAZO_DO_DESFAZER_S = 10;
+export function avisoDeApagar(eraExemplo: boolean, comDesfazer: boolean): string {
+  const o = eraExemplo ? 'Exemplo apagado.' : 'Tudo apagado.';
+  return comDesfazer ? `${o} Para trazer de volta, toque em Desfazer em até ${PRAZO_DO_DESFAZER_S} segundos.` : o;
+}
+
 /** Nome do botão que desfaz o "Apagar" (D7). */
 export const ROTULO_DESFAZER = 'Desfazer';
 
@@ -423,6 +433,20 @@ export function camposComOrgao(d: DadosDoFluxo, passo: 1 | 2): CampoDoFluxo[] {
 /** Há campo que cita órgão e ainda não foi confirmado com este mesmo texto? */
 export const precisaPerguntarDoOrgao = (d: DadosDoFluxo, passo: 1 | 2): boolean =>
   camposComOrgao(d, passo).some((c) => !d.orgaoConfirmado?.includes(chaveDoOrgao(d, c)));
+
+/**
+ * No Pronto de dados de link ("Fazer a imagem deste evento", "Criar outro") a pessoa não passou pelos passos 1 e 2,
+ * então a pergunta do órgão público vem aqui: igual para todos (só para origem 'link' e se algum campo cita órgão e
+ * ainda não foi confirmado).
+ */
+export const perguntarDoOrgaoNoPronto = (d: DadosDoFluxo): boolean =>
+  d.origem === 'link' && (precisaPerguntarDoOrgao(d, 1) || precisaPerguntarDoOrgao(d, 2));
+
+/** Confirmar no Pronto vale pelos dois passos que foram pulados. */
+export function confirmarOrgaoNoPronto(d: DadosDoFluxo): void {
+  confirmarOrgao(d, 1);
+  confirmarOrgao(d, 2);
+}
 
 /** A pessoa disse que o convite não é de órgão público: não pergunta de novo para estes textos. Texto novo, pergunta de novo. */
 export function confirmarOrgao(d: DadosDoFluxo, passo: 1 | 2): void {

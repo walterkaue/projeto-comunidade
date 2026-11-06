@@ -15,6 +15,7 @@ import {
   notaDoCorte,
   paletaDoFluxo,
   precisaConfirmar,
+  soFaltaARede,
   temMenuDeCompartilhar,
 } from './apoio';
 import { exemploDoFluxo } from './estado';
@@ -206,5 +207,19 @@ describe('confirmação sem o link (C-01)', () => {
     expect(frasePainel(true, 'Isto ainda tem partes do exemplo: local.')).toBe(
       'A mensagem vai sem o link do evento. Isto ainda tem partes do exemplo: local.',
     );
+  });
+  it('a pergunta do órgão vem antes das outras frases e também pede confirmação', () => {
+    expect(precisaConfirmar([], false, false, true)).toBe(true);
+    expect(precisaConfirmar([], true, false, true)).toBe(false);
+    expect(frasePainel(true, 'Isto ainda tem partes do exemplo: local.', 'Pergunta?')).toBe(
+      'Pergunta? A mensagem vai sem o link do evento. Isto ainda tem partes do exemplo: local.',
+    );
+    expect(frasePainel(false, '', 'Pergunta?')).toBe('Pergunta?');
+  });
+  it('"Tentar de novo" só quando a falta de rede é o único motivo', () => {
+    expect(soFaltaARede(true, true, 0, false)).toBe(true);
+    expect(soFaltaARede(true, true, 1, false)).toBe(false);
+    expect(soFaltaARede(true, true, 0, true)).toBe(false);
+    expect(soFaltaARede(false, true, 0, false)).toBe(false);
   });
 });

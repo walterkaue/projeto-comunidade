@@ -14,6 +14,10 @@ import {
   letrasQueFaltamNaPauta,
   PERGUNTA_DO_ORGAO,
   precisaPerguntarDoOrgao,
+  perguntarDoOrgaoNoPronto,
+  confirmarOrgaoNoPronto,
+  passo1Vazio,
+  avisoDeApagar,
   ROTULO_DESFAZER,
   assinatura,
   atalhosDoDia,
@@ -658,6 +662,37 @@ describe('órgão público (D1)', () => {
     expect(d.orgaoConfirmado).toHaveLength(1);
     expect(saidas(d)).toEqual(antes);
     expect(saidas(d).join('\n')).not.toContain('orgaoConfirmado');
+  });
+});
+
+describe('órgão público no Pronto de dados de link', () => {
+  const base = () => ({ ...exemploDoFluxo('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
+  it('só pergunta para origem link, nos dois passos pulados; confirmar vale pelos dois', () => {
+    const d: DadosDoFluxo = { ...base(), origem: 'link', titulo: 'Reunião com a Prefeitura', local: 'Prefeitura Regional' };
+    expect(perguntarDoOrgaoNoPronto(d)).toBe(true);
+    confirmarOrgaoNoPronto(d);
+    expect(perguntarDoOrgaoNoPronto(d)).toBe(false);
+    expect(precisaPerguntarDoOrgao(d, 1) || precisaPerguntarDoOrgao(d, 2)).toBe(false);
+  });
+  it('quem passou pelos passos (origem que não é link) não é perguntado de novo no Pronto', () => {
+    const d: DadosDoFluxo = { ...base(), origem: 'pessoa', titulo: 'Reunião com a Prefeitura' };
+    expect(perguntarDoOrgaoNoPronto(d)).toBe(false);
+  });
+  it('dados de link sem órgão citado não perguntam', () => {
+    expect(perguntarDoOrgaoNoPronto({ ...base(), origem: 'link', titulo: 'Mutirão da horta' })).toBe(false);
+  });
+});
+
+describe('Desfazer: prazo e passo vazio', () => {
+  const base = () => exemploDoFluxo('evento', 0, QUINTA);
+  it('o aviso diz o prazo; sem cópia, não fala em Desfazer', () => {
+    expect(avisoDeApagar(true, true)).toBe('Exemplo apagado. Para trazer de volta, toque em Desfazer em até 10 segundos.');
+    expect(avisoDeApagar(false, true)).toBe('Tudo apagado. Para trazer de volta, toque em Desfazer em até 10 segundos.');
+    expect(avisoDeApagar(false, false)).toBe('Tudo apagado.');
+  });
+  it('passo 1 vazio: título, organização, texto e pauta sem nada (ou só espaços)', () => {
+    expect(passo1Vazio({ ...base(), titulo: ' ', organizacao: '', texto: '', pauta: '' })).toBe(true);
+    expect(passo1Vazio({ ...base(), titulo: '', organizacao: '', texto: 'x', pauta: '' })).toBe(false);
   });
 });
 

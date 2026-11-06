@@ -26,6 +26,7 @@ import {
   nomeDoArquivoDoFluxo,
   notaDoCorte,
   precisaConfirmar,
+  soFaltaARede,
   temMenuDeCompartilhar,
 } from './apoio';
 import {
@@ -33,11 +34,14 @@ import {
   fraseDoLinkNoPronto,
   camposDoCard,
   camposDoExemplo,
+  confirmarOrgaoNoPronto,
   convocacaoDoFluxo,
   exemploNoLink,
   fraseDaConfirmacao,
   lembreteDoDia,
   NOTA_DO_LINK,
+  perguntarDoOrgaoNoPronto,
+  PERGUNTA_DO_ORGAO,
   PORTAS,
   temAgenda,
   textoParaMandar,
@@ -68,11 +72,12 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     <p class="campo-dica" id="fluxo-mandar-dica">${esc(dicaDoMandar(d.formato, temMenuDeCompartilhar()))}</p>
     <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(fraseDoLinkNoPronto(d))}</p>
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
+    <p class="fluxo-estado" id="fluxo-estado"></p>
+    <p class="fluxo-estado" id="fluxo-estado-qr"></p>
     <button type="button" class="botao botao-sec" id="fluxo-tentar-link" hidden>Tentar de novo</button>
     <a class="botao botao-sec" id="fluxo-regras" href="${esc(linkPara('regras'))}" hidden>Ver as Regras de uso</a>
 
     <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia da imagem"></canvas></div>
-    <p class="fluxo-estado" id="fluxo-estado"></p>
 
     <div class="fluxo-saidas">
       <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>
@@ -84,9 +89,9 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       <a class="botao botao-sec" id="fluxo-pagina" href="#/" hidden>Ver a página do evento</a>
     </div>
 
-    <div class="fluxo-confirma" id="fluxo-confirma" role="group" aria-labelledby="fluxo-confirma-texto" hidden>
+    <div class="fluxo-confirma" id="fluxo-confirma" role="group" aria-labelledby="fluxo-confirma-texto" tabindex="-1" hidden>
       <p id="fluxo-confirma-texto"></p>
-      <button type="button" class="botao" id="fluxo-confirma-mudar" aria-describedby="fluxo-confirma-texto">Mudar algo</button>
+      <button type="button" class="botao" id="fluxo-confirma-mudar">Mudar algo</button>
       <button type="button" class="botao botao-sec" id="fluxo-confirma-seguir"></button>
     </div>
 
@@ -111,14 +116,18 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const q = <T extends HTMLElement>(id: string) => raiz.querySelector<T>(`[id="${id}"]`)!;
   const canvas = q<HTMLCanvasElement>('fluxo-canvas');
   const estado = q('fluxo-estado');
+  const estadoDoQr = q('fluxo-estado-qr');
   const estadoDoLink = q('fluxo-link-estado');
 
   const medidas = medirFaixasFixas(raiz);
   const tentar = q<HTMLButtonElement>('fluxo-tentar-link');
-  estadoDoLink.tabIndex = -1;
   let vivo = true;
   let ocupado = false;
   let deAcao = false;
+  // "Tentar de novo" (ou a rede que voltou): o link novo é anunciado e o foco que estava no botão que some não se perde.
+  let retomada = false;
+  let focoNoTentar = false;
+  let redeVoltou = false;
 
   /** Mensagem importante: na tela e também no aviso falado. */
   function dizer(mensagem: string): void {
@@ -181,7 +190,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       await esperarFontes();
       if (!vivo || n !== tentativa) return;
       const ctx = document.createElement('canvas').getContext('2d');
-      const texto = ctx ? notaDoCorte(cortesDoCartaz(ctx, camposDoCard(d, link), !!link)) : '';
+      const texto = ctx ? notaDoCorte(cortesDoCartaz(ctx, camposDoCard(d, link), !!link && !semQr)) : '';
       nota.textContent = texto;
       nota.hidden = !texto;
     } catch {
@@ -214,6 +223,8 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     resultado = undefined;
     semQr = false;
     haLink = false;
+    redeVoltou = false;
+    estadoDoQr.textContent = '';
     estadoDoLink.textContent = agenda ? 'Preparando o link…' : '';
     tentar.hidden = true;
     q('fluxo-regras').hidden = true;
@@ -230,7 +241,10 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       const r = await desenharCardEm(canvas, d, d.formato, escalaDoFormato(d.formato, nivel), link, vigente);
       if (!r) throw new Error('fechada');
       if (r.semQr) {
-        dizer('Não deu para gerar o QR deste link. O cartaz sai sem QR.');
+        // Frase própria: a mensagem de outra ação (Baixar, Copiar…) não a apaga.
+        const frase = 'Não deu para gerar o QR deste link. O cartaz sai sem QR.';
+        estadoDoQr.textContent = frase;
+        avisar(frase);
         semQr = true;
         atualizarNotaDoQr();
       }
@@ -245,9 +259,28 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     });
     lp.then((r) => {
       if (!vigente()) return;
+      // A rede voltou enquanto preparava e o que faltou foi a rede: refaz sem mostrar o erro velho.
+      if (r.semRede && redeVoltou) {
+        refazer();
+        return;
+      }
       resultado = r;
       aplicarLink(r);
-      void medirCorte(n, r.link);
+      if (retomada) {
+        retomada = false;
+        const eraNoTentar = focoNoTentar;
+        focoNoTentar = false;
+        if (r.link) avisar('O link está pronto.');
+        // O botão "Tentar de novo" sumiu com o foco dentro: leva para o próximo passo natural, ou de volta a ele se falhou.
+        if (eraNoTentar && (!document.activeElement || document.activeElement === document.body)) {
+          (r.semRede ? tentar : q('fluxo-mandar')).focus({ preventScroll: true });
+        }
+      }
+      // O QR que falhou entra na conta do corte: mede depois do desenho.
+      const medir = () => {
+        if (vigente()) void medirCorte(n, r.link);
+      };
+      ap.then(medir, medir);
     }).catch(() => undefined);
   }
 
@@ -298,7 +331,11 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const baixar = () =>
     exclusivo(async () => {
       try {
-        const arquivo = await comAvisoDeEspera(() => arquivoPronto);
+        // Espera o link de agora e só então lê a imagem: preparar() pode ter trocado as duas promessas.
+        const arquivo = await comAvisoDeEspera(async () => {
+          await linkPronto;
+          return arquivoPronto;
+        });
         baixarImagem(arquivo, arquivo.name);
         dizerDeAcao(MENSAGEM_DE_BAIXAR);
       } catch {
@@ -398,15 +435,20 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   let aoSeguir: (() => unknown) | undefined;
   let paraTentar = false;
 
+  // Só "Mandar" e "Copiar só o texto" levam o texto sem o link; baixar e imprimir não perguntam por ele.
+  let valeSemLink = false;
   /** Evento ou reunião sem link por qualquer motivo que não seja a organização do exemplo (essa já tem a sua frase). */
-  const semLinkAgora = (): boolean => agenda && !!resultado && !resultado.link && !exemploNoLink(d);
+  const semLinkAgora = (): boolean => valeSemLink && agenda && !!resultado && !resultado.link && !exemploNoLink(d);
+  /** Dados de link com órgão público ainda não conferido (os passos 1 e 2 foram pulados). */
+  const orgaoAgora = (): boolean => perguntarDoOrgaoNoPronto(d);
 
   /** Escreve a frase e o primeiro botão do painel com o que vale agora. Falso = não há nada a perguntar. */
   function preencherPainel(): boolean {
     const sem = semLinkAgora();
-    if (!sem && !doExemplo.length) return false;
-    paraTentar = sem && !!resultado?.semRede;
-    q('fluxo-confirma-texto').textContent = frasePainel(sem, doExemplo.length ? fraseDaConfirmacao(doExemplo) : '');
+    const orgao = orgaoAgora();
+    if (!sem && !orgao && !doExemplo.length) return false;
+    paraTentar = soFaltaARede(!!resultado?.semRede, sem, doExemplo.length, orgao);
+    q('fluxo-confirma-texto').textContent = frasePainel(sem, doExemplo.length ? fraseDaConfirmacao(doExemplo) : '', orgao ? PERGUNTA_DO_ORGAO : '');
     primeiro.textContent = paraTentar ? 'Tentar de novo' : 'Mudar algo';
     return true;
   }
@@ -431,7 +473,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   });
 
   /** O primeiro toque, com partes do exemplo ou sem o link, só abre o painel logo abaixo do botão. Depois de confirmar, não pergunta mais. */
-  function comConfirmacao(botao: HTMLElement, verbo: string, acao: () => unknown): () => Promise<void> {
+  function comConfirmacao(botao: HTMLElement, verbo: string, acao: () => unknown, semLink = false): () => Promise<void> {
     return async () => {
       if (confirmado) {
         void acao();
@@ -440,7 +482,8 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       // Link ainda sendo preparado: espera, para saber se a mensagem vai com ele.
       if (agenda && !resultado) await linkPronto;
       if (!vivo) return;
-      if (!precisaConfirmar(doExemplo, confirmado, semLinkAgora())) {
+      valeSemLink = semLink;
+      if (!precisaConfirmar(doExemplo, confirmado, semLinkAgora(), orgaoAgora())) {
         void acao();
         return;
       }
@@ -455,12 +498,15 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       painel.hidden = false;
       // Com letra grande, o começo da frase tem de ficar à vista: rola até o topo do painel e foca sem rolar de novo.
       painel.scrollIntoView?.({ block: 'start' });
-      primeiro.focus({ preventScroll: true });
+      // O foco vai para o grupo: o leitor lê a pergunta (aria-labelledby) e o Tab leva aos botões.
+      painel.focus({ preventScroll: true });
     };
   }
   seguir.addEventListener('click', () => {
     const acao = aoSeguir;
     confirmado = true;
+    // Quem seguiu mesmo assim respondeu à pergunta do órgão pelos dois passos que foram pulados.
+    if (orgaoAgora()) confirmarOrgaoNoPronto(d);
     fecharPainel();
     quemAbriu?.focus();
     if (acao) void acao();
@@ -475,28 +521,28 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     }
   });
 
-  for (const [id, verbo, acao] of [
-    ['fluxo-mandar', 'Mandar', mandar],
-    ['fluxo-baixar', 'Baixar', baixar],
-    ['fluxo-copiar-texto', 'Copiar', copiarTexto],
-    ['fluxo-copiar-link', 'Copiar', copiarLink],
-    ['fluxo-imprimir', 'Imprimir', imprimir],
+  for (const [id, verbo, acao, semLink] of [
+    ['fluxo-mandar', 'Mandar', mandar, true],
+    ['fluxo-baixar', 'Baixar', baixar, false],
+    ['fluxo-copiar-texto', 'Copiar', copiarTexto, true],
+    ['fluxo-copiar-link', 'Copiar', copiarLink, false],
+    ['fluxo-imprimir', 'Imprimir', imprimir, false],
   ] as const) {
     const botao = q(id);
-    botao.addEventListener('click', comConfirmacao(botao, verbo, acao));
+    botao.addEventListener('click', comConfirmacao(botao, verbo, acao, semLink));
   }
 
   function refazer(): void {
-    if (vivo) preparar();
+    if (!vivo) return;
+    retomada = true;
+    focoNoTentar ||= document.activeElement === tentar;
+    preparar();
   }
-  tentar.addEventListener('click', () => {
-    refazer();
-    // O botão some ao refazer: o foco vai para a mensagem, que passa a dizer "Preparando o link…".
-    estadoDoLink.focus({ preventScroll: true });
-  });
-  // A rede voltou: refaz sozinho, só se o que faltou foi a rede.
+  tentar.addEventListener('click', refazer);
+  // A rede voltou: refaz sozinho se o que faltou foi a rede; se ainda está preparando, guarda para conferir no fim.
   const aoVoltarARede = (): void => {
     if (resultado?.semRede) refazer();
+    else if (!resultado) redeVoltou = true;
   };
   window.addEventListener('online', aoVoltarARede);
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_INTERNET, MENSAGEM_SEM_LINK } from './apoio';
 import { camposDoExemplo, dadosDoCardPreparado, dadosDoEvento, exemploDoFluxo, linkAindaVale, type DadosDoFluxo, type Tipo } from './estado';
-import { linkDoFluxo, type DependenciasDoLink } from './link';
+import { dependenciasPadrao, linkDoFluxo, type DependenciasDoLink } from './link';
 
 const HOJE = new Date(2026, 10, 5);
 const BASE = 'https://exemplo.test/projeto/';
@@ -109,6 +109,18 @@ describe('linkDoFluxo', () => {
     const de_novo = await linkDoFluxo(d, BASE, undefined, async () => deps());
     expect(de_novo.link).toContain('#/evento/');
     expect(de_novo.semRede).toBeUndefined();
+  });
+
+  it('o pedaço da lista de bloqueio que não baixa também é "sem internet" (como o formato)', async () => {
+    const d = daPessoa('evento');
+    const r = await linkDoFluxo(d, BASE, undefined, () =>
+      dependenciasPadrao(
+        () => import('../evento/formato'),
+        () => Promise.reject(new Error('rede')),
+      ),
+    );
+    expect(r).toEqual({ link: '', aviso: MENSAGEM_SEM_INTERNET, semRede: true });
+    expect(d.link).toBe('');
   });
 
   it('texto recusado não é "sem rede", mesmo com a rede caída', async () => {

@@ -11,6 +11,9 @@ import { lerLogo } from '../cards/logo';
 import { aplicarCorLivre, PALETAS, paletaPorId } from '../cards/paletas';
 import {
   apagarOPasso1,
+  avisoDeApagar,
+  passo1Vazio,
+  PRAZO_DO_DESFAZER_S,
   atalhosDoDia,
   AVISO_DIA_PASSADO,
   avisoDasLetrasDaPauta,
@@ -64,13 +67,16 @@ const NOME_DO_PASSO = (d: DadosDoFluxo, passo: PassoNumerado): string =>
  * Título da tela: o verbo da porta, "Passo N de 3" e o nome do passo, tudo dentro do h1 (o leitor de tela lê
  * "Chamar para uma reunião. Passo 1 de 3: O quê"). Os separadores só aparecem para o leitor de tela.
  */
-function cabecalho(d: DadosDoFluxo, passo: PassoNumerado, aoLadoDaDica = ''): string {
+function cabecalho(d: DadosDoFluxo, passo: PassoNumerado, aoLadoDaDica = '', miniatura = ''): string {
   const { nota, dica } = notaEDicaDoPasso(d, passo);
   const htmlDaDica = dica ? `<p class="fluxo-dica">${esc(dica)}</p>` : '';
   // Passo 1: a dica e "Apagar o exemplo" dividem a mesma linha (o primeiro campo cabe na primeira tela).
   const linha = aoLadoDaDica ? `<div class="fluxo-dica-linha">${htmlDaDica}${aoLadoDaDica}</div>` : htmlDaDica;
   const aviso = `${nota ? `<p class="fluxo-nota">${esc(nota)}</p>` : ''}${linha}`;
+  // A miniatura (se houver) vem logo depois do título: o Tab passa por "Ver a prévia maior" e "Apagar" antes do
+  // primeiro campo. O CSS a põe no topo da tela.
   return `<h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">. </span><span class="fluxo-passo">Passo ${passo} de 3</span><span class="fluxo-so-leitor">: </span><span class="fluxo-nome">${esc(NOME_DO_PASSO(d, passo))}</span></h1>
+    ${miniatura}
     ${aviso}`;
 }
 
@@ -149,14 +155,13 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
 
 function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => void {
   raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
-    ${cabecalho(d, passo, passo === 1 ? `<button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>` : '')}
-    ${htmlDaMiniatura()}
+    ${cabecalho(d, passo, passo === 1 ? `<button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>` : '', htmlDaMiniatura())}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
     </form>
-    <div class="fluxo-confirma" id="fluxo-orgao" role="group" aria-labelledby="fluxo-orgao-texto" hidden>
+    <div class="fluxo-confirma" id="fluxo-orgao" role="group" aria-labelledby="fluxo-orgao-texto" tabindex="-1" hidden>
       <p id="fluxo-orgao-texto">${esc(PERGUNTA_DO_ORGAO)}</p>
-      <button type="button" class="botao" id="fluxo-orgao-mudar" aria-describedby="fluxo-orgao-texto">Mudar</button>
+      <button type="button" class="botao" id="fluxo-orgao-mudar">Mudar</button>
       <button type="button" class="botao botao-sec" id="fluxo-orgao-seguir">Seguir</button>
     </div>
     ${BARRA()}
@@ -196,6 +201,11 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   // O que a pessoa tinha escrito antes de apagar: só nesta variável (memória da aba), por 10 s.
   let copia: CopiaDoPasso1 | undefined;
   let tempoDoDesfazer: ReturnType<typeof setTimeout> | undefined;
+  /** Os 10 s do Desfazer; enquanto o foco está no próprio botão, o prazo não corre. */
+  function comecarPrazo(): void {
+    clearTimeout(tempoDoDesfazer);
+    tempoDoDesfazer = copia ? setTimeout(esquecerACopia, PRAZO_DO_DESFAZER_S * 1000) : undefined;
+  }
   function esquecerACopia(): void {
     clearTimeout(tempoDoDesfazer);
     tempoDoDesfazer = undefined;
@@ -220,7 +230,8 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   function abrirOrgao(): void {
     painelOrgao.hidden = false;
     painelOrgao.scrollIntoView({ block: 'start' });
-    q<HTMLButtonElement>('fluxo-orgao-mudar').focus({ preventScroll: true });
+    // O foco vai para o grupo: o leitor lê a pergunta (aria-labelledby) e o Tab leva aos botões.
+    painelOrgao.focus({ preventScroll: true });
   }
   q('fluxo-orgao-mudar').addEventListener('click', () => {
     const primeiro = camposComOrgao(d, passo)[0];
@@ -369,20 +380,25 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
         return;
       }
       const eraExemplo = d.origem === 'exemplo';
-      copia = copiaDoPasso1(d);
-      clearTimeout(tempoDoDesfazer);
-      tempoDoDesfazer = setTimeout(esquecerACopia, 10000);
+      // Nada escrito: não há o que trazer de volta, então nem guarda cópia nem oferece "Desfazer".
+      const comDesfazer = !passo1Vazio(d);
+      copia = comDesfazer ? copiaDoPasso1(d) : undefined;
       apagarOPasso1(d);
       escreverOsCampos();
       mudou();
       limparTodosOsErros(form);
       mini.redesenhar();
       entrada('fluxo-titulo').focus();
-      avisar(
-        eraExemplo
-          ? 'Exemplo apagado. Para trazer de volta, toque em Desfazer.'
-          : 'Tudo apagado. Para trazer de volta, toque em Desfazer.',
-      );
+      comecarPrazo();
+      avisar(avisoDeApagar(eraExemplo, comDesfazer));
+    });
+    // Foco no botão "Desfazer": o prazo para; ao sair dele, recomeça os 10 s.
+    q('fluxo-apagar').addEventListener('focus', () => {
+      clearTimeout(tempoDoDesfazer);
+      tempoDoDesfazer = undefined;
+    });
+    q('fluxo-apagar').addEventListener('blur', () => {
+      if (copia) comecarPrazo();
     });
   }
 

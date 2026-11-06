@@ -66,5 +66,7 @@ export function linhasDaPauta(medir: Medir, itens: readonly string[], largura: n
   }
   if (mostrados === 0) mostrados = 1;
   const fora = lista.length - mostrados;
+  // Nada ficou de fora (só um assunto, de duas linhas, num espaço de uma): sem "e mais 0 assuntos".
+  if (fora <= 0) return { linhas: porItem.slice(0, mostrados).flat(), fora: 0 };
   return { linhas: [...porItem.slice(0, mostrados).flat(), eMais(fora)], fora };
 }

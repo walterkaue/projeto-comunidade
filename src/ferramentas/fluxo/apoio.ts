@@ -70,14 +70,18 @@ export const MENSAGEM_DO_LINK_GRANDE = 'O link ficou grande demais. Encurte a pa
  * O toque num botão do Pronto precisa antes perguntar? Sim enquanto algum campo for do exemplo e a pessoa ainda
  * não confirmou nesta visita ao Pronto (quem monta a tela guarda o "já confirmou"; visita nova começa sem ele).
  */
-export const precisaConfirmar = (camposDoExemplo: readonly unknown[], jaConfirmou: boolean, semLink = false): boolean =>
-  (camposDoExemplo.length > 0 || semLink) && !jaConfirmou;
+export const precisaConfirmar = (camposDoExemplo: readonly unknown[], jaConfirmou: boolean, semLink = false, orgao = false): boolean =>
+  (camposDoExemplo.length > 0 || semLink || orgao) && !jaConfirmou;
 
 export const AVISO_SEM_LINK_NO_PAINEL = 'A mensagem vai sem o link do evento.';
 
-/** Frase do painel de confirmação: o aviso do link que falta (se faltar) e a frase do exemplo (se houver). */
-export const frasePainel = (semLink: boolean, fraseDoExemplo: string): string =>
-  [semLink ? AVISO_SEM_LINK_NO_PAINEL : '', fraseDoExemplo].filter(Boolean).join(' ');
+/** Frase do painel de confirmação: a pergunta do órgão (se houver), o aviso do link que falta e a frase do exemplo. */
+export const frasePainel = (semLink: boolean, fraseDoExemplo: string, perguntaDoOrgao = ''): string =>
+  [perguntaDoOrgao, semLink ? AVISO_SEM_LINK_NO_PAINEL : '', fraseDoExemplo].filter(Boolean).join(' ');
+
+/** "Tentar de novo" só é o primeiro botão do painel quando a falta de rede é o único motivo. */
+export const soFaltaARede = (semRede: boolean, semLink: boolean, partesDoExemplo: number, orgao: boolean): boolean =>
+  semRede && semLink && partesDoExemplo === 0 && !orgao;
 
 /** Ids do `aria-describedby`: o aviso do exemplo primeiro (se houver), depois as dicas do próprio botão. */
 export const idsDaDescricao = (temAviso: boolean, ...dicas: string[]): string =>
