@@ -23,7 +23,8 @@
 5. **Métricas:** ligadas em 05/11/2026 (GoatCounter `projetocomunidade`, painel em https://projetocomunidade.goatcounter.com). Código em `src/comum/metricas.ts`; para desligar, `METRICAS_ID = ''` em `marca.ts` e tirar o endereço do `img-src` da CSP (o teste de privacidade confere os dois juntos).
 6. **Nome e domínio** (Kauê, semana de 09/11/2026): trocar a `og:image` no `index.html` e configurar em Settings → Pages → Custom domain (com Actions não há arquivo CNAME; ver `docs/onda-1.md`, 8.5). Com domínio próprio, rever o rascunho da ata no aparelho.
 7. **Ícone e nome definitivos:** `src/comum/marca.ts`, `index.html`, `public/manifest.webmanifest`, `public/offline.html`, `scripts/gerar-icones.mjs`; rodar `npm run icones`.
-8. **Onda 2:** guia da Lei de Acesso à Informação, idade mínima antes de quizzes e jogos (depende do advogado).
+8. **Logo depois do beta — porta "Pedir conserto na rua"** (decidida em 06/11/2026; escopo em `docs/produto.md`, seção 8): mais uma porta do início, em 3 passos e tela Pronto, sem banco. Tipos só de coisas (nunca de pessoas), endereço ou ponto no mapa, foto opcional que não sai do aparelho, texto para o grupo do bairro e "Onde pedir na sua cidade". Nunca envia nada em nome de ninguém. Antes de construir, decidir as duas perguntas abertas da seção 6: de onde vem o mapa (hospedar o nosso com dados do OpenStreetMap ou fornecedor que permita) e como começa a lista de canais oficiais por cidade. O mapa público do bairro fica para a Onda 3.
+9. **Onda 2:** guia da Lei de Acesso à Informação, idade mínima antes de quizzes e jogos (depende do advogado).
 
 ## Pendências pequenas da revisão (não bloqueiam)
 
