@@ -26,6 +26,39 @@
 8. **Logo depois do beta — porta "Pedir conserto na rua"** (decidida em 06/11/2026; escopo em `docs/produto.md`, seção 8): mais uma porta do início, em 3 passos e tela Pronto, sem banco. Tipos só de coisas (nunca de pessoas), endereço ou ponto no mapa, foto opcional que não sai do aparelho, texto para o grupo do bairro e "Onde pedir na sua cidade". Nunca envia nada em nome de ninguém. Antes de construir, decidir as duas perguntas abertas da seção 6: de onde vem o mapa (hospedar o nosso com dados do OpenStreetMap ou fornecedor que permita) e como começa a lista de canais oficiais por cidade. O mapa público do bairro fica para a Onda 3.
 9. **Onda 2:** guia da Lei de Acesso à Informação, idade mínima antes de quizzes e jogos (depende do advogado).
 
+## Correções da simulação por personagens (06/11/2026)
+
+Relatórios em `docs/auditoria/2026-11-06/`. Três sessões em paralelo, cada uma com a sua lista.
+
+### Sessão 1: filtro de conteúdo e leitura do link
+
+- **Corrigidos:**
+  - B-03: link com ponto, vírgula, parêntese, "%20Obrigada!" ou "%0A" no fim abre o evento. Os dados são cortados no primeiro caractere fora do base64url (`cortarDadosDoLink`, `src/ferramentas/evento/formato.ts`). O corte vale para a lista de bloqueio e para "Criar outro". O formato do link não muda.
+  - B-06: telefone partido em linhas é barrado no texto curto e na pauta.
+  - B-07: barrados o nome do site com hífen, ponto ou só a inicial ("Projeto-Comunidade", "P.Comunidade"), "evento conferido/checado/aprovado/verificado", "aprovado pela moderação", "checado pela equipe do site", "selo de verificação" e as frases da faixa e da tela de link removido, iguais ou sem pontuação.
+  - B-08: "19:30-21:00", "Das 19:30-21:00", "10/11-15/11", "Dias 10, 11, 12, 13" e "Salas 101, 102, 103" passam. A faixa de horário e de datas e a lista em ordem só valem sem palavra de contato ("zap", "ligue", "contato"…) no texto. CEP sem hífen continua barrado, com a mensagem "Escreva o CEP com hífen ou tire o CEP".
+  - B-09: "Mostra Doc 2026", "Festa do Ted 2026", hashtag de palavras e linha de traços passam. "Doc" e "Ted" contam com R$ ou com número de conta (5 algarismos ou mais).
+  - B-10: passam "Inscrições pelo site da escola", "Lançamento oficial do projeto da horta", "senhas no Banco de Alimentos" e "Passe na portaria com documento com foto". Site e "oficial" só contam ligados a este site.
+  - B-14: "Data: sáb/dom" passa ("data:" só é link com tipo de arquivo).
+  - B-27, em parte: letras de bandeira (🇵🇮🇽), em quadrado ou círculo (🅿🅸🆇) e entre parênteses viram letras comuns antes de conferir.
+  - B-28: o link recusado diz "Peça a quem enviou para conferir título, local e texto."
+  - D2: Pix continua barrado, mesmo sem chave. A mensagem agora é "O site não aceita a palavra Pix, nem em nome de evento. Troque a palavra."
+  - Mensagens de recusa (WCAG 3.3.3): saiu "É assim que muitos golpes começam". Cada mensagem diz o que trocar, em até 30 palavras (`mensagemDaRecusa`, `src/comum/conteudo.ts`). O exemplo do caso só aparece quando a troca sugerida resolve a recusa: horário, CEP, período, @ solto, senha da fila, ficha, documento, preço, ponto sem espaço, barra, nome com hífen e faixa copiada. Nenhuma dica ensina a partir número ou a disfarçar endereço: o 3.3.3 dispensa a sugestão que tira a segurança.
+  - Também barrados agora: pagamento "pelo site" de qualquer dono ("Doe pelo site da organização"); "conferido/aprovado pelo site da casa"; "golpe. com" (minúscula depois do ponto); com palavra de contato, telefone com até 6 sinais entre os grupos ("Zap 11 98765 -- 4321", buraco antigo).
+  - Para a Sessão 2 (D1): `citaOrgaoPublico(texto)` em `src/comum/conteudo.ts` (na `main` desde f5ce5d2). Diz se o texto cita Prefeitura (e Subprefeitura), Defesa Civil, Governo, INSS, Receita (Federal), Polícia, Banco Central, Ministério ou Secretaria. Não barra nada.
+- **Varredura do B5** (`e2e/simulacoes/b-quem-recebe/g3-vitest.config.ts`, 166 golpes e 76 textos de boa-fé, 4 campos no fluxo e no link): nenhum golpe passou a passar. Barrados em todos os campos: 104 → 118 golpes. Textos de boa-fé barrados: 26 → 12. Os roteiros G3 (cenas e tentativas) e G2-B4 no navegador deram o mesmo.
+- **Revisão:** `revisor`, `revisor-acessibilidade` e `revisor-privacidade-neutralidade`. A de privacidade rodou três vezes, comparando cada texto com a `main`. Ela achou 7 golpes que a primeira versão tinha soltado, depois 4 e depois 3, todos corrigidos. Cada um virou teste em `src/comum/conteudo.test.ts` ("revisão de 06/11/2026"). Na última comparação, o que a `main` barrava e agora passa é só o que B-08, B-09, B-10 e B-14 pediam.
+- **Ficou de fora, e por quê:**
+  - B-03 na página: `pagina.ts` é de outra sessão. A página abre o link com ponto ou "Obrigada!" no fim, mas o card, o QR, "Compartilhar" e a denúncia ainda saem com o endereço inteiro: o card perde o link original e a denúncia chega sem o link (a pessoa cola). Enquanto isso, a sobra só é aceita se for resto de mensagem: até 40 letras e 4 palavras, sem algarismo, @, palavra de contato nem conteúdo recusado (`sobraAceitavel`, `abrir.ts`). Com outra coisa no fim, o link não abre. Pedido em `docs/pedidos-comum.md`. Também ficou pedido que `npm run bloquear` corte o fim do link do mesmo jeito.
+  - "Vamos.Com todos" continua barrado e agora sem a dica "coloque um espaço": a dica ensinaria a escrever "golpe. Com". Antes de outras palavras ("Av.das Flores"), a dica aparece.
+  - B-27, o resto: "bit ly barra x", "golpe com br", número com letra ("9l234"), número por extenso, "Taxa de liberação de R$ 49" e "Chame no privado" passam. Nada vira link clicável. Uma lista de frases de golpe **pede decisão** (manutenção contínua).
+  - Continuam barrados, fora da lista desta sessão (a mensagem nova diz o que trocar): "Av.das Flores" (ponto sem espaço), "uma arroba de gado" e "Sarau @ praça" (o @), "Plano aprovado pelo projeto pedagógico", "Ficha (token) de entrada". "Comunidade" sozinho, "Pague 1 leve 2" e "Pagamento em 3 vezes" são barrados de propósito. Para fechar as brechas da revisão, voltaram a ser barrados "Evento aprovado pelo site da escola" e "Resultado oficial do site da escola" (como na `main`). Também passaram a ser barrados "Pague no site da organização" e "Compre o ingresso pelo site da escola" (pedido de pagamento).
+  - Golpes que ainda passam e não são desta lista: órgão público (B-01, confirmação da Sessão 2), "Moderação da Comunidade" e "Equipe da Comunidade" (nome curto dentro de frase: **pede decisão**), "Comunicado oficial", "Correios: encomenda retida", "Você foi sorteado".
+  - Já passavam na `main` e continuam passando: "golpe. Com" e "golpe. buzz" (espaço depois do ponto, com maiúscula ou final raro), telefone com 7 sinais ou mais entre os grupos, ou com letra no meio ("Zap 11 98765 x 4321"), "Siga golpista_oficial no insta" (rede social sem @), "Ᵽ Comunidade" e "Þ Comunidade". Nada vira link clicável.
+  - A régua de lista em ordem deixa passar telefone que, partido, fica em ordem e com salto de até 10 ("11, 12, 13, 14, 15"), e faixa de horário sem palavra de contato ("23:45-23:59"). Quem lê não vê telefone ali sem ser avisado. Os testes guardam os golpes mais parecidos que continuam barrados.
+  - O pedaço `entreTelas` (baixado ao entrar no fluxo) foi de 4,6 para 7,9 KB gzip, por causa das regras e das mensagens. A primeira tela não mudou (o teste de peso passa).
+  - O `docs/produto.md` v0.11 citado no pedido ainda não estava na `main` quando esta sessão juntou. As regras seguiram o pedido (D2: Pix barrado; nada de dado novo no link).
+
 ## Pendências pequenas da revisão (não bloqueiam)
 
 - O teste de neutralidade não confere cor de partido em paletas e modelos prontos: a sessão dos cards e o `revisor-privacidade-neutralidade` olham isso à mão.
