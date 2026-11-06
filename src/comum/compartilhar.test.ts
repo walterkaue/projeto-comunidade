@@ -108,7 +108,12 @@ describe('mensagemDoResultado', () => {
     const outros: Resultado[] = ['arquivo', 'arquivo-sozinho', 'texto', 'copiado', 'falhou'];
     for (const r of outros) expect(mensagemDoResultado(r).length).toBeGreaterThan(5);
     expect(mensagemDoResultado('copiado')).toBe('Texto copiado. Cole na conversa.');
-    expect(mensagemDoResultado('falhou')).toContain('Baixar imagem');
+    expect(mensagemDoResultado('falhou')).toBe('Não deu para compartilhar neste aparelho.');
+    expect(mensagemDoResultado('falhou')).not.toContain('Baixar');
+  });
+  it('falhou usa a frase de quem chamou, quando vier', () => {
+    expect(mensagemDoResultado('falhou', 'Use Baixar imagem.')).toBe('Use Baixar imagem.');
+    expect(mensagemDoResultado('copiado', 'x')).toBe('Texto copiado. Cole na conversa.');
   });
 });
 
