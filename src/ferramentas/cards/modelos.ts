@@ -20,7 +20,7 @@ export interface DefFormato {
 
 export const DEF_FORMATOS: Record<Formato, DefFormato> = {
   status: { id: 'status', nome: 'Status', explicacao: 'Tela cheia, para o Status do WhatsApp', largura: 1080, altura: 1920 },
-  conversa: { id: 'conversa', nome: 'Conversa', explicacao: 'Quadrado, para grupos e conversas', largura: 1080, altura: 1080 },
+  conversa: { id: 'conversa', nome: 'Grupo', explicacao: 'Quadrado, para mandar no grupo', largura: 1080, altura: 1080 },
   cartaz: { id: 'cartaz', nome: 'Cartaz A4', explicacao: 'Para imprimir ou salvar em PDF', largura: 1080, altura: 1527 },
 };
 
@@ -60,8 +60,12 @@ export interface CamposDoCard {
   texto: string;
   organizacao: string;
   link: string;
+  /**
+   * Pauta da reunião, um item por posição (sem "Pauta:" nem numeração). Com pauta, o card desenha um item por
+   * linha, corta num item inteiro e termina com "e mais N assuntos"; o `texto` fica vazio.
+   */
+  pauta?: readonly string[];
 }
-
 
 /** Corta cada campo no limite (por letra). */
 export function aplicarLimites(c: CamposDoCard): CamposDoCard {

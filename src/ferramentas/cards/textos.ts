@@ -6,14 +6,18 @@ import { DEF_FORMATOS, DEF_MODELOS, type CamposDoCard, type Formato } from './mo
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
 
-/** "2026-03-14" → "sábado, 14 de março". Data que não existe vira vazio. */
-export function dataPorExtenso(iso: string): string {
+/**
+ * "2026-03-14" → "sábado, 14 de março". Data que não existe vira vazio.
+ * Com `anoCorrente`, uma data de outro ano leva o ano: "quarta-feira, 1 de janeiro de 2020".
+ */
+export function dataPorExtenso(iso: string, anoCorrente?: number): string {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
   if (!m) return '';
   const [a, mes, dia] = [Number(m[1]), Number(m[2]), Number(m[3])] as [number, number, number];
   const d = new Date(Date.UTC(a, mes - 1, dia));
   if (d.getUTCFullYear() !== a || d.getUTCMonth() !== mes - 1 || d.getUTCDate() !== dia) return '';
-  return `${DIAS[d.getUTCDay()]}, ${dia} de ${MESES[mes - 1]}`;
+  const ano = anoCorrente !== undefined && a !== anoCorrente ? ` de ${a}` : '';
+  return `${DIAS[d.getUTCDay()]}, ${dia} de ${MESES[mes - 1]}${ano}`;
 }
 
 /** "19:00" → "19h"; "19:30" → "19h30". */
@@ -23,9 +27,9 @@ export function horaPorExtenso(hhmm: string): string {
   return m[2] === '00' ? `${Number(m[1])}h` : `${Number(m[1])}h${m[2]}`;
 }
 
-/** "sábado, 14 de março, às 19h" (a parte que existir). */
-export function quando(c: Pick<CamposDoCard, 'data' | 'hora' | 'modelo'>): string {
-  const data = dataPorExtenso(c.data);
+/** "sábado, 14 de março, às 19h" (a parte que existir). Data de outro ano que o de `hoje` leva o ano. */
+export function quando(c: Pick<CamposDoCard, 'data' | 'hora' | 'modelo'>, hoje: Date = new Date()): string {
+  const data = dataPorExtenso(c.data, hoje.getFullYear());
   const hora = DEF_MODELOS[c.modelo].usaHora ? horaPorExtenso(c.hora) : '';
   if (data && hora) return `${data}, às ${hora}`;
   if (hora) return `às ${hora}`;
@@ -36,15 +40,27 @@ export function onde(c: Pick<CamposDoCard, 'local' | 'modelo'>): string {
   return DEF_MODELOS[c.modelo].usaLocal ? c.local.trim() : '';
 }
 
+/** "1. a; 2. b; 3. c" (a pauta inteira, para quem não enxerga o corte do desenho). */
+export function pautaPorExtenso(pauta: readonly string[]): string {
+  return pauta
+    .map((t) => t.trim())
+    .filter((t) => t !== '')
+    .map((t, i) => `${i + 1}. ${t}`)
+    .join('; ');
+}
+
 /** Texto alternativo da imagem, para quem não enxerga. */
 export function textoAlternativo(c: CamposDoCard, formato: Formato, comQr = false): string {
   const fim = (s: string) => (/[.!?…]$/.test(s) ? s : `${s}.`);
-  const partes = [`Card de ${DEF_MODELOS[c.modelo].nome.toLowerCase()}, formato ${DEF_FORMATOS[formato].nome}.`];
+  const modelo = DEF_MODELOS[c.modelo].nome.toLowerCase();
+  const partes = [formato === 'cartaz' ? `Cartaz de ${modelo}, para imprimir.` : `Imagem de ${modelo}, formato ${DEF_FORMATOS[formato].nome}.`];
   if (c.titulo.trim()) partes.push(`Título: ${fim(c.titulo.trim())}`);
   const q = quando(c);
   if (q) partes.push(`Quando: ${q}.`);
   const o = onde(c);
   if (o) partes.push(`Onde: ${fim(o)}`);
+  const pauta = c.pauta ? pautaPorExtenso(c.pauta) : '';
+  if (pauta) partes.push(`Pauta: ${fim(pauta)}`);
   if (c.texto.trim()) partes.push(`Texto: ${fim(c.texto.trim())}`);
   if (c.organizacao.trim()) partes.push(`Organização: ${fim(c.organizacao.trim())}`);
   if (comQr) partes.push('Tem um código QR que abre a página do evento.');

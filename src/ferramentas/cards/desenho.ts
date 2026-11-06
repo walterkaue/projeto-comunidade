@@ -4,6 +4,7 @@
 
 import { desenharQr, type Matriz } from '../../comum/qr';
 import { quebrarTexto } from '../../comum/texto';
+import { linhasDaPauta } from './pauta';
 import { DEF_FORMATOS, DEF_MODELOS, type CamposDoCard, type Formato, type ModeloDeCard } from './modelos';
 import type { Paleta } from './paletas';
 import { RODAPE, onde, quando } from './textos';
@@ -64,6 +65,31 @@ interface Bloco {
   passo: number;
   /** Espaço antes do bloco. */
   antes: number;
+  /** O texto ainda passou do limite no menor tamanho e ficou com "…". */
+  cortado?: boolean;
+}
+
+/** Piso da letra do local no cartaz e da organização no rodapé, em fração do tamanho de partida. */
+const PISO = 0.6;
+
+interface Ajuste {
+  tamanho: number;
+  linhas: string[];
+  cortado: boolean;
+}
+
+/** Diminui a letra (de `inicio` até `piso`) até o texto caber em `maxLinhas`; no piso, corta com "…". */
+function ajustarAoLimite(ctx: CanvasRenderingContext2D, texto: string, peso: 400 | 700, inicio: number, piso: number, largura: number, maxLinhas: number): Ajuste {
+  const medir = (s: string) => ctx.measureText(s).width;
+  const menor = Math.min(inicio, piso);
+  let tamanho = inicio;
+  for (;;) {
+    ctx.font = fonte(peso, tamanho);
+    const todas = quebrarTexto(medir, texto, largura);
+    if (todas.length <= maxLinhas) return { tamanho, linhas: todas, cortado: false };
+    if (tamanho <= menor + 1e-9) return { tamanho, linhas: quebrarTexto(medir, texto, largura, maxLinhas), cortado: true };
+    tamanho = Math.max(menor, tamanho * 0.95);
+  }
 }
 
 function montarBlocos(ctx: CanvasRenderingContext2D, c: CamposDoCard, formato: Formato, k: number, largura: number): Bloco[] {
@@ -82,9 +108,20 @@ function montarBlocos(ctx: CanvasRenderingContext2D, c: CamposDoCard, formato: F
     blocos.push({ rotulo: 'QUANDO', linhas: linhasDe(ctx, q, largura, 2), tamanho: info, peso: 700, cor: 'texto', passo: info * 1.2, antes: 56 * k });
   }
   const o = onde(c);
-  if (o) {
+  if (o && formato === 'cartaz') {
+    // No cartaz o endereço não pode ser cortado: a letra diminui até caber em 3 linhas.
+    const a = ajustarAoLimite(ctx, o, 700, info, cfg.info * PISO, largura, 3);
+    blocos.push({ rotulo: 'ONDE', linhas: a.linhas, tamanho: a.tamanho, peso: 700, cor: 'texto', passo: a.tamanho * 1.2, antes: 40 * k, cortado: a.cortado });
+  } else if (o) {
     ctx.font = fonte(700, info);
     blocos.push({ rotulo: 'ONDE', linhas: linhasDe(ctx, o, largura, 2), tamanho: info, peso: 700, cor: 'texto', passo: info * 1.2, antes: 40 * k });
+  }
+  const itens = (c.pauta ?? []).filter((t) => t.trim() !== '');
+  if (itens.length > 0) {
+    const t = cfg.corpo * k;
+    ctx.font = fonte(400, t);
+    const p = linhasDaPauta((s) => ctx.measureText(s).width, itens, largura, cfg.corpoLinhas + 1);
+    blocos.push({ rotulo: 'PAUTA', linhas: p.linhas, tamanho: t, peso: 400, cor: 'texto', passo: t * 1.35, antes: 56 * k });
   }
   const texto = c.texto.trim();
   if (texto) {
@@ -93,6 +130,53 @@ function montarBlocos(ctx: CanvasRenderingContext2D, c: CamposDoCard, formato: F
     blocos.push({ linhas: linhasDe(ctx, texto, largura, cfg.corpoLinhas), tamanho: t, peso: 400, cor: 'suave', passo: t * 1.4, antes: 56 * k });
   }
   return blocos;
+}
+
+/** Maior largura entre as palavras do título, na fonte do título com a letra `t`. */
+function palavraMaisLargaDoTitulo(ctx: CanvasRenderingContext2D, titulo: string, t: number): number {
+  ctx.font = fonte(700, t);
+  return titulo.split(/\s+/).reduce((m, p) => Math.max(m, p ? ctx.measureText(p).width : 0), 0);
+}
+
+/**
+ * Escolhe o fator `k` da letra: o maior (de 1,3 até 0,55) em que o título não parte palavra e os blocos
+ * cabem na altura. Puro em relação ao canvas (só mede texto).
+ */
+export function escolherTamanho(ctx: CanvasRenderingContext2D, c: CamposDoCard, formato: Formato, larguraTexto: number, areaAltura: number): { k: number; blocos: Bloco[] } {
+  const cfg = CONFIG[formato];
+  const titulo = c.titulo.trim();
+  let k = 1.3;
+  let blocos: Bloco[] = [];
+  for (let t = 1.3; t >= 0.55 - 1e-9; t -= 0.05) {
+    k = t;
+    blocos = montarBlocos(ctx, c, formato, k, larguraTexto);
+    const palavraCabe = !titulo || palavraMaisLargaDoTitulo(ctx, titulo, cfg.titulo * k) <= larguraTexto;
+    if (palavraCabe && alturaDosBlocos(blocos, cfg.rotulo, k) + 40 <= areaAltura) break;
+  }
+  return { k, blocos };
+}
+
+const AREA_TOPO = (formato: Formato) => CONFIG[formato].faixa + 70;
+const AREA_ALTURA = (formato: Formato) => DEF_FORMATOS[formato].altura - CONFIG[formato].rodapeAltura - AREA_TOPO(formato) - 30;
+
+/** Organização no rodapé: 42 px, 2 linhas; no cartaz a letra diminui até caber sem "…". */
+function organizacaoNoRodape(ctx: CanvasRenderingContext2D, org: string, formato: Formato, largura: number): Ajuste {
+  return ajustarAoLimite(ctx, org, 700, 42, formato === 'cartaz' ? 42 * PISO : 42, largura, 2);
+}
+
+/**
+ * O que o cartaz ainda corta com "…" mesmo no menor tamanho de letra (a tela Pronto avisa).
+ * `comQr`: o rodapé divide a largura com o QR.
+ */
+export function cortesDoCartaz(ctx: CanvasRenderingContext2D, c: CamposDoCard, comQr: boolean): ('local' | 'organizacao')[] {
+  const cfg = CONFIG.cartaz;
+  const larguraTexto = DEF_FORMATOS.cartaz.largura - MARGEM * 2;
+  const cortes: ('local' | 'organizacao')[] = [];
+  const { blocos } = escolherTamanho(ctx, c, 'cartaz', larguraTexto, AREA_ALTURA('cartaz'));
+  if (blocos.some((b) => b.rotulo === 'ONDE' && b.cortado)) cortes.push('local');
+  const org = c.organizacao.trim();
+  if (org && organizacaoNoRodape(ctx, org, 'cartaz', comQr ? larguraTexto - cfg.qr - 40 : larguraTexto).cortado) cortes.push('organizacao');
+  return cortes;
 }
 
 function alturaDosBlocos(blocos: Bloco[], rotulo: number, k: number): number {
@@ -210,17 +294,11 @@ export function desenharCard(ctx: CanvasRenderingContext2D, c: CamposDoCard, for
   // rodapé: reserva o espaço (QR no cartaz)
   const comQr = formato === 'cartaz' && !!op.qr;
   const rodapeTopo = H - cfg.rodapeAltura;
-  const areaTopo = cfg.faixa + 70;
-  const areaAltura = rodapeTopo - areaTopo - 30;
+  const areaTopo = AREA_TOPO(formato);
+  const areaAltura = AREA_ALTURA(formato);
 
-  // conteúdo: encolhe até caber
-  let k = 1.3;
-  let blocos: Bloco[] = [];
-  for (let t = 1.3; t >= 0.55 - 1e-9; t -= 0.05) {
-    k = t;
-    blocos = montarBlocos(ctx, c, formato, k, larguraTexto);
-    if (alturaDosBlocos(blocos, cfg.rotulo, k) + 40 <= areaAltura) break;
-  }
+  // conteúdo: encolhe até caber (e até a palavra mais longa do título caber numa linha)
+  const { k, blocos } = escolherTamanho(ctx, c, formato, larguraTexto, areaAltura);
   const conteudo = alturaDosBlocos(blocos, cfg.rotulo, k) + 40;
   // Conteúdo centrado na área livre, mas sempre perto do topo no Status para não ficar flutuando.
   const sobra = Math.max(0, areaAltura - conteudo);
@@ -257,11 +335,11 @@ export function desenharCard(ctx: CanvasRenderingContext2D, c: CamposDoCard, for
   let yr = rodapeTopo + 40;
   const org = c.organizacao.trim();
   if (org) {
-    ctx.font = fonte(700, 42);
+    const a = organizacaoNoRodape(ctx, org, formato, larguraRodape);
+    ctx.font = fonte(700, a.tamanho);
     ctx.fillStyle = paleta.texto;
-    const linhas = linhasDe(ctx, org, larguraRodape, 2);
-    for (const l of linhas) {
-      yr += 46;
+    for (const l of a.linhas) {
+      yr += a.tamanho * 1.1;
       ctx.fillText(l, MARGEM, yr);
       yr += 8;
     }

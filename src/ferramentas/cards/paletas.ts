@@ -70,7 +70,7 @@ export function aplicarCorLivre(entrada: string, base: Paleta = PALETA_PADRAO): 
     ok: true,
     paleta,
     mensagem: ajustou
-      ? 'Essa cor fica difícil de ler sobre o fundo claro. A faixa mantém a sua cor; nos detalhes, escurecemos um pouco para o texto ficar legível.'
+      ? 'Essa cor é clara e difícil de ler. Nas letras, vamos usar um tom mais escuro.'
       : '',
   };
 }
