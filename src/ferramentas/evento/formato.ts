@@ -174,5 +174,5 @@ export const MENSAGEM_DO_PROBLEMA: Record<ProblemaDoLink, string> = {
   versao: 'Este link foi criado por uma versão mais nova do site. Atualize a página e tente de novo.',
   'sem-suporte': 'Este navegador é antigo demais para abrir este link. Tente abrir em outro navegador.',
   recusado:
-    'Este link de evento tem conteúdo que o site não aceita (como link, telefone ou pedido de pagamento). Por segurança, ele não é mostrado.',
+    'Este link de evento tem conteúdo que o site não aceita (como link, telefone ou pedido de pagamento). Por segurança, ele não é mostrado. Peça a quem enviou para conferir título, local e texto.',
 };

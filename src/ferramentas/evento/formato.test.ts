@@ -5,6 +5,7 @@ import {
   LINK_IDEAL,
   codificar,
   cortarDadosDoLink,
+  MENSAGEM_DO_PROBLEMA,
   decodificar,
   deBase64Url,
   linkCompleto,
@@ -207,6 +208,15 @@ describe('linkCompleto', () => {
     expect(linkCompleto('1rAAAA.', 'https://walterkaue.github.io/projeto-comunidade/')).toBe(
       'https://walterkaue.github.io/projeto-comunidade/#/evento/1rAAAA',
     );
+  });
+});
+
+describe('mensagens do link que não abre', () => {
+  it('o link recusado diz o que pedir a quem enviou (B-28)', () => {
+    expect(MENSAGEM_DO_PROBLEMA.recusado).toMatch(/Peça a quem enviou para conferir título, local e texto\.$/);
+  });
+  it('o link cortado continua pedindo para mandar de novo (B-23 fica como está)', () => {
+    expect(MENSAGEM_DO_PROBLEMA.malformado).toBe('Este link de evento está incompleto ou foi alterado. Peça a quem enviou para mandar de novo.');
   });
 });
 
