@@ -4,9 +4,9 @@
 // Regras: data e hora reais; limite por campo; e recusa de texto com cara de link, telefone, chave PIX,
 // e-mail, @ de rede social ou HTML. A lista é de propósito rígida: a página aparece no nosso domínio e
 // não pode servir para golpe. Quando a regra erra para o lado de recusar (ex.: "Feira.Com todos" sem espaço),
-// a mensagem diz o que mudar.
+// a mensagem diz o que mudar, com um exemplo (mensagemDaRecusa, em src/comum/conteudo.ts).
 
-import { MENSAGEM_DO_MOTIVO, limparTexto, motivoDeRecusa, type Motivo } from '../../comum/conteudo';
+import { limparTexto, mensagemDaRecusa, motivoDeRecusa, type Motivo } from '../../comum/conteudo';
 
 // A detecção de conteúdo proibido mora em src/comum/conteudo.ts (o Cards também a usa).
 export { limparTexto, motivoDeRecusa, type Motivo };
@@ -94,7 +94,7 @@ export function validarEvento(entrada: unknown): ResultadoDaValidacao {
       return;
     }
     const motivo = motivoDeRecusa(limpo);
-    if (motivo) erros[campo] = `Confira ${NOMES[campo]}: ${MENSAGEM_DO_MOTIVO[motivo]}`;
+    if (motivo) erros[campo] = `Confira ${NOMES[campo]}: ${mensagemDaRecusa(limpo, motivo)}`;
   };
 
   const campoHora = (campo: 'inicio' | 'fim', obrigatorio: boolean): void => {

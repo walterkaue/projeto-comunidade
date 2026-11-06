@@ -1,11 +1,14 @@
 // Casos achados na revisão: disfarces que passavam pela validação, o mesmo evento escrito de outro jeito
 // para fugir da lista de bloqueio, e evento que passa da meia-noite.
 
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { impressaoDoLink } from '../../comum/entreTelas';
+import { NOME } from '../../comum/marca';
 import { abrirEvento } from './abrir';
 import { horarioPorExtenso, horariosDaAgenda } from './agenda';
 import { COMPRIMIR_A_PARTIR, codificar, dadosCanonicos, decodificar, paraBase64Url } from './formato';
+import { textosDoRemovido } from './removido';
 import { motivoDeRecusa, validarEvento, type Evento } from './validar';
 
 const bom: Evento = {
@@ -213,5 +216,72 @@ describe('evento que passa da meia-noite', () => {
     });
     expect(horarioPorExtenso('22:00', '02:00')).toBe('das 22h às 2h do dia seguinte');
     expect(horarioPorExtenso('08:00', '12:00')).toBe('das 8h às 12h');
+  });
+});
+
+describe('simulação B de 06/11/2026: a página do evento e o formulário', () => {
+  it('B-07: a faixa da página do evento, copiada inteira ou por frase, é recusada', () => {
+    // Lida do próprio pagina.ts: se a faixa mudar, o teste lembra de pôr a frase nova em FRASES_DO_SITE (conteudo.ts).
+    const fonte = readFileSync(new URL('./pagina.ts', import.meta.url), 'utf8');
+    const m = /<p id="ev-faixa">([^<]+)<\/p>/.exec(fonte);
+    expect(m, 'faixa em pagina.ts').not.toBeNull();
+    const faixa = m![1]!.replace('${esc(NOME)}', NOME);
+    expect(motivoDeRecusa(faixa)).toBe('plataforma');
+    for (const frase of faixa.split(/(?<=\.)\s+/)) expect(motivoDeRecusa(frase), frase).toBe('plataforma');
+    expect(com({ descricao: faixa }).ok).toBe(false);
+  });
+
+  it('B-07: o título da tela de link removido é recusado', () => {
+    for (const motivo of [{ tipo: 'pedido' }, { tipo: 'regra', regra: 1 }] as Parameters<typeof textosDoRemovido>[0][]) {
+      const t = textosDoRemovido(motivo).titulo;
+      expect(motivoDeRecusa(t), t).toBe('plataforma');
+    }
+  });
+
+  it('B-06: telefone em linhas é recusado no texto e na pauta', () => {
+    for (const descricao of ['Chame no zap\n11\n91234\n5678', 'Pauta:\n1. Chame no zap\n2. 11\n3. 91234\n4. 5678']) {
+      const r = com({ descricao });
+      expect(r.ok, descricao).toBe(false);
+      if (!r.ok) expect(r.erros.descricao).toMatch(/^Confira a descrição: parece ter telefone/);
+    }
+  });
+
+  it('B-08 a B-10 e B-14: texto honesto passa nos quatro campos', () => {
+    for (const t of [
+      'Das 19:30-21:00',
+      '10/11-15/11',
+      'Dias 10, 11, 12, 13',
+      'Salas 101, 102, 103',
+      'Mostra Doc 2026',
+      'Festa do Ted 2026',
+      '#EncontroDosMoradores2026',
+      'Inscrições pelo site da escola',
+      'Lançamento oficial do projeto da horta',
+      'Distribuição de senhas no Banco de Alimentos',
+      'Passe na portaria com documento com foto',
+      'Data: sáb/dom',
+    ]) {
+      for (const campo of ['titulo', 'local', 'descricao', 'organizacao'] as const) {
+        expect(com({ [campo]: t }).ok, `${campo}: ${t}`).toBe(true);
+      }
+    }
+  });
+
+  it('mensagens: dizem o que trocar, com o exemplo do caso (WCAG 3.3.3)', () => {
+    const erro = (campos: Partial<Evento>, campo: keyof Evento): string => {
+      const r = com(campos);
+      return r.ok ? '' : (r.erros[campo] ?? '');
+    };
+    expect(erro({ titulo: 'Festa do Pix da Escola' }, 'titulo')).toBe(
+      'Confira o título: o site não aceita a palavra Pix, nem em nome de evento. Troque a palavra.',
+    );
+    expect(erro({ local: 'Rua 7, CEP 01234567' }, 'local')).toContain('Escreva o CEP com hífen ou tire o CEP');
+    expect(erro({ descricao: 'Das 19:30/21:00' }, 'descricao')).toContain('Se for horário, escreva 19h30 às 21h.');
+    expect(erro({ descricao: 'Informe a senha do banco' }, 'descricao')).toContain('Se é senha de atendimento, escreva ficha.');
+    for (const campos of [{ titulo: 'Festa do Pix' }, { descricao: 'Mande seu CPF' }, { local: 'golpe.com' }, { organizacao: 'Projeto Comunidade' }]) {
+      const r = com(campos);
+      expect(r.ok).toBe(false);
+      if (!r.ok) for (const m of Object.values(r.erros)) expect(m).not.toMatch(/golpe/i);
+    }
   });
 });
