@@ -7,6 +7,7 @@
 
 - A denúncia chega por e-mail (`contato.projetocomunidade@gmail.com`), já com o link, pelo botão "Denunciar" da página do evento.
 - `public/bloqueados.json` guarda só a **impressão** (SHA-256) dos dados de cada link removido e o **motivo** (`{ "h": "<impressão>", "motivo": "regra-5" }` ou `"motivo": "pedido"`). A lista é pública, mas não republica o conteúdo denunciado. Itens antigos, só com a impressão, continuam valendo, sem motivo.
+- **O bloqueio vale para o evento exato.** O mesmo evento escrito de outro jeito no link (compressão, espaços, marca) continua bloqueado. Mudar o texto do evento, até um ponto a mais na descrição, gera outro link, que precisa de outra denúncia (`docs/auditoria/2026-11-05/seguranca.md`, B1).
 - Antes de mostrar um evento, a página confere a lista. Se o link estiver nela, mostra que ele foi removido, o motivo (como decisão do site) e como pedir revisão por e-mail. Nas regras de proteção a crianças e adolescentes (8 e 10), a tela não repete o texto da regra.
 - A conta da impressão está em `src/comum/entreTelas.ts` e em `scripts/bloquear.mjs`; um teste confere que as duas batem.
 - O histórico de commits do `bloqueados.json` é a prova da data de cada remoção. **Nunca reescreva esse histórico.**
