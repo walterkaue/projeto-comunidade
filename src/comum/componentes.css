@@ -45,6 +45,11 @@ html {
   transform: none;
 }
 
+/* Com o aviso no alto, a rolagem até o foco deixa espaço em cima. */
+html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
+  scroll-padding-top: 8rem;
+}
+
 /* Só para o leitor de tela: o texto vai à região viva, mas não aparece (há erro escrito embaixo do campo). */
 .aviso-vivo-leitor {
   position: absolute;
@@ -61,7 +66,7 @@ html {
 
 /* Alto contraste: o fundo some, então o aviso ganha borda. */
 @media (forced-colors: active) {
-  .aviso-vivo {
+  .aviso-vivo:not(.aviso-vivo-leitor) {
     border: 2px solid CanvasText;
   }
 }
@@ -98,6 +103,7 @@ html {
   /* Celular deitado ou letra a 200%: a caixa rola e a frase "Você vai sair…" fica à vista. */
   max-height: 100%;
   overflow-y: auto;
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .folha-caixa p {
@@ -107,12 +113,8 @@ html {
   overflow-wrap: anywhere;
 }
 
-/* O domínio só quebra nos pontos (<wbr> depois de cada ponto, em saida.ts). */
-.folha-caixa strong {
-  /* Quebra nos pontos (<wbr>); dentro de um pedaço, só se ele sozinho não couber na linha. */
-  overflow-wrap: break-word;
-  word-break: normal;
-}
+/* O domínio quebra nos pontos (<wbr> depois de cada ponto, em saida.ts): o "anywhere" do parágrafo só parte um
+   pedaço por dentro quando ele sozinho não cabe na linha. A coluna nunca passa da caixa (sem rolagem lateral). */
 
 /* ---------- formulário ---------- */
 .campo {

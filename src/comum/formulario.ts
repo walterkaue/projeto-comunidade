@@ -203,6 +203,12 @@ function aplicarLimite(campo: Campo, cortar: boolean): boolean {
   if (anuncio) {
     if (!est.visivel) anuncio.textContent = '';
     else if (est.anuncio) anuncio.textContent = est.anuncio;
+    else if (cortado) {
+      // Tentou passar do limite: repete o aviso (limpa e escreve no quadro seguinte, para o leitor ler de novo).
+      anuncio.textContent = '';
+      const texto = textoDoLimite(0, maximo);
+      requestAnimationFrame(() => (anuncio.textContent = texto));
+    }
   }
   return cortado;
 }

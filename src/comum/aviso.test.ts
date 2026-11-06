@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { avisar, ID_AVISO, LIMPEZA_DO_AVISO_MS, TEMPO_DO_AVISO_MS, temInstrucao, tempoDoAviso } from './aviso';
+import { avisar, ID_AVISO, LIMPEZA_DO_AVISO_MS, TEMPO_DO_AVISO_MS, TETO_DO_AVISO_MS, temInstrucao, tempoDoAviso } from './aviso';
 
 interface Foco {
   top: number;
@@ -8,7 +8,7 @@ interface Foco {
 }
 
 // Documento falso mínimo: só o que aviso.ts usa.
-function docFalso(altura = 640) {
+function docFalso(altura = 640, alturaDoAviso?: number) {
   const elementos = new Map<string, FakeEl>();
   const ouvintes = new Map<string, Set<(e: unknown) => void>>();
   class FakeEl {
@@ -29,6 +29,13 @@ function docFalso(altura = 640) {
     setAttribute(k: string, v: string) {
       this.atributos[k] = v;
     }
+    // Só quando o teste dá a altura do aviso: embaixo (16 px da base) ou no alto (16 px do topo).
+    getBoundingClientRect = alturaDoAviso
+      ? () =>
+          this.classes.has('aviso-vivo-alto')
+            ? { top: 16, bottom: 16 + alturaDoAviso }
+            : { top: altura - 16 - alturaDoAviso, bottom: altura - 16 }
+      : undefined;
   }
   const criados: FakeEl[] = [];
   const estado = { foco: null as Foco | 'body' | null };
@@ -46,7 +53,7 @@ function docFalso(altura = 640) {
       if (!f) return null;
       if (f === 'body') return doc.body;
       return {
-        getBoundingClientRect: () => ({ top: f.top, height: f.height, width: 200 }),
+        getBoundingClientRect: () => ({ top: f.top, bottom: f.top + f.height, height: f.height, width: 200 }),
         getAttribute: (n: string) => (n === 'aria-invalid' && f.invalido ? 'true' : null),
       };
     },
@@ -136,7 +143,7 @@ describe('avisar', () => {
     avisar('Texto copiado. Cole na conversa.', doc);
     vi.advanceTimersByTime(100);
     const el = criados[0]!;
-    vi.advanceTimersByTime(60_000);
+    vi.advanceTimersByTime(TETO_DO_AVISO_MS - 1000);
     expect(el.classes.has('aviso-vivo-visivel')).toBe(true);
     disparar('keydown', { key: 'Shift' });
     expect(el.classes.has('aviso-vivo-visivel')).toBe(true);
@@ -144,6 +151,21 @@ describe('avisar', () => {
     expect(el.classes.has('aviso-vivo-visivel')).toBe(false);
     vi.advanceTimersByTime(LIMPEZA_DO_AVISO_MS + 1);
     expect(el.textContent).toBe('');
+  });
+
+  it('com instrução: um click (leitor de tela) também fecha, e o teto longo fecha sozinho', () => {
+    const a = docFalso();
+    avisar('Texto copiado. Cole na conversa.', a.doc);
+    vi.advanceTimersByTime(100);
+    a.disparar('click');
+    expect(a.criados[0]?.classes.has('aviso-vivo-visivel')).toBe(false);
+
+    const b = docFalso();
+    avisar('Texto copiado. Cole na conversa.', b.doc);
+    vi.advanceTimersByTime(100);
+    vi.advanceTimersByTime(TETO_DO_AVISO_MS);
+    expect(b.criados[0]?.classes.has('aviso-vivo-visivel')).toBe(false);
+    expect(b.total()).toBe(0);
   });
 
   it('o toque que gerou o aviso não o fecha (ouvinte só no quadro seguinte)', () => {
@@ -205,6 +227,28 @@ describe('avisar', () => {
     expect(criados[0]?.classes.has('aviso-vivo-alto')).toBe(true);
   });
 
+  it('medindo: fica onde não cobre o campo; se cobrir nos dois, onde cobre menos', () => {
+    // Aviso de 380 px (letra grande) numa tela de 640: embaixo vai de 244 a 624; no alto, de 16 a 396.
+    const a = docFalso(640, 380);
+    a.estado.foco = { top: 350, height: 52 }; // centro na metade de baixo, mas o alto também cobriria
+    avisar('Ata apagada.', a.doc);
+    vi.advanceTimersByTime(20);
+    // Embaixo cobre 52 px; no alto, 46 px: fica no alto.
+    expect(a.criados[0]?.classes.has('aviso-vivo-alto')).toBe(true);
+
+    const b = docFalso(640, 60); // aviso curto: embaixo de 564 a 624
+    b.estado.foco = { top: 400, height: 52 }; // metade de baixo, mas o aviso não chega lá
+    avisar('Ata apagada.', b.doc);
+    vi.advanceTimersByTime(20);
+    expect(b.criados[0]?.classes.has('aviso-vivo-alto')).toBe(false);
+
+    const c = docFalso(640, 60);
+    c.estado.foco = { top: 560, height: 52 }; // embaixo cobriria; no alto, não
+    avisar('Ata apagada.', c.doc);
+    vi.advanceTimersByTime(20);
+    expect(c.criados[0]?.classes.has('aviso-vivo-alto')).toBe(true);
+  });
+
   it('sem nada focado (foco no body, a página inteira), o aviso fica embaixo', () => {
     const { doc, criados, estado } = docFalso(640);
     estado.foco = 'body';
@@ -255,7 +299,8 @@ describe('componentes.css', () => {
   });
   it('no alto contraste o aviso ganha borda', async () => {
     const c = await css();
-    expect(c).toMatch(/@media \(forced-colors: active\)\s*{\s*\.aviso-vivo\s*{\s*border: 2px solid CanvasText/);
+    // Só no aviso visível: o que é só para o leitor de tela continua sem caixa.
+    expect(c).toMatch(/@media \(forced-colors: active\)\s*{\s*\.aviso-vivo:not\(\.aviso-vivo-leitor\)\s*{\s*border: 2px solid CanvasText/);
   });
   it('contador e anúncio existem; o anúncio é só para leitor de tela', async () => {
     const c = await css();
@@ -270,7 +315,10 @@ describe('componentes.css', () => {
     const caixa = bloco(c, '.folha-caixa');
     expect(caixa).toMatch(/max-height:\s*100%/);
     expect(caixa).toMatch(/overflow-y:\s*auto/);
-    expect(bloco(c, '.folha-caixa strong')).toMatch(/overflow-wrap:\s*break-word/);
+    // A coluna nunca passa da caixa: domínio de um pedaço só, comprido, quebra por dentro em vez de rolar de lado.
+    expect(caixa).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    expect(bloco(c, '.folha-caixa p')).toMatch(/overflow-wrap:\s*anywhere/);
+    expect(c).not.toContain('.folha-caixa strong {');
     // Navegador sem "safe" fica com a linha de antes.
     expect(folha).toMatch(/align-items:\s*flex-end;[\s\S]*align-items:\s*safe flex-end/);
   });

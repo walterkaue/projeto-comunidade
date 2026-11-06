@@ -8,6 +8,8 @@ export const ID_AVISO = 'aviso-vivo';
 export const TEMPO_DO_AVISO_MS = 5000;
 /** Passa a transição de 0,2 s do CSS antes de esvaziar a região. */
 export const LIMPEZA_DO_AVISO_MS = 250;
+/** Aviso com instrução fica até o próximo toque, mas nunca mais que isto. */
+export const TETO_DO_AVISO_MS = 60_000;
 
 export interface OpcoesDoAviso {
   doc?: Document;
@@ -92,6 +94,27 @@ function campoComFoco(doc: Document): Element | null {
   return foco;
 }
 
+type Caixa = Pick<DOMRect, 'top' | 'bottom'>;
+const sobrepoe = (a: Caixa, b: Caixa): number => Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+
+/**
+ * O aviso vai para o alto? Mede o aviso nos dois lugares e fica onde não cobre o campo com foco; se cobrir nos
+ * dois (letra grande, aviso comprido), fica onde cobre menos. Sem como medir (testes), usa a metade da tela.
+ */
+function irParaOAlto(doc: Document, el: HTMLElement): boolean {
+  const foco = campoComFoco(doc);
+  if (!foco || typeof foco.getBoundingClientRect !== 'function') return false;
+  const r = foco.getBoundingClientRect();
+  if (!r.width && !r.height) return false;
+  if (typeof el.getBoundingClientRect !== 'function') return focoEmBaixo(doc);
+  el.classList.remove('aviso-vivo-alto');
+  const embaixo = sobrepoe(el.getBoundingClientRect(), r);
+  if (!embaixo) return false;
+  el.classList.add('aviso-vivo-alto');
+  const emCima = sobrepoe(el.getBoundingClientRect(), r);
+  return emCima < embaixo;
+}
+
 /** O campo com foco está na metade de baixo da tela (onde o aviso ficaria por cima)? */
 function focoEmBaixo(doc: Document): boolean {
   const foco = campoComFoco(doc);
@@ -128,9 +151,9 @@ export function avisar(mensagem: string, opcoes: Document | OpcoesDoAviso = {}):
     if (e.token !== meu) return;
     const soLeitor = op.soLeitor === true || focoComErro(doc);
     el.classList.toggle('aviso-vivo-leitor', soLeitor);
-    const posicionar = () => el.classList.toggle('aviso-vivo-alto', !soLeitor && focoEmBaixo(doc));
-    posicionar();
     el.textContent = mensagem;
+    const posicionar = () => el.classList.toggle('aviso-vivo-alto', !soLeitor && irParaOAlto(doc, el));
+    posicionar();
     el.classList.add('aviso-vivo-visivel');
 
     const esconder = () => {
@@ -160,12 +183,18 @@ export function avisar(mensagem: string, opcoes: Document | OpcoesDoAviso = {}):
           if (k === 'Shift' || k === 'Control' || k === 'Alt' || k === 'Meta') return;
           esconder();
         };
+        // click também: o leitor de tela (TalkBack, VoiceOver) pode ativar um botão só com click.
         doc.addEventListener('pointerdown', aoTocar, true);
+        doc.addEventListener('click', aoTocar, true);
         doc.addEventListener('keydown', aoTecla, true);
+        // Teto longo, para o aviso não ficar para sempre se nada for tocado.
+        const teto = setTimeout(esconder, TETO_DO_AVISO_MS);
         const antigo = e.soltar;
         e.soltar = () => {
           antigo?.();
+          clearTimeout(teto);
           doc.removeEventListener('pointerdown', aoTocar, true);
+          doc.removeEventListener('click', aoTocar, true);
           doc.removeEventListener('keydown', aoTecla, true);
         };
       });
