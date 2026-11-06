@@ -11,7 +11,7 @@ const deps = (maximo = 4000): DependenciasDoLink => ({
   maximo,
 });
 
-/** Exemplo com título e organização trocados pelos da pessoa (o link só sai assim). */
+/** Exemplo com título e organização trocados pelos da pessoa (o link só sai com a organização trocada). */
 const daPessoa = (tipo: Tipo, i = 0): DadosDoFluxo => ({
   ...exemploDoFluxo(tipo, i, HOJE),
   titulo: 'Mutirão da horta',
@@ -74,17 +74,23 @@ describe('linkDoFluxo', () => {
     expect(r.link.startsWith(`${BASE}#/evento/1`)).toBe(true);
   });
 
-  it('não gera link enquanto o título ou a organização forem do exemplo', async () => {
+  it('não gera link enquanto a organização for do exemplo, mesmo com o título trocado', async () => {
     for (const tipo of ['evento', 'reuniao'] as const) {
       const dp = deps();
       const tudo = exemploDoFluxo(tipo, 1, HOJE);
       expect(await linkDoFluxo(tudo, BASE, dp)).toEqual({ link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO });
       const soTitulo = { ...exemploDoFluxo(tipo, 1, HOJE), titulo: 'Outro título' };
-      expect((await linkDoFluxo(soTitulo, BASE, dp)).link).toBe('');
-      const soOrg = { ...exemploDoFluxo(tipo, 1, HOJE), organizacao: 'Outra organização' };
-      expect((await linkDoFluxo(soOrg, BASE, dp)).link).toBe('');
+      expect(await linkDoFluxo(soTitulo, BASE, dp)).toEqual({ link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO });
       expect(dp.codificar).not.toHaveBeenCalled();
       expect(tudo.link).toBe('');
+    }
+  });
+
+  it('com a organização trocada o link sai, mesmo com o título do exemplo (que pode ser o de verdade)', async () => {
+    for (const tipo of ['evento', 'reuniao'] as const) {
+      const soOrg = { ...exemploDoFluxo(tipo, 1, HOJE), organizacao: 'Outra organização' };
+      expect(camposDoExemplo(soOrg)).toContain('titulo');
+      expect(await linkDoFluxo(soOrg, BASE, deps())).toEqual({ link: `${BASE}#/evento/1rDADOS`, aviso: '' });
     }
   });
 
@@ -114,9 +120,7 @@ describe('linkDoFluxo', () => {
     const d = daPessoa('evento');
     await linkDoFluxo(d, BASE, deps());
     expect(linkAindaVale(d)).toBe(true);
-    const ex = exemploDoFluxo('evento', 0, HOJE);
-    d.titulo = ex.titulo;
-    d.organizacao = ex.organizacao;
+    d.organizacao = exemploDoFluxo('evento', 0, HOJE).organizacao;
     expect(linkAindaVale(d)).toBe(false);
   });
 });

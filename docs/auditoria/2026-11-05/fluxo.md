@@ -41,7 +41,7 @@ Feitas na pasta do fluxo. Revisadas pelo `revisor`, pelo `revisor-acessibilidade
 - A organização também conta como do exemplo quando é igual a uma das organizações fictícias do catálogo (`ORGANIZACOES`). Isso cobre um link antigo e o exemplo digitado à mão.
 - O Pronto diz quais campos ainda são do exemplo, e o "Mandar" e o "Copiar o link" apontam para esse aviso.
 - Mandar, Baixar, Copiar o texto, Copiar o link e Imprimir abrem antes um painel na própria tela, com "Mudar algo" e "<Ação> mesmo assim". O painel não usa `window.confirm`, porque o menu de compartilhar precisa vir do toque. O foco vai para "Mudar algo", e o Esc fecha o painel. Uma confirmação vale para a visita inteira ao Pronto.
-- Sem link do evento enquanto o título ou a organização forem do exemplo. Por isso também não há QR nem "Mais detalhes".
+- Sem link do evento enquanto a organização for do exemplo. Por isso também não há QR nem "Mais detalhes". O título do exemplo não trava o link, porque pode ser o de verdade. Ele fica no aviso e no painel.
 - "Apagar o exemplo" limpa também o local do exemplo.
 
 **M3:**
@@ -54,11 +54,11 @@ Feitas na pasta do fluxo. Revisadas pelo `revisor`, pelo `revisor-acessibilidade
 - "Fazer a ata" com o exemplo não pede confirmação: a ata é local e editável.
 - "Mandar sem o link" e o cartaz de reunião sem QR esperam o beta.
 
-**Decisão do Kauê em aberto:** o título do exemplo também trava o link. Um sindicato que mantém "Assembleia da categoria" como título fica sem link até trocar. A revisão de privacidade sugere travar só pela organização, e deixar o título no aviso e no painel.
+**Decidido pelo Kauê em 06/11/2026:** o link trava só pela organização do exemplo. Antes, o título também travava, e um sindicato que mantivesse "Assembleia da categoria" ficaria sem link. O título do exemplo segue no aviso e no painel.
 
 **Conferido no navegador** (servidor `dev`), por script, com o painel do navegador oculto:
 - o aviso com a lista dos campos;
-- a falta de link com o exemplo e o link depois de trocar título e organização;
+- a falta de link com o exemplo e o link depois de trocar título e organização (antes da decisão acima; a regra nova tem teste em `link.test.ts`);
 - o painel abrindo depois da dica de cada botão, com o foco em "Mudar algo", o Esc e a confirmação única;
 - a nota do QR;
 - o aviso novo do passo 1.

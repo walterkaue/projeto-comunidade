@@ -273,9 +273,12 @@ export function camposDoExemplo(d: ParaOExemplo): CampoDeExemplo[] {
 const semMaiusculas = (t: string): string => t.trim().toLocaleLowerCase('pt-BR');
 const daOrganizacaoDoCatalogo = (t: string): boolean => ORGANIZACOES.some((o) => semMaiusculas(o) === semMaiusculas(t));
 
-/** O título ou a organização ainda são do exemplo? Então o link do evento não é criado. */
-export const exemploNoLink = (d: ParaOExemplo): boolean =>
-  camposDoExemplo(d).some((c) => c === 'titulo' || c === 'organizacao');
+/**
+ * A organização ainda é do exemplo? Então o link do evento não é criado: é ela que faria o convite parecer de
+ * outra organização (regra 9). O título do exemplo, que pode ser o de verdade ("Assembleia da categoria"), fica só
+ * no aviso e na confirmação (decisão do Kauê, 06/11/2026).
+ */
+export const exemploNoLink = (d: ParaOExemplo): boolean => camposDoExemplo(d).includes('organizacao');
 
 const NOME_DO_CAMPO: Record<CampoDeExemplo, string> = {
   titulo: 'título',
