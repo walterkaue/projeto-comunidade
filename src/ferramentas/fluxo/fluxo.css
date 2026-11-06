@@ -571,3 +571,30 @@ html.fluxo-teclado:has(.fluxo-barra) {
     object-fit: contain;
   }
 }
+
+/* Confirmação do Pronto: aparece logo abaixo do botão tocado quando ainda há partes do exemplo. */
+.fluxo-confirma {
+  display: grid;
+  gap: 12px;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem;
+  border: 2px solid var(--borda-campo);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  min-width: 0;
+}
+
+.fluxo-confirma[hidden] {
+  display: none;
+}
+
+.fluxo-confirma p {
+  margin: 0;
+  font-weight: 700;
+  color: var(--tinta);
+}
+
+.fluxo-confirma .botao {
+  width: 100%;
+  min-height: var(--toque);
+}

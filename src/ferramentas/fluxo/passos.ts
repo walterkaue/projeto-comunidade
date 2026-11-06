@@ -10,6 +10,7 @@ import { DEF_MODELOS, escalaDoFormato, type Formato } from '../cards/modelos';
 import { lerLogo } from '../cards/logo';
 import { aplicarCorLivre, PALETAS, paletaPorId } from '../cards/paletas';
 import {
+  apagarOPasso1,
   atalhosDoDia,
   dataBr,
   diaPorExtenso,
@@ -88,15 +89,22 @@ export function montarPasso(raiz: HTMLElement, d: DadosDoFluxo, passo: PassoNume
 
 // ---------- passos 1 e 2 ----------
 
+/** Reunião: título, local e pauta vão no link do convite (avisa antes de a pessoa escrever; fica na ordem de leitura). */
+const AVISO_DO_LINK_DA_REUNIAO =
+  'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.';
+const DICA_DO_LOCAL_DA_REUNIAO = 'Escreva o endereço como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
+
 function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
-  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
+  const avisoDoLink = semCorretor ? `<p class="fluxo-dica">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
+      ` : '';
+  return `${avisoDoLink}${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
       ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
-          ? campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta', dica: 'Um assunto por linha.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })
+          ? campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })
           : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, maximo: LIMITES.texto, linhas: 3 })
       }`;
 }
@@ -123,7 +131,7 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
   const agenda = temAgenda(d.tipo);
   return `${campoDia(d)}
       ${agenda ? campoTexto({ id: 'fluxo-hora', rotulo: 'Hora', tipo: 'time', valor: d.hora, obrigatorio: true }) : ''}
-      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: 'Escreva o endereço como se fosse procurar no mapa.', valor: d.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
+      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: d.tipo === 'reuniao' ? DICA_DO_LOCAL_DA_REUNIAO : 'Escreva o endereço como se fosse procurar no mapa.', valor: d.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
       ${podePularOPasso2(d.tipo) ? '<button type="button" class="botao botao-sec" id="fluxo-pular">Pular este passo</button>' : ''}`;
 }
 
@@ -225,7 +233,7 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   if (passo === 1) {
     q('fluxo-apagar').addEventListener('click', () => {
       const eraExemplo = d.origem === 'exemplo';
-      d.titulo = d.organizacao = d.texto = d.pauta = '';
+      apagarOPasso1(d);
       for (const id of ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto', 'fluxo-pauta']) {
         const el = raiz.querySelector<HTMLInputElement>(`[id="${id}"]`);
         if (el) el.value = '';

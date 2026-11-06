@@ -7,8 +7,10 @@ import {
   enderecoDaPaginaDoEvento,
   escalaDaMiniatura,
   esperaDoRedesenho,
+  idsDaDescricao,
   nomeDoArquivoDoFluxo,
   paletaDoFluxo,
+  precisaConfirmar,
 } from './apoio';
 import { exemploDoFluxo } from './estado';
 
@@ -118,5 +120,31 @@ describe('criarAgendador', () => {
     vi.advanceTimersByTime(500);
     expect(acao).not.toHaveBeenCalled();
     vi.useRealTimers();
+  });
+});
+
+describe('confirmação do Pronto (sem DOM)', () => {
+  it('sem campos do exemplo, nunca pergunta', () => {
+    expect(precisaConfirmar([], false)).toBe(false);
+    expect(precisaConfirmar([], true)).toBe(false);
+  });
+
+  it('com campos do exemplo, pergunta', () => {
+    expect(precisaConfirmar(['organizacao', 'local'], false)).toBe(true);
+  });
+
+  it('depois de confirmar, não pergunta mais; visita nova pergunta de novo', () => {
+    let confirmou = false;
+    expect(precisaConfirmar(['titulo'], confirmou)).toBe(true);
+    confirmou = true;
+    expect(precisaConfirmar(['titulo'], confirmou)).toBe(false);
+    // Nova visita ao Pronto: a tela é montada de novo e o "já confirmou" começa falso.
+    confirmou = false;
+    expect(precisaConfirmar(['titulo'], confirmou)).toBe(true);
+  });
+
+  it('o aviso do exemplo vem primeiro no aria-describedby', () => {
+    expect(idsDaDescricao(true, 'fluxo-mandar-dica')).toBe('fluxo-aviso-exemplo fluxo-mandar-dica');
+    expect(idsDaDescricao(false, 'fluxo-mandar-dica')).toBe('fluxo-mandar-dica');
   });
 });

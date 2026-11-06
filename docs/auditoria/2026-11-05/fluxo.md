@@ -26,8 +26,44 @@ Os três pontos médios:
 
 | Achado | Situação |
 |---|---|
-| M1 a M3 | Abertos |
+| M1 | Corrigido em 06/11/2026 (ver abaixo) |
+| M2 | Aberto (bloqueia a divulgação) |
+| M3 | Corrigido em 06/11/2026, sem "Mandar sem o link" (ver abaixo) |
 | B1 a B7 | Abertos |
+
+### Correções de 06/11/2026 (M1 e M3)
+
+Feitas na pasta do fluxo. Revisadas pelo `revisor`, pelo `revisor-acessibilidade` e pelo `revisor-privacidade-neutralidade`, com os achados deles já aplicados. `npm test`: 45 arquivos, 610 testes passando.
+
+**M1:**
+- Os dados guardam, na memória da aba, os campos do exemplo de onde a pessoa partiu (`doExemplo`). Esses campos nunca entram no evento, na assinatura nem no texto.
+- `camposDoExemplo` confere campo a campo: título, organização, texto ou pauta, e local. Dia e hora não contam.
+- A organização também conta como do exemplo quando é igual a uma das organizações fictícias do catálogo (`ORGANIZACOES`). Isso cobre um link antigo e o exemplo digitado à mão.
+- O Pronto diz quais campos ainda são do exemplo, e o "Mandar" e o "Copiar o link" apontam para esse aviso.
+- Mandar, Baixar, Copiar o texto, Copiar o link e Imprimir abrem antes um painel na própria tela, com "Mudar algo" e "<Ação> mesmo assim". O painel não usa `window.confirm`, porque o menu de compartilhar precisa vir do toque. O foco vai para "Mudar algo", e o Esc fecha o painel. Uma confirmação vale para a visita inteira ao Pronto.
+- Sem link do evento enquanto o título ou a organização forem do exemplo. Por isso também não há QR nem "Mais detalhes".
+- "Apagar o exemplo" limpa também o local do exemplo.
+
+**M3:**
+- No passo 1 da reunião, um aviso visível antes dos campos: "Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber."
+- A dica da pauta passa a ser "Um assunto por linha. Sem nome de pessoa."
+- Na reunião, a dica do local pede para não pôr o nome de quem mora, se for numa casa.
+- No Pronto da reunião, "O QR do cartaz abre a pauta inteira." aparece junto de Imprimir, só quando há link e QR.
+
+**Ficou de fora, de propósito:**
+- "Fazer a ata" com o exemplo não pede confirmação: a ata é local e editável.
+- "Mandar sem o link" e o cartaz de reunião sem QR esperam o beta.
+
+**Decisão do Kauê em aberto:** o título do exemplo também trava o link. Um sindicato que mantém "Assembleia da categoria" como título fica sem link até trocar. A revisão de privacidade sugere travar só pela organização, e deixar o título no aviso e no painel.
+
+**Conferido no navegador** (servidor `dev`), por script, com o painel do navegador oculto:
+- o aviso com a lista dos campos;
+- a falta de link com o exemplo e o link depois de trocar título e organização;
+- o painel abrindo depois da dica de cada botão, com o foco em "Mudar algo", o Esc e a confirmação única;
+- a nota do QR;
+- o aviso novo do passo 1.
+
+Falta ver o desenho a 360 px e testar o leitor de tela no aparelho.
 
 ## O que bloqueia o beta
 

@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { lerRota } from '../../comum/rotas';
 import { validarEvento } from '../evento/validar';
 import {
+  apagarOPasso1,
   assinatura,
   atalhosDoDia,
+  avisoDoExemplo,
   camposDoCard,
+  camposDoExemplo,
+  convocacaoDoFluxo,
   dadosDoCardPreparado,
   dadosDoEvento,
   dataBr,
@@ -13,6 +17,7 @@ import {
   errosDoPasso,
   eventoDoFluxo,
   exemploDoFluxo,
+  fraseDaConfirmacao,
   lerDataBr,
   lerDestino,
   linkAindaVale,
@@ -280,6 +285,101 @@ describe('origem dos dados', () => {
     expect(rotuloDeApagar('exemplo')).toBe('Apagar o exemplo');
     expect(rotuloDeApagar('pessoa')).toBe('Apagar tudo');
     expect(rotuloDeApagar('link')).toBe('Apagar tudo');
+  });
+});
+
+describe('o que ainda é do exemplo', () => {
+  it('o exemplo inteiro tem título, organização, texto e local marcados (pauta na reunião)', () => {
+    expect(camposDoExemplo(exemploDoFluxo('evento', 0, QUINTA))).toEqual(['titulo', 'organizacao', 'texto', 'local']);
+    expect(camposDoExemplo(exemploDoFluxo('reuniao', 0, QUINTA))).toEqual(['titulo', 'organizacao', 'pauta', 'local']);
+    // Sem agenda, o local não conta.
+    for (const tipo of ['aviso', 'resultado', 'agradecimento'] as const) {
+      expect(camposDoExemplo(exemploDoFluxo(tipo, 0, QUINTA))).toEqual(['titulo', 'organizacao', 'texto']);
+    }
+  });
+
+  it('o atalho do dia e a hora não tiram a marca do exemplo', () => {
+    const d = exemploDoFluxo('evento', 0, QUINTA);
+    const antes = camposDoExemplo(d);
+    d.data = atalhosDoDia(QUINTA)[0]!.data;
+    d.hora = '07:15';
+    marcarMudanca(d);
+    expect(d.origem).toBe('pessoa');
+    expect(camposDoExemplo(d)).toEqual(antes);
+  });
+
+  it('trocar só o título deixa a organização e o local marcados', () => {
+    const d = { ...exemploDoFluxo('evento', 2, QUINTA), titulo: 'Meu título' };
+    expect(camposDoExemplo(d)).toEqual(['organizacao', 'texto', 'local']);
+  });
+
+  it('compara sem os espaços das pontas; campo vazio não é do exemplo', () => {
+    const ex = exemploDoFluxo('evento', 0, QUINTA);
+    expect(camposDoExemplo({ ...ex, titulo: `  ${ex.titulo}  ` })).toContain('titulo');
+    expect(camposDoExemplo({ ...ex, titulo: '', local: '   ' })).toEqual(['organizacao', 'texto']);
+  });
+
+  it('dados de link não têm cópia do exemplo e nunca são marcados', () => {
+    const d = dadosDoEvento(
+      { titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '', local: 'Praça', descricao: 'Traga um prato', organizacao: 'Grupo' },
+      '',
+      BASE,
+    );
+    expect(d.doExemplo).toBeUndefined();
+    expect(camposDoExemplo(d)).toEqual([]);
+  });
+
+  it('organização do catálogo conta como do exemplo mesmo sem a cópia (link antigo, digitada à mão)', () => {
+    const base = { ...exemploDoFluxo('evento', 0, QUINTA), titulo: 'Festa da rua', texto: 'Traga um prato', local: 'Rua das Flores, 10' };
+    delete base.doExemplo;
+    const org = exemploDoFluxo('evento', 0, QUINTA).organizacao;
+    expect(camposDoExemplo({ ...base, organizacao: org })).toEqual(['organizacao']);
+    expect(camposDoExemplo({ ...base, organizacao: `  ${org.toUpperCase()} ` })).toEqual(['organizacao']);
+    expect(camposDoExemplo({ ...base, organizacao: `${org} Sul` })).toEqual([]);
+  });
+
+  it('a frase do aviso lista os campos, com "e" no fim e singular ou plural certo', () => {
+    expect(avisoDoExemplo([])).toBe('');
+    expect(avisoDoExemplo(['local'])).toBe('O local ainda é do exemplo. Troque pelo que for seu em Mudar algo.');
+    expect(avisoDoExemplo(['organizacao'])).toBe('A organização ainda é do exemplo. Troque pelo que for seu em Mudar algo.');
+    expect(avisoDoExemplo(['organizacao', 'local'])).toBe('A organização e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo.');
+    expect(avisoDoExemplo(['titulo', 'organizacao', 'pauta', 'local'])).toBe(
+      'O título, a organização, a pauta e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo.',
+    );
+  });
+
+  it('a frase da confirmação', () => {
+    expect(fraseDaConfirmacao(['organizacao', 'local'])).toBe('Isto ainda tem partes do exemplo: organização e local.');
+    expect(fraseDaConfirmacao(['titulo'])).toBe('Isto ainda tem partes do exemplo: título.');
+    expect(fraseDaConfirmacao(['titulo', 'organizacao', 'texto'])).toBe('Isto ainda tem partes do exemplo: título, organização e texto.');
+  });
+
+  it('"Apagar" limpa o local só quando ele ainda é o do exemplo; dia e hora ficam', () => {
+    const d = exemploDoFluxo('evento', 0, QUINTA);
+    const { data, hora } = d;
+    apagarOPasso1(d);
+    expect([d.titulo, d.organizacao, d.texto, d.pauta, d.local]).toEqual(['', '', '', '', '']);
+    expect([d.data, d.hora]).toEqual([data, hora]);
+    const e = { ...exemploDoFluxo('evento', 0, QUINTA), local: 'Rua das Flores, 10' };
+    apagarOPasso1(e);
+    expect(e.local).toBe('Rua das Flores, 10');
+  });
+
+  it('a cópia do exemplo não vaza para o evento, a assinatura nem o texto', () => {
+    for (const tipo of ['reuniao', 'evento'] as const) {
+      const d = exemploDoFluxo(tipo, 4, QUINTA);
+      const ex = { ...d.doExemplo! };
+      Object.assign(d, { titulo: 'Novo título', organizacao: 'Nova org', texto: 'Novo texto', pauta: 'Novo assunto', local: 'Novo local' });
+      const saidas = [
+        JSON.stringify(eventoDoFluxo(d)),
+        assinatura(d),
+        textoParaMandar(d, 'https://exemplo.test/#/evento/x'),
+        JSON.stringify(camposDoCard(d)),
+        JSON.stringify(convocacaoDoFluxo(d)),
+      ].join('\n');
+      for (const valor of [ex.titulo, ex.organizacao, ex.local]) expect(saidas).not.toContain(valor);
+      expect(Object.keys(eventoDoFluxo(d)).sort()).toEqual(['data', 'descricao', 'fim', 'inicio', 'local', 'organizacao', 'titulo']);
+    }
   });
 });
 

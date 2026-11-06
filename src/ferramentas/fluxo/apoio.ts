@@ -43,6 +43,18 @@ export function avisoDoCompartilhamento(r: Resultado): string {
 }
 
 export const MENSAGEM_DO_LINK_GRANDE = 'O link ficou grande demais. Encurte a pauta ou o texto em Mudar algo.';
+/**
+ * O toque num botão do Pronto precisa antes perguntar? Sim enquanto algum campo for do exemplo e a pessoa ainda
+ * não confirmou nesta visita ao Pronto (quem monta a tela guarda o "já confirmou"; visita nova começa sem ele).
+ */
+export const precisaConfirmar = (camposDoExemplo: readonly unknown[], jaConfirmou: boolean): boolean =>
+  camposDoExemplo.length > 0 && !jaConfirmou;
+
+/** Ids do `aria-describedby`: o aviso do exemplo primeiro (se houver), depois as dicas do próprio botão. */
+export const idsDaDescricao = (temAviso: boolean, ...dicas: string[]): string =>
+  [...(temAviso ? ['fluxo-aviso-exemplo'] : []), ...dicas].join(' ');
+
+export const MENSAGEM_LINK_COM_EXEMPLO = 'O link é criado quando você trocar o exemplo pelo seu.';
 export const MENSAGEM_SEM_LINK = 'Não deu para criar o link do evento. Confira o texto em Mudar algo.';
 
 /**

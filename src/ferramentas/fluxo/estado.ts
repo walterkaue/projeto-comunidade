@@ -9,7 +9,7 @@
 import { ehLinkDoEvento, MODELOS_DE_CARD, TAMANHO_MAXIMO, type DadosDoCard, type ModeloDeCard } from '../../comum/entreTelas';
 import { linkPara, type Rota } from '../../comum/rotas';
 import { letras } from '../../comum/texto';
-import { exemplo, proximoSabado, QUANTOS_EXEMPLOS } from '../cards/exemplos';
+import { exemplo, ORGANIZACOES, proximoSabado, QUANTOS_EXEMPLOS } from '../cards/exemplos';
 import { aplicarLimites, FORMATOS, type CamposDoCard, type Formato } from '../cards/modelos';
 import { PALETAS } from '../cards/paletas';
 import { onde, quando } from '../cards/textos';
@@ -54,6 +54,21 @@ export interface DadosDoFluxo {
    */
   link: string;
   assinaturaDoLink: string;
+  /**
+   * Cópia dos campos do exemplo de onde a pessoa partiu (dados de link não têm). Serve só para dizer o que ainda é
+   * do exemplo (camposDoExemplo). Fica na memória da aba e NUNCA entra no evento, na assinatura, no texto, no nome
+   * do arquivo, no endereço nem em armazenamento.
+   */
+  doExemplo?: CamposDoExemplo;
+}
+
+/** Os campos que o aviso do exemplo confere (dia e hora ficam de fora: são escolhas que a pessoa confirma). */
+export interface CamposDoExemplo {
+  titulo: string;
+  organizacao: string;
+  texto: string;
+  pauta: string;
+  local: string;
 }
 
 export const LIMITES = {
@@ -133,6 +148,13 @@ export function exemploDoFluxo(tipo: ModeloDeCard, indice: number, hoje: Date = 
     ...APARENCIA_PADRAO,
     link: '',
     assinaturaDoLink: '',
+    doExemplo: {
+      titulo: e.titulo,
+      organizacao: e.organizacao,
+      texto: tipo === 'reuniao' ? '' : e.texto,
+      pauta: tipo === 'reuniao' ? PAUTAS[n]!.join('\n') : '',
+      local: e.local,
+    },
   };
 }
 
@@ -216,7 +238,6 @@ export function oQueFicouDeFora(e: Pick<Evento, 'fim' | 'descricao'>): string {
 }
 
 export const NOTA_DO_LINK = 'Estes dados vieram de um link de evento. Confira tudo antes de mandar.';
-export const AVISO_DO_EXEMPLO = 'Você ainda está com o exemplo. Troque pelo que for seu em Mudar algo.';
 export const avisoDoLinkNoPronto = (tipo: ModeloDeCard): string =>
   `O link leva título, dia, hora, local e ${tipo === 'reuniao' ? 'a pauta' : 'o texto'}. Quem receber pode repassar.`;
 export const PERGUNTA_DA_TROCA_DO_RASCUNHO = 'Trocar o que você estava fazendo pelos dados deste evento?';
@@ -224,6 +245,66 @@ export const PERGUNTA_DA_TROCA_DO_RASCUNHO = 'Trocar o que você estava fazendo 
 /** A pessoa mudou um campo dos passos 1 e 2: o exemplo passa a ser dela. Dados de link continuam de link. */
 export function marcarMudanca(d: Pick<DadosDoFluxo, 'origem'>): void {
   if (d.origem === 'exemplo') d.origem = 'pessoa';
+}
+
+// ---------- o que ainda é do exemplo ----------
+
+export type CampoDeExemplo = 'titulo' | 'organizacao' | 'texto' | 'pauta' | 'local';
+type ParaOExemplo = Pick<DadosDoFluxo, 'tipo' | 'doExemplo' | 'titulo' | 'organizacao' | 'texto' | 'pauta' | 'local'>;
+
+/**
+ * Quais campos ainda estão iguais aos do exemplo de onde a pessoa partiu (sem os espaços das pontas), na ordem da
+ * tela. Campo vazio não é do exemplo. Dia e hora não contam. O local só conta em reunião e evento. A organização também conta quando for uma
+ * do catálogo de exemplos (sem diferença de maiúsculas), mesmo sem a cópia do exemplo.
+ */
+export function camposDoExemplo(d: ParaOExemplo): CampoDeExemplo[] {
+  const ex = d.doExemplo;
+  const quais: CampoDeExemplo[] = ['titulo', 'organizacao', d.tipo === 'reuniao' ? 'pauta' : 'texto'];
+  if (temAgenda(d.tipo)) quais.push('local');
+  return quais.filter((c) => {
+    const atual = d[c].trim();
+    if (atual === '') return false;
+    if (ex && atual === ex[c].trim()) return true;
+    // Dados sem cópia do exemplo (link gerado antes desta regra, exemplo digitado à mão): a organização do catálogo.
+    return c === 'organizacao' && daOrganizacaoDoCatalogo(atual);
+  });
+}
+
+const semMaiusculas = (t: string): string => t.trim().toLocaleLowerCase('pt-BR');
+const daOrganizacaoDoCatalogo = (t: string): boolean => ORGANIZACOES.some((o) => semMaiusculas(o) === semMaiusculas(t));
+
+/** O título ou a organização ainda são do exemplo? Então o link do evento não é criado. */
+export const exemploNoLink = (d: ParaOExemplo): boolean =>
+  camposDoExemplo(d).some((c) => c === 'titulo' || c === 'organizacao');
+
+const NOME_DO_CAMPO: Record<CampoDeExemplo, string> = {
+  titulo: 'título',
+  organizacao: 'organização',
+  texto: 'texto',
+  pauta: 'pauta',
+  local: 'local',
+};
+const ARTIGO_DO_CAMPO: Record<CampoDeExemplo, string> = { titulo: 'o', organizacao: 'a', texto: 'o', pauta: 'a', local: 'o' };
+
+/** "a", "a e b", "a, b e c". */
+const listar = (itens: string[]): string =>
+  itens.length < 2 ? (itens[0] ?? '') : `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`;
+
+/** Aviso do Pronto: "A organização e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo." */
+export function avisoDoExemplo(campos: readonly CampoDeExemplo[]): string {
+  if (!campos.length) return '';
+  const lista = listar(campos.map((c) => `${ARTIGO_DO_CAMPO[c]} ${NOME_DO_CAMPO[c]}`));
+  return `${lista.charAt(0).toUpperCase()}${lista.slice(1)} ainda ${campos.length === 1 ? 'é' : 'são'} do exemplo. Troque pelo que for seu em Mudar algo.`;
+}
+
+/** Frase do painel de confirmação: "Isto ainda tem partes do exemplo: organização e local." */
+export const fraseDaConfirmacao = (campos: readonly CampoDeExemplo[]): string =>
+  `Isto ainda tem partes do exemplo: ${listar(campos.map((c) => NOME_DO_CAMPO[c]))}.`;
+
+/** "Apagar" no passo 1: limpa título, organização, texto e pauta, e o local se ainda for o do exemplo. */
+export function apagarOPasso1(d: DadosDoFluxo): void {
+  if (camposDoExemplo(d).includes('local')) d.local = '';
+  d.titulo = d.organizacao = d.texto = d.pauta = '';
 }
 
 /** Nome do botão que esvazia os campos do passo 1. */
@@ -471,7 +552,8 @@ export function assinatura(d: DadosDoFluxo): string {
 }
 
 /** O link que já existia ainda descreve estes dados? */
-export const linkAindaVale = (d: DadosDoFluxo): boolean => !!d.link && d.assinaturaDoLink === assinatura(d);
+export const linkAindaVale = (d: DadosDoFluxo): boolean =>
+  !!d.link && d.assinaturaDoLink === assinatura(d) && !exemploNoLink(d);
 
 /** Tira asteriscos e sublinhados do texto digitado, para não quebrar o negrito do WhatsApp. */
 const semMarcas = (s: string) => s.replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();

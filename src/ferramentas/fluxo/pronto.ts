@@ -14,13 +14,18 @@ import {
   avisoDoCompartilhamento,
   descricaoDaImagem,
   enderecoDaPaginaDoEvento,
+  idsDaDescricao,
+  MENSAGEM_LINK_COM_EXEMPLO,
   MENSAGEM_SEM_LINK,
   nomeDoArquivoDoFluxo,
+  precisaConfirmar,
 } from './apoio';
 import {
-  AVISO_DO_EXEMPLO,
+  avisoDoExemplo,
   avisoDoLinkNoPronto,
+  camposDoExemplo,
   convocacaoDoFluxo,
+  fraseDaConfirmacao,
   PORTAS,
   temAgenda,
   textoParaMandar,
@@ -35,24 +40,34 @@ import { desenharCardEm, medirFaixasFixas } from './previa';
 export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const agenda = temAgenda(d.tipo);
   const nivel = nivelDoAparelho();
+  // O que ainda é do exemplo (qualquer origem): o aviso, a confirmação e a falta do link dependem só disto.
+  const doExemplo = camposDoExemplo(d);
+  const aviso = avisoDoExemplo(doExemplo);
 
   raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
     <h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">: </span><span class="fluxo-pronto-titulo">Pronto!</span></h1>
-    ${d.origem === 'exemplo' ? `<p class="fluxo-nota" id="fluxo-aviso-exemplo">${esc(AVISO_DO_EXEMPLO)}</p>` : ''}
+    ${aviso ? `<p class="fluxo-nota" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
     <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
     <p class="fluxo-estado" id="fluxo-estado"></p>
 
-    <button type="button" class="botao" id="fluxo-mandar" aria-describedby="fluxo-mandar-dica">Mandar no WhatsApp</button>
+    <button type="button" class="botao" id="fluxo-mandar" aria-describedby="${esc(idsDaDescricao(!!aviso, 'fluxo-mandar-dica'))}">Mandar no WhatsApp</button>
     <p class="campo-dica" id="fluxo-mandar-dica">Abre o menu do celular. Escolha o WhatsApp e a conversa.</p>
     <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(avisoDoLinkNoPronto(d.tipo))}</p>
 
     <div class="fluxo-saidas">
       <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>
       <button type="button" class="botao botao-sec" id="fluxo-copiar-texto">Copiar só o texto</button>
-      <button type="button" class="botao botao-sec" id="fluxo-copiar-link" hidden>Copiar o link</button>
+      <button type="button" class="botao botao-sec" id="fluxo-copiar-link"${aviso ? ' aria-describedby="fluxo-aviso-exemplo"' : ''} hidden>Copiar o link</button>
       <button type="button" class="botao botao-sec" id="fluxo-imprimir">Imprimir cartaz para o mural</button>
+      ${d.tipo === 'reuniao' ? '<p class="campo-dica" id="fluxo-aviso-qr" hidden>O QR do cartaz abre a pauta inteira.</p>' : ''}
       <a class="botao botao-sec" id="fluxo-pagina" href="#/" hidden>Ver a página do evento</a>
+    </div>
+
+    <div class="fluxo-confirma" id="fluxo-confirma" role="group" aria-labelledby="fluxo-confirma-texto" hidden>
+      <p id="fluxo-confirma-texto"></p>
+      <button type="button" class="botao" id="fluxo-confirma-mudar" aria-describedby="fluxo-confirma-texto">Mudar algo</button>
+      <button type="button" class="botao botao-sec" id="fluxo-confirma-seguir"></button>
     </div>
 
     <div class="fluxo-acoes">
@@ -91,11 +106,29 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     agenda ? import('../evento/partes').then((p) => linkDoFluxo(d, p.enderecoDoSite())) : Promise.resolve({ link: '', aviso: '' })
   ).catch((): ResultadoDoLink => ({ link: '', aviso: MENSAGEM_SEM_LINK }));
 
+  // A nota "O QR do cartaz abre a pauta inteira." só vale com link e com QR. Venha o link antes ou depois do
+  // desenho, o QR que falhou vence.
+  let haLink = false;
+  let semQr = false;
+  function atualizarNotaDoQr(): void {
+    const nota = raiz.querySelector<HTMLElement>('[id="fluxo-aviso-qr"]');
+    if (!nota) return;
+    const mostrar = haLink && !semQr;
+    nota.hidden = !mostrar;
+    const imprimirBtn = q('fluxo-imprimir');
+    if (mostrar) imprimirBtn.setAttribute('aria-describedby', 'fluxo-aviso-qr');
+    else imprimirBtn.removeAttribute('aria-describedby');
+  }
+
   // A imagem do formato escolhido: desenhada e já convertida em arquivo, para o toque em "Mandar" não esperar.
   const arquivoPronto: Promise<File> = linkPronto.then(async ({ link }) => {
     const r = await desenharCardEm(canvas, d, d.formato, escalaDoFormato(d.formato, nivel), link, () => vivo);
     if (!r) throw new Error('fechada');
-    if (r.semQr) dizer('Não deu para gerar o QR deste link. O cartaz sai sem QR.');
+    if (r.semQr) {
+      dizer('Não deu para gerar o QR deste link. O cartaz sai sem QR.');
+      semQr = true;
+      atualizarNotaDoQr();
+    }
     canvas.setAttribute('aria-label', descricaoDaImagem(d, d.formato, link, !!link && !r.semQr && d.formato === 'cartaz'));
     return canvasParaArquivo(canvas, nomeDoArquivoDoFluxo(d));
   });
@@ -109,10 +142,13 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     .then(({ link, aviso }) => {
       if (!vivo) return;
       estadoDoLink.textContent = aviso;
-      if (aviso) avisar(aviso);
+      // O aviso do exemplo já está na tela e no aviso do topo; a região de status basta para o do link.
+      if (aviso && aviso !== MENSAGEM_LINK_COM_EXEMPLO) avisar(aviso);
       if (!link) return;
       q('fluxo-copiar-link').hidden = false;
       q('fluxo-aviso-link').hidden = false;
+      haLink = true;
+      atualizarNotaDoQr();
       // A base é o endereço deste site, nunca o próprio link.
       const pagina = enderecoDaPaginaDoEvento(link, location.href);
       if (pagina) {
@@ -149,7 +185,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     }
   }
 
-  q('fluxo-mandar').addEventListener('click', () =>
+  const mandar = () =>
     exclusivo(async () => {
       try {
         const { texto, arquivo } = await comAvisoDeEspera(async () => ({ ...(await textoAgora()), arquivo: await arquivoPronto }));
@@ -158,10 +194,9 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       } catch {
         avisar('Não deu para gerar a imagem. Tente de novo.');
       }
-    }),
-  );
+    });
 
-  q('fluxo-baixar').addEventListener('click', () =>
+  const baixar = () =>
     exclusivo(async () => {
       try {
         const arquivo = await comAvisoDeEspera(() => arquivoPronto);
@@ -170,8 +205,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       } catch {
         avisar('Não deu para gerar a imagem. Tente de novo.');
       }
-    }),
-  );
+    });
 
   async function copiar(texto: string, pronto: string): Promise<void> {
     try {
@@ -181,18 +215,18 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       avisar('Não deu para copiar sozinho. Use Mandar no WhatsApp ou copie pelo seu aparelho.');
     }
   }
-  q('fluxo-copiar-texto').addEventListener('click', async () => {
+  const copiarTexto = async (): Promise<void> => {
     try {
       const { texto } = await textoAgora();
       await copiar(texto, 'Texto copiado. Cole na conversa.');
     } catch {
       avisar('Não deu para copiar o texto. Use Mandar no WhatsApp.');
     }
-  });
-  q('fluxo-copiar-link').addEventListener('click', async () => {
+  };
+  const copiarLink = async (): Promise<void> => {
     const { link } = await linkPronto;
     if (link) await copiar(link, 'Link copiado. Cole na conversa.');
-  });
+  };
 
   // ---------- imprimir: o cartaz é desenhado à parte, numa imagem que só aparece na impressão ----------
   let enderecoImpressao: string | undefined;
@@ -216,7 +250,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     return true;
   }
 
-  q('fluxo-imprimir').addEventListener('click', () =>
+  const imprimir = () =>
     exclusivo(async () => {
       try {
         limparImpressao();
@@ -225,6 +259,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
         const folha = document.createElement('canvas');
         const r = await desenharCardEm(folha, d, 'cartaz', escalaDoFormato('cartaz', nivel), link, () => vivo);
         if (!r || fechou()) return;
+        if (r.semQr && link) avisar('O cartaz sai sem QR.');
         const arquivo = await canvasParaArquivo(folha, nomeDoArquivoDoFluxo(d, 'cartaz'));
         if (fechou()) return;
         enderecoImpressao = URL.createObjectURL(arquivo);
@@ -248,8 +283,66 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
         limparImpressao();
         avisar('Não deu para preparar o cartaz. Tente de novo.');
       }
-    }),
-  );
+    });
+
+  // ---------- confirmação quando ainda há partes do exemplo ----------
+  // Na própria tela (sem window.confirm): o menu de compartilhar e a cópia precisam vir do toque da pessoa.
+  const painel = q('fluxo-confirma');
+  const seguir = q<HTMLButtonElement>('fluxo-confirma-seguir');
+  let confirmado = false;
+  let quemAbriu: HTMLElement | undefined;
+  let aoSeguir: (() => unknown) | undefined;
+
+  function fecharPainel(): void {
+    painel.hidden = true;
+    aoSeguir = undefined;
+  }
+  // Esc fecha o painel e devolve o foco a quem o abriu.
+  painel.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || painel.hidden) return;
+    e.preventDefault();
+    fecharPainel();
+    quemAbriu?.focus();
+  });
+
+  /** O primeiro toque, com partes do exemplo, só abre o painel logo abaixo do botão. Depois de confirmar, não pergunta mais. */
+  function comConfirmacao(botao: HTMLElement, verbo: string, acao: () => unknown): () => void {
+    return () => {
+      if (!precisaConfirmar(doExemplo, confirmado)) {
+        void acao();
+        return;
+      }
+      quemAbriu = botao;
+      aoSeguir = acao;
+      q('fluxo-confirma-texto').textContent = fraseDaConfirmacao(doExemplo);
+      seguir.textContent = `${verbo} mesmo assim`;
+      // Depois do botão e das descrições que vêm logo depois dele (ocultas ou não).
+      let ancora: Element = botao;
+      while (ancora.nextElementSibling?.classList.contains('campo-dica')) ancora = ancora.nextElementSibling;
+      ancora.insertAdjacentElement('afterend', painel);
+      painel.hidden = false;
+      q('fluxo-confirma-mudar').focus();
+    };
+  }
+  seguir.addEventListener('click', () => {
+    const acao = aoSeguir;
+    confirmado = true;
+    fecharPainel();
+    quemAbriu?.focus();
+    if (acao) void acao();
+  });
+  q('fluxo-confirma-mudar').addEventListener('click', () => mudarAlgo(d.tipo));
+
+  for (const [id, verbo, acao] of [
+    ['fluxo-mandar', 'Mandar', mandar],
+    ['fluxo-baixar', 'Baixar', baixar],
+    ['fluxo-copiar-texto', 'Copiar', copiarTexto],
+    ['fluxo-copiar-link', 'Copiar', copiarLink],
+    ['fluxo-imprimir', 'Imprimir', imprimir],
+  ] as const) {
+    const botao = q(id);
+    botao.addEventListener('click', comConfirmacao(botao, verbo, acao));
+  }
 
   q('fluxo-mudar').addEventListener('click', () => mudarAlgo(d.tipo));
   q('fluxo-outro').addEventListener('click', () => {

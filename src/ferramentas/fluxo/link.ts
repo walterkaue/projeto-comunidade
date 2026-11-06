@@ -2,8 +2,8 @@
 // baixado aqui, quando a tela Pronto abre, e pode ser trocado nos testes.
 
 import { validarEvento, type Evento } from '../evento/validar';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_SEM_LINK } from './apoio';
-import { assinatura, eventoDoFluxo, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_LINK } from './apoio';
+import { assinatura, eventoDoFluxo, exemploNoLink, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
 
 export interface ResultadoDoLink {
   /** Vazio quando não há link (tipo sem agenda, texto grande demais ou dados recusados). */
@@ -30,6 +30,8 @@ async function padrao(): Promise<DependenciasDoLink> {
  */
 export async function linkDoFluxo(d: DadosDoFluxo, base: string, deps?: DependenciasDoLink): Promise<ResultadoDoLink> {
   if (!temAgenda(d.tipo)) return { link: '', aviso: '' };
+  // O link é o que circula: com título ou organização do exemplo, não sai (docs/produto.md 7.6).
+  if (exemploNoLink(d)) return { link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO };
   if (linkAindaVale(d)) return { link: d.link, aviso: '' };
   try {
     const r = validarEvento(eventoDoFluxo(d));
