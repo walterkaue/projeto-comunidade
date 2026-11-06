@@ -6,7 +6,8 @@ import './comum/tema.css';
 import './comum/componentes.css';
 import { prepararAviso } from './comum/aviso';
 import { ligarMetricas } from './comum/metricas';
-import { lerRota, linkPara, mostraORodapeComum, parteDaRota, type Parte, type Rota } from './comum/rotas';
+import { estaEmMoldura, telaDaMoldura } from './comum/moldura';
+import { enderecoDoSite, lerRota, linkPara, mostraORodapeComum, parteDaRota, type Parte, type Rota } from './comum/rotas';
 import { ligarAvisoDeSaida } from './comum/saida';
 import type { Limpeza, Tela } from './comum/tela';
 import { NOME } from './comum/marca';
@@ -124,9 +125,16 @@ function abrir(): void {
   );
 }
 
-prepararAviso();
-ligarAvisoDeSaida();
-window.addEventListener('hashchange', abrir);
-abrir();
-registrarServiceWorker();
-ligarMetricas();
+// Dentro de um iframe de outro site, só o link para abrir direto (auditoria de segurança, B3): sem roteador,
+// sem service worker e sem contagem de visita.
+if (estaEmMoldura(window)) {
+  if (rodapeComum) rodapeComum.hidden = true;
+  raiz.innerHTML = telaDaMoldura(`${enderecoDoSite(location.href)}${location.hash}`);
+} else {
+  prepararAviso();
+  ligarAvisoDeSaida();
+  window.addEventListener('hashchange', abrir);
+  abrir();
+  registrarServiceWorker();
+  ligarMetricas();
+}
