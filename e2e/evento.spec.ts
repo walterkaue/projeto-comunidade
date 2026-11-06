@@ -31,11 +31,11 @@ test('página do evento: "Fazer o card" e "Criar outro" sem mudança devolvem o 
   const recebida = await abrirComoQuemRecebe(page, link);
   await expect(titulo(recebida)).toHaveText(tituloDoEvento);
   await expect(recebida.getByText(`Quem chama, segundo quem criou o link: ${ORGANIZACAO}`)).toBeVisible();
-  await expect(recebida.getByText('Nunca faça pagamento pedido por um evento.', { exact: false })).toBeVisible();
+  await expect(recebida.getByText('Nunca faça pagamento nem mande documentos pedidos por um evento.', { exact: false })).toBeVisible();
   await conferirTela(recebida, 'página do evento');
 
-  // "Fazer o card deste evento": cai no passo 3, com os dados do link.
-  await recebida.getByRole('link', { name: 'Fazer o card deste evento' }).click();
+  // "Fazer a imagem deste evento": cai no passo 3, com os dados do link.
+  await recebida.getByRole('link', { name: 'Fazer a imagem deste evento' }).click();
   await expect(titulo(recebida)).toContainText('Passo 3 de 3');
   await recebida.getByRole('button', { name: 'Ficou bom' }).click();
   await esperarOPronto(recebida, EVENTO);
@@ -68,9 +68,27 @@ test('link da lista de bloqueio mostra "removido" com o motivo', async ({ page }
   await outra.goto(link);
   await expect(titulo(outra)).toHaveText('Este link foi removido após denúncia');
   await expect(outra.getByText(`fere esta regra de uso: ${textoDaRegra(5)}`, { exact: false })).toBeVisible();
+  await expect(outra.getByText('Se você recebeu este link, não pague nem mande documentos.', { exact: false })).toBeVisible();
   await expect(outra.getByText('peça revisão', { exact: false })).toBeVisible();
   await expect(outra.getByRole('link', { name: 'Ver as Regras de uso' })).toBeVisible();
   await conferirTela(outra, 'link removido');
+});
+
+test('link com ponto colado no fim abre, e a denúncia leva o link limpo', async ({ page }) => {
+  const { link, tituloDoEvento } = await criarEvento(page);
+  const recebida = await abrirComoQuemRecebe(page, `${link}.`);
+  await expect(titulo(recebida)).toHaveText(tituloDoEvento);
+  // A barra do navegador volta ao link limpo, sem remontar a tela.
+  await expect(recebida).toHaveURL(link);
+
+  await recebida.getByRole('link', { name: 'Denunciar este evento' }).click();
+  await expect(recebida).toHaveURL(/#\/denunciar\//);
+  await expect(recebida.locator('.link-denunciado')).toContainText(link.slice(0, 40));
+  await recebida.getByLabel('Tipo de problema').selectOption('golpe');
+  await recebida.getByLabel('O que há de errado').fill('O evento pede um pagamento adiantado para garantir a vaga.');
+  await recebida.getByRole('button', { name: 'Revisar a denúncia' }).click();
+  const texto = recebida.getByLabel('Texto da denúncia');
+  await expect(texto).toHaveValue(new RegExp(link.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&') + '(?![A-Za-z0-9_.-])'));
 });
 
 test('denúncia a partir da página do evento: a revisão mostra o link e a descrição', async ({ page }) => {

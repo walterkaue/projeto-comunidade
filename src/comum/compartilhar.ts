@@ -99,7 +99,7 @@ export function canvasParaArquivo(canvas: Pick<HTMLCanvasElement, 'toBlob'>, nom
 }
 
 /** Texto para a região de aviso. Vazio = não avisar (a pessoa cancelou). */
-export function mensagemDoResultado(r: Resultado): string {
+export function mensagemDoResultado(r: Resultado, seFalhar?: string): string {
   switch (r) {
     case 'arquivo':
       return 'Pronto, imagem enviada para compartilhar.';
@@ -112,6 +112,6 @@ export function mensagemDoResultado(r: Resultado): string {
     case 'cancelado':
       return '';
     case 'falhou':
-      return 'Não deu para compartilhar. Use Baixar imagem.';
+      return seFalhar || 'Não deu para compartilhar neste aparelho.';
   }
 }

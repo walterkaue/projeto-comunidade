@@ -46,3 +46,14 @@ describe('tela de link removido', () => {
     }
   });
 });
+
+describe('D3: aviso de golpe na tela de link removido', () => {
+  it('só a regra 5 acrescenta o aviso, logo depois da decisão', () => {
+    const p = textosDoRemovido({ tipo: 'regra', regra: 5 }).paragrafos;
+    const i = p.findIndex((x) => x.startsWith('Removemos este link'));
+    expect(p[i + 1]).toBe('Se você recebeu este link, não pague nem mande documentos. Avise quem mandou.');
+    for (const motivo of [{ tipo: 'regra', regra: 1 }, { tipo: 'pedido' }] as Parameters<typeof textosDoRemovido>[0][]) {
+      expect(textosDoRemovido(motivo).paragrafos.join(' ')).not.toContain('Se você recebeu este link');
+    }
+  });
+});

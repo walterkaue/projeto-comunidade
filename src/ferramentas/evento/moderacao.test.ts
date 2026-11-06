@@ -45,3 +45,30 @@ describe('script de moderação', () => {
     expect(r.impressoes).toEqual([await impressaoDoLink('1zlixo')]);
   }, 30000);
 });
+
+describe('script de moderação: dados do link colado numa mensagem', () => {
+  it('B-03: corta o que veio depois dos dados e junta só quebras de linha', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { dadosDoLink, dadosValidos } = await import('../../../scripts/bloquear.mjs');
+    const base = 'https://x.exemplo/p/#/evento/';
+    for (const fim of ['.', ')', ' Obrigada!', '%20Obrigada!', ',']) {
+      expect(dadosDoLink(base + '1rAbc-_09' + fim), JSON.stringify(fim)).toBe('1rAbc-_09');
+    }
+    expect(dadosDoLink(base + 'editar/1rAbc.')).toBe('1rAbc');
+    expect(dadosDoLink(base + 'abc\n123 ')).toBe('abc123');
+    expect(dadosDoLink(base + 'abc \r\n  123')).toBe('abc123');
+    expect(dadosDoLink('sem marca')).toBe('');
+    expect(dadosValidos(dadosDoLink(base + '1rAbc.'))).toBe(true);
+  });
+
+  it('avisa quem modera quando o que foi cortado parece comando', async () => {
+    // @ts-expect-error script .mjs sem tipos
+    const { dadosDoLink, sobraSuspeita } = await import('../../../scripts/bloquear.mjs');
+    const base = 'https://x.exemplo/p/#/evento/';
+    for (const ruim of ['1rAbc$(curl x|sh)', '1rAbc`id`', '1rAbc;rm', '1rAbc&x', `1rAbc ${'a'.repeat(41)}`]) {
+      expect(sobraSuspeita(base + ruim), ruim).toBe(true);
+      expect(dadosDoLink(base + ruim)).toBe('1rAbc');
+    }
+    for (const ok of ['1rAbc', '1rAbc.', '1rAbc Obrigada!', '1rAbc%20Valeu']) expect(sobraSuspeita(base + ok), ok).toBe(false);
+  });
+});

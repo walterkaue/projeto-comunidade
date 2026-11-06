@@ -3,7 +3,8 @@
 
 import { devices, type PlaywrightTestOptions, type PlaywrightWorkerOptions } from '@playwright/test';
 
-export const PORTA = 4181;
+// PORTA_SIM troca a porta (outra sessão pode estar com a 4181).
+export const PORTA = Number(process.env.PORTA_SIM ?? 4181);
 
 export type ModoCompartilhar = 'sim' | 'ausente' | 'cancela' | 'sem-arquivo';
 

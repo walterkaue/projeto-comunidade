@@ -93,3 +93,9 @@
   border: 1px solid var(--borda);
   image-rendering: pixelated;
 }
+
+/* Título comprido em celular estreito: hifeniza (lang="pt-BR") em vez de só quebrar no meio da palavra (B-29). */
+.evento h1 {
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}

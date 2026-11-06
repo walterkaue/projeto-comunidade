@@ -24,24 +24,36 @@ export function dominioDoLink(href: string): string {
   }
 }
 
-/** HTML da folha (puro, testável). */
-export function htmlDaFolha(href: string): string {
+/** Nome curto do destino ("o mapa"). Só letras, espaço e acentos, até 40; senão, ignora. */
+function destinoValido(destino?: string): string {
+  const d = (destino ?? '').trim();
+  return d.length > 0 && d.length <= 40 && /^[\p{L} ]+$/u.test(d) ? d : '';
+}
+
+/** HTML da folha (puro, testável). `destino` é o que o link abre ("o mapa"), posto por nós no atributo data-destino. */
+export function htmlDaFolha(href: string, destino?: string): string {
   const dominio = dominioDoLink(href);
+  const nome = destinoValido(destino);
+  // O domínio só quebra nos pontos: cada pedaço é escapado e juntado com <wbr>.
+  const dominioHtml = dominio ? `<strong>${dominio.split('.').map(esc).join('.<wbr>')}</strong>` : '';
+  let abrir: string;
+  if (nome) abrir = `${esc(nome)}${dominioHtml ? ` (${dominioHtml})` : ''}`;
+  else abrir = dominioHtml || 'outro site';
   return `<div class="folha-caixa">
-    <p id="folha-texto">Você vai sair do ${esc(NOME)} e abrir ${dominio ? `<strong>${esc(dominio)}</strong>` : 'outro site'}.</p>
+    <p id="folha-texto">Você vai sair do ${esc(NOME)} e abrir ${abrir}.</p>
     <a class="botao" data-sem-aviso href="${esc(href)}" target="_blank" rel="noopener noreferrer">Ir para o site</a>
     <button class="botao botao-sec" type="button" data-ficar>Ficar aqui</button>
   </div>`;
 }
 
-function abrirFolha(href: string, doc: Document): void {
+function abrirFolha(href: string, doc: Document, destino?: string): void {
   const folha = doc.createElement('div');
   folha.className = 'folha';
   folha.setAttribute('role', 'dialog');
   folha.setAttribute('aria-modal', 'true');
   folha.setAttribute('aria-label', 'Saída do site');
   folha.setAttribute('aria-describedby', 'folha-texto');
-  folha.innerHTML = htmlDaFolha(href);
+  folha.innerHTML = htmlDaFolha(href, destino);
   const anterior = doc.activeElement as HTMLElement | null;
   const fechar = () => {
     doc.removeEventListener('keydown', aoTeclar, true);
@@ -83,7 +95,7 @@ export function ligarAvisoDeSaida(doc: Document = document): () => void {
     const link = (e.target as Element | null)?.closest?.<HTMLAnchorElement>('a[href]');
     if (!link || link.hasAttribute('data-sem-aviso') || !ehLinkExterno(link.href, doc.location.host)) return;
     e.preventDefault();
-    abrirFolha(link.href, doc);
+    abrirFolha(link.href, doc, link.dataset.destino);
   };
   // auxclick: clique do meio ("abrir em nova aba") também passa pelo aviso.
   doc.addEventListener('click', aoClicar, true);

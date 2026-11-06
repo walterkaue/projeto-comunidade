@@ -66,8 +66,8 @@ for (const chave of ['evento-sp-19h', 'reuniao-longa'] as const) {
     await paginaDoEvento(page, base, chave);
     await foto(page, `g4-card-${chave}-0-pagina`, true);
 
-    // "Fazer o card deste evento"
-    await page.getByRole('link', { name: 'Fazer o card deste evento' }).click();
+    // "Fazer a imagem deste evento" (era "Fazer o card", D9)
+    await page.getByRole('link', { name: 'Fazer a imagem deste evento' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Passo 3 de 3');
     salvarSaida(`g4-card-${chave}-passo3.txt`, await page.locator('main').innerText());
     await medirEGuardar(page, 'g4', `card-${chave}-passo3`);
@@ -147,7 +147,7 @@ for (const modo of ['cancela', 'recusa-arquivo'] as const) {
     const s = await abrirAparelho(browser, 'AND-GRANDE', { compartilhar: modo });
     const { page } = s;
     await paginaDoEvento(page, base, 'evento-sp-19h');
-    await page.getByRole('link', { name: 'Fazer o card deste evento' }).click();
+    await page.getByRole('link', { name: 'Fazer a imagem deste evento' }).click();
     await page.getByRole('button', { name: 'Ficou bom' }).click();
     await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…', { timeout: 60_000 });
     await page.waitForTimeout(800);

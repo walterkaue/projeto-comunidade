@@ -80,6 +80,23 @@ export function horariosDaAgenda(e: Pick<Evento, 'data' | 'inicio' | 'fim'>): { 
   return { inicio: compacto(e.data, e.inicio), fim: compacto(fim.data, fim.hora) };
 }
 
+/** O texto de "Quando" na página: data, hora e a lembrança de que a hora é a do local (B-18). */
+export function quandoNaPagina(e: Pick<Evento, 'data' | 'inicio' | 'fim'>): string {
+  return `${dataPorExtenso(e.data)}, ${horarioPorExtenso(e.inicio, e.fim)} (horário do local do evento)`;
+}
+
+/** Folga antes de dizer que passou: a hora do link é a do local do evento, e quem abre pode estar noutro fuso
+ * (no Brasil, até 2 horas de diferença). */
+export const FOLGA_DO_PASSOU_MS = 6 * 60 * 60 * 1000;
+
+/** O evento já terminou (fim, ou início + 1 hora sem fim; B-22), com a folga do fuso pelo relógio de quem abre. */
+export function jaPassou(e: Pick<Evento, 'data' | 'inicio' | 'fim'>, agora: Date): boolean {
+  const f = horariosDaAgenda(e).fim;
+  const n = (de: number, ate: number) => Number(f.slice(de, ate));
+  const termino = new Date(n(0, 4), n(4, 6) - 1, n(6, 8), n(9, 11), n(11, 13));
+  return !Number.isNaN(termino.getTime()) && agora.getTime() >= termino.getTime() + FOLGA_DO_PASSOU_MS;
+}
+
 /** O que vai como descrição na agenda: o texto do evento e, se houver, a organização. */
 function descricaoDaAgenda(e: Evento): string {
   // Mesma frase da página (auditoria 05/11/2026, M6): o site não confere quem chama.

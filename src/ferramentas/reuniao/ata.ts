@@ -144,7 +144,7 @@ export function textoDaAta(a: Ata): string {
     }
   }
   if (l.encaminhamentos.length) {
-    s.push('', 'ENCAMINHAMENTOS');
+    s.push('', 'O QUE FICOU COMBINADO');
     for (const e of l.encaminhamentos) {
       s.push(`- ${e.oque}${e.quem ? ` | Quem: ${e.quem}` : ''}${e.ate ? ` | Até: ${e.ate}` : ''}`);
     }
@@ -186,7 +186,7 @@ export function htmlDaAta(a: Ata): string {
         .join('')}</section>`
     : '';
   const enc = l.encaminhamentos.length
-    ? `<section class="ata-bloco"><h3>Encaminhamentos</h3><table><thead><tr><th scope="col">O quê</th><th scope="col">Quem</th><th scope="col">Até quando</th></tr></thead><tbody>${l.encaminhamentos
+    ? `<section class="ata-bloco"><h3>O que ficou combinado</h3><table><thead><tr><th scope="col">O quê</th><th scope="col">Quem</th><th scope="col">Até quando</th></tr></thead><tbody>${l.encaminhamentos
         .map((e) => `<tr><td>${esc(e.oque)}</td><td>${esc(e.quem)}</td><td>${esc(e.ate)}</td></tr>`)
         .join('')}</tbody></table></section>`
     : '';
