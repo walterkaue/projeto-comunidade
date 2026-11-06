@@ -14,19 +14,23 @@ Modelo de pedido (copie, preencha e apague os comentários):
 
 ## Pedidos abertos
 
+Nenhum.
+
+## Pedidos atendidos
+
 ### 2026-11-06 · sessão 1 das correções da simulação (filtro e leitura do link) · `pagina.ts` usar os dados já cortados
 - **O que precisa:** em `src/ferramentas/evento/pagina.ts`, `telaPagina`, trocar `pagina(raiz, r.evento, dados, vivo)` por `pagina(raiz, r.evento, r.dados ?? dados, vivo)`. Se quiser, atualizar também a barra de endereço com `history.replaceState` quando `r.dados` for diferente (contrato de `src/comum/tela.ts`).
 - **Por quê:** desde o B-03, `abrirEvento` corta o que colou no fim do link ("…<dados>.", "%20Obrigada!") e devolve os dados limpos em `r.dados`. A página já abre, mas ainda monta o link do card, do QR, de "Compartilhar", de "Criar outro" e da denúncia com os dados sujos. O link sujo não passa em `ehLinkDoEvento`: "Fazer o card" sai sem o link original e a denúncia chega sem o link (a pessoa precisa colar).
 - **Sugestão de assinatura:** nenhuma nova; `Aberto` já tem `dados?: string` (sempre preenchido por `abrirEvento`).
 - **Cópia provisória:** nenhuma. "Criar outro" já sai limpo, porque `linkCompleto` (formato.ts) também corta.
+- **Atendido em 06/11/2026** (sessão 3 das correções da simulação): `telaPagina` usa `r.dados ?? dados`, e a barra volta ao link limpo com `history.replaceState` quando houve corte. Card, QR, "Compartilhar", "Criar outro" e denúncia saem com o link limpo (teste de ponta a ponta em `e2e/evento.spec.ts`, link com ponto no fim).
 
 ### 2026-11-06 · sessão 1 das correções da simulação (filtro e leitura do link) · `npm run bloquear` cortar o fim do link como a página
 - **O que precisa:** em `scripts/bloquear.mjs`, `dadosDoLink`, cortar os dados no primeiro caractere fora de `A-Z a-z 0-9 - _`, como `cortarDadosDoLink` em `src/ferramentas/evento/formato.ts` (hoje o script recusa o link com "formato inválido").
 - **Por quê:** a denúncia pode chegar com "…<dados>." ou "…<dados>)" (link copiado de uma conversa). A página abre esse link; quem modera deve conseguir bloquear o mesmo link sem limpar à mão. A impressão gravada continua a dos dados limpos e a da forma canônica, que são as que a página confere.
 - **Sugestão de assinatura:** `dadosDoLink(link)` devolve `junto.slice(i + MARCA.length).replace(/^editar\//, '').match(/^[A-Za-z0-9_-]*/)[0]`; teste em `src/ferramentas/evento/moderacao.test.ts`.
 - **Cópia provisória:** nenhuma.
-
-## Pedidos atendidos
+- **Atendido em 06/11/2026** (sessão 3 das correções da simulação): `dadosDoLink` junta só as quebras de linha (não qualquer espaço, que colaria "Obrigada!" aos dados) e corta no primeiro sinal fora do base64url. Se o que foi cortado tiver sinal de comando ou for comprido, o script avisa para não usar o link em comando nenhum (`sobraSuspeita`). Testes em `moderacao.test.ts`.
 
 ### 2026-11-06 · sessão correções do fluxo · limite do link em `src/comum/entreTelas.ts` menor que o da página do evento
 - **O que precisa:** `TAMANHO_MAXIMO.link` (4000) é menor que o que a página do evento aceita (dados de até 6000). Igualar o limite ao da página, ou recusar na leitura links acima de `LINK_MAXIMO`.
