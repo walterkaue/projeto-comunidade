@@ -35,7 +35,7 @@ O ponto mais sério está **fora do site**: no fluxo de moderação, o link que 
 | B1 | Corrigido junto com A1 (`docs/moderacao.md`, passo 3); em 06/11/2026, a frase também em "Como funciona" | `5b98cef`, `04d220b` |
 | B2 | Corrigido em 06/11/2026: na troca de versão, o service worker copia a lista do cache velho se o novo não tiver. Achado junto, na conferência offline: Wi-Fi com página de login (200 com HTML) trocava a lista guardada; agora o service worker só guarda e só usa a lista em JSON. Na revisão, a cópia da versão velha também passou a ser conferida (só JSON; com mais de uma, a que tem mais bloqueios). Testes em `testes/sw.test.ts`; conferido no navegador sem rede e com um deploy simulado | `84a57ad`, `861ec9d`, `7e3e030` |
 | B3 | Corrigido em 06/11/2026 no que dá para fazer no código: dentro de um iframe de outro site, o site mostra só "Abrir o site" (`src/comum/moldura.ts`); comentário do `index.html` corrigido para `img-src`. Cabeçalhos de verdade (`frame-ancestors`, `X-Content-Type-Options`) só com um serviço na frente do Pages, decisão do Kauê com o domínio próprio | `a774b1d` |
-| B4 | `if:` no job de publicar corrigido em 06/11/2026. **Falta o Kauê:** Dependabot e regra da `main` (ver B4) | `cb2e535` |
+| B4 | Corrigido em 06/11/2026: `if:` no job de publicar; o Kauê ligou os alertas e as atualizações de segurança do Dependabot e criou a regra `main` (apagar e force-push bloqueados), conferidos pela API. Actions por versão, não por SHA, seguem como estão | `cb2e535` |
 | B5 | Corrigido antes (`CREDITOS.md` e `public/licencas.txt`) | — |
 | B6 | Sem mudança de código (procedimento) | — |
 | B7 | Depende do Kauê (conta do Gem com a Atividade desligada) | — |
@@ -392,7 +392,7 @@ Não mexi em nada disso. Para cada item, diga se quer que eu acompanhe passo a p
 1. **GoatCounter:** em https://projetocomunidade.goatcounter.com → **Settings → Data collection**, escolher o que coletar (M4). Confirmar que o painel não está público e que a conta tem senha forte.
 2. **Gmail do projeto:** confirmar a verificação em duas etapas (Conta Google → **Segurança**), já pedida em `docs/onda-1.md` 8.2. Essa caixa guarda todas as denúncias.
 3. **Gemini:** confirmar em qual conta o Gem está e que a Atividade está desligada nela (B7).
-4. **GitHub:** Dependabot e regra da `main` (B4). Desligar o Pages do `auxiliar-ia`, se não for usado (M9).
+4. **GitHub:** ~~Dependabot e regra da `main` (B4)~~ feito em 06/11/2026. Desligar o Pages do `auxiliar-ia`, se não for usado (M9).
 
 ## Ordem sugerida para a Sessão 7
 
