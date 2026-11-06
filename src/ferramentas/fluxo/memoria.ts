@@ -2,6 +2,7 @@
 // os passos e a voltar ao início, e some ao fechar ou recarregar a aba. Proibido guardar em localStorage,
 // sessionStorage, IndexedDB, cookie ou no endereço (pasta.test.ts confere a pasta toda).
 
+import { VOLTA_DO_RODIZIO } from '../cards/exemplos';
 import type { Logo } from '../cards/logo';
 import { convocacaoVazia } from '../reuniao/convocacao';
 import { rascunho } from '../reuniao/rascunho';
@@ -10,8 +11,8 @@ import { exemploDoFluxo, PERGUNTA_DA_TROCA_DO_RASCUNHO, type DadosDoFluxo, type 
 const porTipo = new Map<Tipo, DadosDoFluxo>();
 let logo: Logo | undefined;
 
-// Rodízio dos exemplos: começa num tipo de organização ao acaso e anda um a cada exemplo novo.
-let proximo = Math.floor(Math.random() * 7);
+// Rodízio dos exemplos: começa num ponto ao acaso da volta (0 … VOLTA_DO_RODIZIO − 1) e anda um a cada exemplo novo.
+let proximo = Math.floor(Math.random() * VOLTA_DO_RODIZIO);
 
 /** Há dados deste tipo na memória desta aba (quem abre /3 ou /pronto direto, depois de recarregar, não tem)? */
 export const existe = (tipo: Tipo): boolean => porTipo.has(tipo);

@@ -9,7 +9,8 @@
 import { ehLinkDoEvento, MODELOS_DE_CARD, TAMANHO_MAXIMO, type DadosDoCard, type ModeloDeCard } from '../../comum/entreTelas';
 import { linkPara, type Rota } from '../../comum/rotas';
 import { letras } from '../../comum/texto';
-import { exemplo, ORGANIZACOES, proximoSabado, QUANTOS_EXEMPLOS } from '../cards/exemplos';
+import { citaOrgaoPublico } from '../../comum/conteudo';
+import { exemplo, ORGANIZACOES, proximoSabado } from '../cards/exemplos';
 import { aplicarLimites, FORMATOS, type CamposDoCard, type Formato } from '../cards/modelos';
 import { PALETAS } from '../cards/paletas';
 import { onde, quando } from '../cards/textos';
@@ -62,6 +63,17 @@ export interface DadosDoFluxo {
    * do arquivo, no endereço nem em armazenamento.
    */
   doExemplo?: CamposDoExemplo;
+  /**
+   * Dia e hora do exemplo de onde a pessoa partiu (só reunião e evento). Serve só para o lembrete "Confira o dia" no
+   * Pronto (lembreteDoDia). Fica na memória da aba e NUNCA entra no evento, na assinatura, no texto, no link, no
+   * endereço nem em armazenamento.
+   */
+  diaDoExemplo?: { data: string; hora: string };
+  /**
+   * Combinações campo + texto que a pessoa já confirmou que não falam em nome de órgão público (confirmarOrgao).
+   * Só na memória da aba; NUNCA entra no evento, na assinatura, no texto, no link nem no endereço.
+   */
+  orgaoConfirmado?: string[];
 }
 
 /** Os campos que o aviso do exemplo confere (dia e hora ficam de fora: são escolhas que a pessoa confirma). */
@@ -130,12 +142,13 @@ const PAUTAS: readonly string[][] = [
 ];
 
 /**
- * Exemplo pronto de um tipo. `indice` gira entre os tipos de organização (qualquer inteiro; dá a volta).
+ * Exemplo pronto de um tipo. `indice` é o índice cru do rodízio (qualquer inteiro; dá a volta): o tipo de organização
+ * e a pauta da reunião são `indice mod 7`; o nome da organização é decidido em cards/exemplos.ts.
  * Tudo fictício (cards/exemplos.ts). Nada de tela em branco.
  */
 export function exemploDoFluxo(tipo: ModeloDeCard, indice: number, hoje: Date = new Date()): DadosDoFluxo {
-  const n = ((Math.trunc(indice) % QUANTOS_EXEMPLOS) + QUANTOS_EXEMPLOS) % QUANTOS_EXEMPLOS;
-  const e = exemplo(tipo, n, hoje);
+  const n = ((Math.trunc(indice) % PAUTAS.length) + PAUTAS.length) % PAUTAS.length;
+  const e = exemplo(tipo, Math.trunc(indice), hoje);
   return {
     tipo,
     origem: 'exemplo',
@@ -150,6 +163,7 @@ export function exemploDoFluxo(tipo: ModeloDeCard, indice: number, hoje: Date = 
     ...APARENCIA_PADRAO,
     link: '',
     assinaturaDoLink: '',
+    ...(temAgenda(tipo) ? { diaDoExemplo: { data: e.data, hora: e.hora } } : {}),
     doExemplo: {
       titulo: e.titulo,
       organizacao: e.organizacao,
@@ -243,9 +257,9 @@ const textoDoEvento = (e: Pick<Evento, 'descricao'>): string => e.descricao.repl
 export function oQueFicouDeFora(e: Pick<Evento, 'fim' | 'descricao'>): string {
   const fim = !!e.fim;
   const descricao = letras(textoDoEvento(e)).length > LIMITES.texto;
-  if (fim && descricao) return 'A hora de fim e parte da descrição não cabem no card. Sem mudança, o link continua levando o evento inteiro.';
-  if (fim) return 'A hora de fim não cabe no card. Sem mudança, o link continua levando o evento inteiro.';
-  if (descricao) return 'Parte da descrição não cabe no card. Sem mudança, o link continua levando o evento inteiro.';
+  if (fim && descricao) return 'A hora de fim e parte da descrição não cabem na imagem. Sem mudança, o link continua levando o evento inteiro.';
+  if (fim) return 'A hora de fim não cabe na imagem. Sem mudança, o link continua levando o evento inteiro.';
+  if (descricao) return 'Parte da descrição não cabe na imagem. Sem mudança, o link continua levando o evento inteiro.';
   return '';
 }
 
@@ -349,6 +363,97 @@ export function apagarOPasso1(d: DadosDoFluxo): void {
 
 /** Nome do botão que esvazia os campos do passo 1. */
 export const rotuloDeApagar = (origem: Origem): string => (origem === 'exemplo' ? 'Apagar o exemplo' : 'Apagar tudo');
+
+/** Nome do botão que desfaz o "Apagar" (D7). */
+export const ROTULO_DESFAZER = 'Desfazer';
+
+/** O passo 1 como estava antes de apagar. Fica só com quem chamou (memória da aba); nada vai para armazenamento. */
+export interface CopiaDoPasso1 {
+  titulo: string;
+  organizacao: string;
+  texto: string;
+  pauta: string;
+  local: string;
+  origem: Origem;
+}
+
+export const copiaDoPasso1 = (d: DadosDoFluxo): CopiaDoPasso1 => ({
+  titulo: d.titulo,
+  organizacao: d.organizacao,
+  texto: d.texto,
+  pauta: d.pauta,
+  local: d.local,
+  origem: d.origem,
+});
+
+/** Desfaz apagarOPasso1: devolve os campos e a origem de antes. */
+export function devolverOPasso1(d: DadosDoFluxo, copia: CopiaDoPasso1): void {
+  d.titulo = copia.titulo;
+  d.organizacao = copia.organizacao;
+  d.texto = copia.texto;
+  d.pauta = copia.pauta;
+  d.local = copia.local;
+  d.origem = copia.origem;
+}
+
+// ---------- órgão público (D1) ----------
+
+export const PERGUNTA_DO_ORGAO =
+  'Este convite fala em nome de um órgão público? O site não é para comunicado oficial, e fingir ser órgão público é contra as regras.';
+
+/** O texto de cada campo que o passo confere (a pauta vira os itens, um por linha). */
+function textoDoCampo(d: DadosDoFluxo, campo: CampoDoFluxo): string {
+  if (campo === 'pauta') return itensDaPauta(d.pauta).join('\n');
+  if (campo === 'titulo' || campo === 'organizacao' || campo === 'texto' || campo === 'local') return d[campo].trim();
+  return '';
+}
+
+const chaveDoOrgao = (d: DadosDoFluxo, campo: CampoDoFluxo): string => `${campo}\u0000${textoDoCampo(d, campo)}`;
+
+/**
+ * Campos do passo que citam um órgão público (citaOrgaoPublico; só diz se cita, não barra), na ordem da tela.
+ * Passo 1: título, organização e texto (pauta, na reunião). Passo 2: local, só em reunião e evento.
+ */
+export function camposComOrgao(d: DadosDoFluxo, passo: 1 | 2): CampoDoFluxo[] {
+  const quais: CampoDoFluxo[] =
+    passo === 1 ? ['titulo', 'organizacao', d.tipo === 'reuniao' ? 'pauta' : 'texto'] : temAgenda(d.tipo) ? ['local'] : [];
+  return quais.filter((c) => citaOrgaoPublico(textoDoCampo(d, c)));
+}
+
+/** Há campo que cita órgão e ainda não foi confirmado com este mesmo texto? */
+export const precisaPerguntarDoOrgao = (d: DadosDoFluxo, passo: 1 | 2): boolean =>
+  camposComOrgao(d, passo).some((c) => !d.orgaoConfirmado?.includes(chaveDoOrgao(d, c)));
+
+/** A pessoa disse que o convite não é de órgão público: não pergunta de novo para estes textos. Texto novo, pergunta de novo. */
+export function confirmarOrgao(d: DadosDoFluxo, passo: 1 | 2): void {
+  const lista = (d.orgaoConfirmado ??= []);
+  for (const c of camposComOrgao(d, passo)) {
+    const chave = chaveDoOrgao(d, c);
+    if (!lista.includes(chave)) lista.push(chave);
+  }
+}
+
+// ---------- lembrete do dia (D4) ----------
+
+/**
+ * Reunião e evento com dia E hora ainda iguais aos do exemplo: "Confira o dia: sábado, 7 de novembro, às 19h."
+ * Senão, vazio. `hoje` só decide se o ano aparece (quando()).
+ */
+export function lembreteDoDia(d: DadosDoFluxo, hoje: Date = new Date()): string {
+  const ex = d.diaDoExemplo;
+  if (!temAgenda(d.tipo) || !ex || !ex.data || !ex.hora || d.data !== ex.data || d.hora !== ex.hora) return '';
+  const q = quando({ modelo: d.tipo, data: d.data, hora: d.hora }, hoje);
+  return q ? `Confira o dia: ${q}.` : '';
+}
+
+// ---------- dia que já passou (C-09) ----------
+
+export const AVISO_DIA_PASSADO = 'Esse dia já passou. Está certo?';
+
+/** O dia (AAAA-MM-DD) é antes de hoje, pela data local? Hoje não passou. Data inválida ou vazia: não. */
+export function diaJaPassou(iso: string, hoje: Date = new Date()): boolean {
+  return dataBr(iso) !== '' && iso < isoDe(hoje);
+}
 
 // ---------- endereços do fluxo ----------
 
@@ -501,9 +606,7 @@ export function errosDoPasso(d: DadosDoFluxo, passo: Passo): ErrosDoFluxo {
       if (!itens.length) e.pauta = 'escreva pelo menos um assunto na pauta.';
       else if (itens.length > LIMITES.itensDaPauta) e.pauta = `use no máximo ${LIMITES.itensDaPauta} itens.`;
       else if (itens.some((i) => letras(i).length > LIMITES.itemDaPauta)) e.pauta = `cada item pode ter até ${LIMITES.itemDaPauta} letras.`;
-      else if (letras(descricaoDaReuniao(d.pauta)).length > LIMITES.descricao) {
-        e.pauta = `a pauta ficou longa para o link: use até ${LIMITES.descricao} letras no total.`;
-      }
+      else if (letrasQueFaltamNaPauta(d.pauta) < 0) e.pauta = `a pauta ${passouLetras(-letrasQueFaltamNaPauta(d.pauta))} Encurte um assunto ou tire algum.`;
     } else if (letras(d.texto.trim()).length > LIMITES.texto) e.texto = `use no máximo ${LIMITES.texto} letras.`;
   }
   if (passo === 2) {
@@ -549,11 +652,6 @@ const cortar = (s: string, max: number) => {
   return l.length <= max ? s : `${l.slice(0, max - 1).join('').trimEnd()}…`;
 };
 
-/** Texto do card da reunião: "Pauta: a; b; c" (até o limite do card). */
-export function textoDaPautaNoCard(pauta: string): string {
-  return cortar(`Pauta: ${itensDaPauta(pauta).join('; ')}`, LIMITES.texto);
-}
-
 /** Campos que o motor do card desenha (cards/desenho.ts). */
 export function camposDoCard(d: DadosDoFluxo, link = ''): CamposDoCard {
   return aplicarLimites({
@@ -562,7 +660,8 @@ export function camposDoCard(d: DadosDoFluxo, link = ''): CamposDoCard {
     data: d.data,
     hora: temAgenda(d.tipo) ? d.hora : '',
     local: temAgenda(d.tipo) ? d.local.trim() : '',
-    texto: d.tipo === 'reuniao' ? textoDaPautaNoCard(d.pauta) : d.texto.trim(),
+    texto: d.tipo === 'reuniao' ? '' : d.texto.trim(),
+    ...(d.tipo === 'reuniao' ? { pauta: itensDaPauta(d.pauta) } : {}),
     organizacao: d.organizacao.trim(),
     link,
   });
@@ -571,6 +670,22 @@ export function camposDoCard(d: DadosDoFluxo, link = ''): CamposDoCard {
 /** A descrição do link da reunião: a pauta numerada, sem corte (o passo 1 barra o que passa do limite). */
 const descricaoDaReuniao = (pauta: string): string =>
   ['Pauta:', ...itensDaPauta(pauta).map((t, i) => `${i + 1}. ${t}`)].join('\n');
+
+/** Quantas letras ainda cabem na descrição do link com esta pauta (negativo: passou). */
+export const letrasQueFaltamNaPauta = (pauta: string): number => LIMITES.descricao - letras(descricaoDaReuniao(pauta)).length;
+
+const passouLetras = (n: number): string => (n === 1 ? 'passou 1 letra.' : `passou ${n} letras.`);
+
+/** Contador da pauta: vazio enquanto faltam mais de 50 letras; depois diz quantas faltam, o limite ou quantas passou. */
+export function avisoDasLetrasDaPauta(pauta: string): string {
+  const falta = letrasQueFaltamNaPauta(pauta);
+  if (falta > 50) return '';
+  if (falta > 1) return `Faltam ${falta} letras.`;
+  if (falta === 1) return 'Falta 1 letra.';
+  if (falta === 0) return 'Chegou no limite.';
+  const passou = passouLetras(-falta);
+  return passou.charAt(0).toUpperCase() + passou.slice(1);
+}
 
 /** Evento que vai no link (só reunião e evento). A descrição da reunião é a pauta numerada. */
 export function eventoDoFluxo(d: DadosDoFluxo): Record<keyof Evento, string> {
@@ -598,6 +713,16 @@ export const linkAindaVale = (d: DadosDoFluxo): boolean =>
 /** Tira asteriscos e sublinhados do texto digitado, para não quebrar o negrito do WhatsApp. */
 const semMarcas = (s: string) => s.replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();
 
+/** Como `semMarcas`, mas mantém as quebras de linha: no máximo uma linha em branco seguida, sem espaço nas pontas. */
+const semMarcasComLinhas = (s: string): string =>
+  s
+    .replace(/[*_~`]/g, '')
+    .split(/\r\n|[\r\n\u2028\u2029]/)
+    .map((l) => l.replace(/[^\S\r\n]+/g, ' ').trim())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
 /**
  * Texto que vai junto com a imagem no WhatsApp. Com dia e local (reunião e evento), leva o link do evento.
  * Reunião: pauta numerada, como na convocação de antes.
@@ -615,7 +740,7 @@ export function textoParaMandar(d: DadosDoFluxo, link = ''): string {
     const itens = itensDaPauta(d.pauta);
     if (itens.length) linhas.push('', '*Pauta*', ...itens.map((t, i) => `${i + 1}. ${semMarcas(t)}`));
   } else {
-    const texto = semMarcas(c.texto);
+    const texto = semMarcasComLinhas(c.texto);
     if (texto) linhas.push('', texto);
   }
   const org = semMarcas(c.organizacao);

@@ -3,6 +3,18 @@ import { lerRota } from '../../comum/rotas';
 import { validarEvento } from '../evento/validar';
 import {
   apagarOPasso1,
+  AVISO_DIA_PASSADO,
+  avisoDasLetrasDaPauta,
+  camposComOrgao,
+  confirmarOrgao,
+  copiaDoPasso1,
+  devolverOPasso1,
+  diaJaPassou,
+  lembreteDoDia,
+  letrasQueFaltamNaPauta,
+  PERGUNTA_DO_ORGAO,
+  precisaPerguntarDoOrgao,
+  ROTULO_DESFAZER,
   assinatura,
   atalhosDoDia,
   avisoDoExemplo,
@@ -61,6 +73,14 @@ describe('exemplos em rodízio', () => {
     expect(orgs.size).toBe(7);
     expect(exemploDoFluxo('evento', 7).organizacao).toBe(exemploDoFluxo('evento', 0).organizacao);
     expect(exemploDoFluxo('evento', -1).organizacao).toBe(exemploDoFluxo('evento', 6).organizacao);
+  });
+
+  it('usa o índice cru: a pauta gira a cada 7 e dá a volta, também para trás', () => {
+    const pauta = (i: number) => exemploDoFluxo('reuniao', i, QUINTA).pauta;
+    expect(pauta(7)).toBe(pauta(0));
+    expect(pauta(15)).toBe(pauta(1));
+    expect(pauta(-1)).toBe(pauta(6));
+    expect(new Set(Array.from({ length: 7 }, (_, i) => pauta(i))).size).toBe(7);
   });
 
   it('a reunião vem com pauta, um item por linha', () => {
@@ -173,10 +193,16 @@ describe('o que falta em cada passo', () => {
 });
 
 describe('o que sai', () => {
-  it('o card da reunião leva a pauta em uma linha', () => {
+  it('o card da reunião leva a pauta em itens, sem "Pauta:" nem número, e o texto vazio', () => {
     const c = camposDoCard(reuniao());
-    expect(c.texto).toBe('Pauta: Limpeza do córrego; Horário da coleta de lixo; Contas do ano');
+    expect(c.pauta).toEqual(['Limpeza do córrego', 'Horário da coleta de lixo', 'Contas do ano']);
+    expect(c.texto).toBe('');
     expect(c.modelo).toBe('reuniao');
+    expect(camposDoCard({ ...reuniao(), pauta: ' Um \n\n Dois ' }).pauta).toEqual(['Um', 'Dois']);
+  });
+
+  it('os outros tipos não levam pauta no card', () => {
+    expect(camposDoCard(exemploDoFluxo('evento', 0, QUINTA)).pauta).toBeUndefined();
   });
 
   it('aviso não leva hora nem local no card', () => {
@@ -210,9 +236,8 @@ describe('o que sai', () => {
 
   it('pauta que não cabe no link vira erro no campo Pauta, com a regra dita', () => {
     const muitos = Array.from({ length: 20 }, (_, i) => `Assunto comprido número ${i + 1} da pauta`).join('\n');
-    expect(errosDoPasso({ ...reuniao(), pauta: muitos }, 1).pauta).toBe(
-      'a pauta ficou longa para o link: use até 400 letras no total.',
-    );
+    expect(errosDoPasso({ ...reuniao(), pauta: muitos }, 1).pauta).toMatch(/^a pauta passou \d+ letras\. Encurte um assunto ou tire algum\.$/);
+    expect(errosDoPasso({ ...reuniao(), pauta: muitos }, 1).pauta).not.toMatch(/400/);
     expect(errosDoPasso(reuniao(), 1)).toEqual({});
   });
 
@@ -282,10 +307,10 @@ describe('dados que chegam de outra tela', () => {
   it('diz o que ficou de fora, só a parte que vale', () => {
     const longa = 'x'.repeat(200);
     expect(oQueFicouDeFora(ev)).toBe('');
-    expect(oQueFicouDeFora({ ...ev, fim: '20:00' })).toBe('A hora de fim não cabe no card. Sem mudança, o link continua levando o evento inteiro.');
-    expect(oQueFicouDeFora({ ...ev, descricao: longa })).toBe('Parte da descrição não cabe no card. Sem mudança, o link continua levando o evento inteiro.');
+    expect(oQueFicouDeFora({ ...ev, fim: '20:00' })).toBe('A hora de fim não cabe na imagem. Sem mudança, o link continua levando o evento inteiro.');
+    expect(oQueFicouDeFora({ ...ev, descricao: longa })).toBe('Parte da descrição não cabe na imagem. Sem mudança, o link continua levando o evento inteiro.');
     expect(oQueFicouDeFora({ ...ev, fim: '20:00', descricao: longa })).toBe(
-      'A hora de fim e parte da descrição não cabem no card. Sem mudança, o link continua levando o evento inteiro.',
+      'A hora de fim e parte da descrição não cabem na imagem. Sem mudança, o link continua levando o evento inteiro.',
     );
     expect(dadosDoEvento({ ...ev, fim: '20:00' }, link, BASE).ficouDeFora).toMatch(/hora de fim/);
   });
@@ -463,5 +488,240 @@ describe('passo pendente (endereço de passo aberto direto)', () => {
     expect(passoPendente(d, 2)).toBeNull();
     expect(passoPendente(d, 3)).toBe(2);
     expect(passoPendente(d, 'pronto')).toBe(2);
+  });
+});
+
+describe('contador de letras da pauta (A-02, B-19)', () => {
+  // "Pauta:" (6) + "\n1. " (4) por item + letras do item
+  const comFalta = (falta: number) => {
+    const total = 400 - 6 - 16 - falta; // 4 itens de até 120 letras
+    // palavras curtas: letra repetida sem parar seria barrada como "código comprido"
+    const item = (n: number) => `${'lua '.repeat(40).slice(0, n - 1)}a`;
+    return [0, 1, 2, 3].map((i) => item(Math.floor(total / 4) + (i < total % 4 ? 1 : 0))).join('\n');
+  };
+
+  it('conta o que falta para o limite da descrição do link', () => {
+    expect(letrasQueFaltamNaPauta('')).toBe(394);
+    expect(letrasQueFaltamNaPauta(comFalta(10))).toBe(10);
+    expect(letrasQueFaltamNaPauta(comFalta(0))).toBe(0);
+    expect(letrasQueFaltamNaPauta(comFalta(-3))).toBe(-3);
+  });
+
+  it('vazio enquanto faltam mais de 50; depois, quanto falta', () => {
+    expect(avisoDasLetrasDaPauta(comFalta(51))).toBe('');
+    expect(avisoDasLetrasDaPauta(comFalta(50))).toBe('Faltam 50 letras.');
+    expect(avisoDasLetrasDaPauta(comFalta(2))).toBe('Faltam 2 letras.');
+    expect(avisoDasLetrasDaPauta(comFalta(1))).toBe('Falta 1 letra.');
+  });
+
+  it('no limite e acima dele', () => {
+    expect(avisoDasLetrasDaPauta(comFalta(0))).toBe('Chegou no limite.');
+    expect(avisoDasLetrasDaPauta(comFalta(-1))).toBe('Passou 1 letra.');
+    expect(avisoDasLetrasDaPauta(comFalta(-7))).toBe('Passou 7 letras.');
+  });
+
+  it('o erro do passo 1 diz quantas letras passou, em minúscula e sem falar em 400', () => {
+    expect(errosDoPasso({ ...reuniao(), pauta: comFalta(-7) }, 1).pauta).toBe('a pauta passou 7 letras. Encurte um assunto ou tire algum.');
+    expect(errosDoPasso({ ...reuniao(), pauta: comFalta(-1) }, 1).pauta).toBe('a pauta passou 1 letra. Encurte um assunto ou tire algum.');
+    expect(errosDoPasso({ ...reuniao(), pauta: comFalta(0) }, 1).pauta).toBeUndefined();
+  });
+});
+
+describe('quebra de linha no texto livre (A-09)', () => {
+  const texto = (t: string) => textoParaMandar({ ...exemploDoFluxo('evento', 0, QUINTA), texto: t, organizacao: '' });
+
+  it('mantém a quebra de linha e os emojis', () => {
+    expect(texto('Venha com sua família 🙏\nTeremos roupas, livros e bolo 🎉😊')).toContain(
+      '\n\nVenha com sua família 🙏\nTeremos roupas, livros e bolo 🎉😊',
+    );
+  });
+
+  it('três linhas em branco seguidas viram uma só', () => {
+    const t = texto('Primeira parte\n\n\n\nSegunda parte');
+    expect(t).toContain('Primeira parte\n\nSegunda parte');
+    expect(t).not.toMatch(/\n\n\n/);
+  });
+
+  it('junta espaços e tabulações e tira os das pontas de cada linha', () => {
+    expect(texto('  Um   dois\t\ttrês  \r\n   quatro   ')).toContain('Um dois três\nquatro');
+  });
+
+  it('título, local e itens da pauta seguem numa linha só', () => {
+    const t = textoParaMandar({ ...exemploDoFluxo('evento', 0, QUINTA), titulo: 'Festa\nda   rua', local: 'Praça\nCentral' });
+    expect(t).toContain('*Festa da rua*');
+    expect(t).toContain('📍 Praça Central');
+    const r = textoParaMandar({ ...reuniao(), pauta: 'Um   assunto\nOutro' });
+    expect(r).toContain('1. Um assunto\n2. Outro');
+  });
+});
+
+describe('lembrete do dia (D4)', () => {
+  it('reunião e evento com o dia e a hora do exemplo: pede para conferir', () => {
+    expect(lembreteDoDia(exemploDoFluxo('evento', 0, QUINTA), QUINTA)).toBe('Confira o dia: sábado, 7 de novembro, às 9h30.');
+    expect(lembreteDoDia(exemploDoFluxo('reuniao', 0, QUINTA), QUINTA)).toBe('Confira o dia: sábado, 7 de novembro, às 19h.');
+  });
+
+  it('mudou o dia ou a hora: some', () => {
+    expect(lembreteDoDia({ ...exemploDoFluxo('evento', 0, QUINTA), data: '2026-11-14' }, QUINTA)).toBe('');
+    expect(lembreteDoDia({ ...exemploDoFluxo('evento', 0, QUINTA), hora: '10:00' }, QUINTA)).toBe('');
+  });
+
+  it('sem exemplo (aviso, ou dados sem a cópia) não há lembrete', () => {
+    expect(lembreteDoDia(exemploDoFluxo('aviso', 0, QUINTA), QUINTA)).toBe('');
+    const semExemplo = { ...exemploDoFluxo('evento', 0, QUINTA) };
+    delete semExemplo.diaDoExemplo;
+    expect(lembreteDoDia(semExemplo, QUINTA)).toBe('');
+  });
+
+  it('o dia do exemplo não sai em camposDoExemplo, evento, assinatura, texto nem card', () => {
+    const d = exemploDoFluxo('evento', 0, QUINTA);
+    expect(camposDoExemplo(d)).not.toContain('data');
+    expect(d.diaDoExemplo).toEqual({ data: '2026-11-07', hora: '09:30' });
+    const mudado = { ...d, data: '2026-12-01', hora: '08:00', diaDoExemplo: { data: '1999-01-02', hora: '03:04' } };
+    const saidas = [JSON.stringify(eventoDoFluxo(mudado)), assinatura(mudado), textoParaMandar(mudado), JSON.stringify(camposDoCard(mudado))].join('\n');
+    expect(saidas).not.toContain('1999');
+    expect(saidas).not.toContain('03:04');
+    expect(Object.keys(eventoDoFluxo(mudado)).sort()).toEqual(['data', 'descricao', 'fim', 'inicio', 'local', 'organizacao', 'titulo']);
+  });
+});
+
+describe('órgão público (D1)', () => {
+  const base = () => ({ ...exemploDoFluxo('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
+
+  it('a pergunta é a do plano', () => {
+    expect(PERGUNTA_DO_ORGAO).toBe(
+      'Este convite fala em nome de um órgão público? O site não é para comunicado oficial, e fingir ser órgão público é contra as regras.',
+    );
+  });
+
+  it('sem órgão citado, não pergunta', () => {
+    const d = { ...base(), titulo: 'Festa da rua', texto: 'Traga um prato' };
+    expect(camposComOrgao(d, 1)).toEqual([]);
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(false);
+    expect(precisaPerguntarDoOrgao(d, 2)).toBe(false);
+  });
+
+  it('passo 1: título, organização e texto; passo 2: só o local', () => {
+    const d = { ...base(), titulo: 'Reunião com a Prefeitura', organizacao: 'Secretaria de Obras', texto: 'Fala da Prefeitura', local: 'Prefeitura Regional' };
+    expect(camposComOrgao(d, 1)).toEqual(['titulo', 'organizacao', 'texto']);
+    expect(camposComOrgao(d, 2)).toEqual(['local']);
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(true);
+    expect(precisaPerguntarDoOrgao(d, 2)).toBe(true);
+  });
+
+  it('na reunião, o passo 1 olha a pauta e não o texto; aviso não tem local', () => {
+    const r = { ...exemploDoFluxo('reuniao', 0, QUINTA), pauta: 'Conversa com a Prefeitura\nContas' };
+    expect(camposComOrgao(r, 1)).toEqual(['pauta']);
+    const a = { ...exemploDoFluxo('aviso', 0, QUINTA), local: 'Prefeitura' };
+    expect(camposComOrgao(a, 2)).toEqual([]);
+  });
+
+  it('depois de confirmar, não pergunta de novo para o mesmo texto; texto novo que cita, pergunta', () => {
+    const d = { ...base(), titulo: 'Reunião com a Prefeitura', texto: 'Traga um prato' };
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(true);
+    confirmarOrgao(d, 1);
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(false);
+    confirmarOrgao(d, 1);
+    expect(d.orgaoConfirmado).toHaveLength(1);
+    d.titulo = 'Reunião com a Prefeitura de novo';
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(true);
+    d.titulo = 'Reunião com a Prefeitura';
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(false);
+    d.texto = 'A Prefeitura vai ouvir';
+    expect(precisaPerguntarDoOrgao(d, 1)).toBe(true);
+  });
+
+  it('confirmar o passo 1 não confirma o 2', () => {
+    const d = { ...base(), titulo: 'Reunião com a Prefeitura', local: 'Prefeitura Regional' };
+    confirmarOrgao(d, 1);
+    expect(precisaPerguntarDoOrgao(d, 2)).toBe(true);
+  });
+
+  it('vale para todo tipo e toda organização', () => {
+    for (const tipo of TIPOS) {
+      const d = { ...exemploDoFluxo(tipo, 3, QUINTA), titulo: 'Ofício da Secretaria de Saúde', organizacao: 'Coletivo cultural' };
+      expect(precisaPerguntarDoOrgao(d, 1), tipo).toBe(true);
+    }
+  });
+
+  it('o que foi confirmado nunca entra no evento, na assinatura, no texto, no card nem na convocação', () => {
+    const d = { ...base(), titulo: 'Reunião com a Prefeitura', texto: 'Traga um prato' };
+    const saidas = (x: DadosDoFluxo) => [
+      JSON.stringify(eventoDoFluxo(x)),
+      assinatura(x),
+      textoParaMandar(x, 'https://exemplo.test/#/evento/x'),
+      JSON.stringify(camposDoCard(x)),
+      JSON.stringify(convocacaoDoFluxo(x)),
+    ];
+    const antes = saidas(d);
+    confirmarOrgao(d, 1);
+    expect(d.orgaoConfirmado).toHaveLength(1);
+    expect(saidas(d)).toEqual(antes);
+    expect(saidas(d).join('\n')).not.toContain('orgaoConfirmado');
+  });
+});
+
+describe('Desfazer o apagar (D7)', () => {
+  it('o rótulo é "Desfazer"', () => expect(ROTULO_DESFAZER).toBe('Desfazer'));
+
+  it('devolve título, organização, texto, local e origem de antes do Apagar', () => {
+    const d = exemploDoFluxo('evento', 0, QUINTA);
+    const antes = structuredClone(d);
+    const copia = copiaDoPasso1(d);
+    apagarOPasso1(d);
+    marcarMudanca(d);
+    expect([d.titulo, d.organizacao, d.texto, d.local]).toEqual(['', '', '', '']);
+    expect(d.origem).toBe('pessoa');
+    devolverOPasso1(d, copia);
+    expect(d).toEqual(antes);
+  });
+
+  it('devolve a pauta da reunião', () => {
+    const d = reuniao();
+    const pauta = d.pauta;
+    const copia = copiaDoPasso1(d);
+    apagarOPasso1(d);
+    expect(d.pauta).toBe('');
+    devolverOPasso1(d, copia);
+    expect(d.pauta).toBe(pauta);
+  });
+
+  it('a cópia não muda se os dados mudarem depois', () => {
+    const d = reuniao();
+    const copia = copiaDoPasso1(d);
+    d.titulo = 'Outro';
+    expect(copia.titulo).not.toBe('Outro');
+  });
+});
+
+describe('dia que já passou (C-09)', () => {
+  it('antes de hoje passou; hoje e depois, não', () => {
+    expect(diaJaPassou('2026-11-04', QUINTA)).toBe(true);
+    expect(diaJaPassou('2026-11-05', QUINTA)).toBe(false);
+    expect(diaJaPassou('2026-11-06', QUINTA)).toBe(false);
+    expect(diaJaPassou('2025-12-31', QUINTA)).toBe(true);
+  });
+
+  it('usa a data local: hoje às 23h59 ainda não passou', () => {
+    expect(diaJaPassou('2026-11-05', new Date(2026, 10, 5, 23, 59))).toBe(false);
+    expect(diaJaPassou('2026-11-05', new Date(2026, 10, 6, 0, 1))).toBe(true);
+  });
+
+  it('vazio ou inválido não passou, e não bloqueia nada', () => {
+    expect(diaJaPassou('', QUINTA)).toBe(false);
+    expect(diaJaPassou('2026-02-31', QUINTA)).toBe(false);
+    expect(errosDoPasso({ ...reuniao(), data: '2020-01-01' }, 2)).toEqual({});
+  });
+
+  it('o aviso é o do plano', () => expect(AVISO_DIA_PASSADO).toBe('Esse dia já passou. Está certo?'));
+});
+
+describe('palavras da tela (D9)', () => {
+  it('o que ficou de fora fala em imagem, não em card', () => {
+    const e = { fim: '20:00', descricao: 'x'.repeat(500) };
+    for (const t of [oQueFicouDeFora(e), oQueFicouDeFora({ ...e, descricao: 'x' }), oQueFicouDeFora({ ...e, fim: '' })]) {
+      expect(t).toContain('na imagem');
+      expect(t).not.toMatch(/card/i);
+    }
   });
 });

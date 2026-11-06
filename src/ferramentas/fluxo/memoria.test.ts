@@ -59,3 +59,18 @@ describe('trocar o rascunho pelos dados de um link', () => {
     expect(PERGUNTA_DA_TROCA_DO_RASCUNHO).toBe('Trocar o que você estava fazendo pelos dados deste evento?');
   });
 });
+
+describe('rodízio dos exemplos (D6)', () => {
+  it('o começo é sorteado em 0 … VOLTA_DO_RODIZIO − 1 e anda um a cada exemplo novo', async () => {
+    const { VOLTA_DO_RODIZIO } = await import('../cards/exemplos');
+    for (const [sorteio, inicio] of [[0, 0], [0.999999, VOLTA_DO_RODIZIO - 1]] as const) {
+      vi.resetModules();
+      vi.spyOn(Math, 'random').mockReturnValue(sorteio);
+      const mem = await import('./memoria');
+      const est = await import('./estado');
+      vi.restoreAllMocks();
+      expect(mem.dadosDo('reuniao', HOJE).pauta).toBe(est.exemploDoFluxo('reuniao', inicio, HOJE).pauta);
+      expect(mem.dadosDo('evento', HOJE).organizacao).toBe(est.exemploDoFluxo('evento', inicio + 1, HOJE).organizacao);
+    }
+  });
+});
