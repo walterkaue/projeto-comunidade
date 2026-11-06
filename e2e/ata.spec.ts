@@ -20,11 +20,11 @@ test('ata: preencher, imprimir e apagar', async ({ page }) => {
   await expect(folha).toContainText('A festa será no dia 20.');
   await conferirTela(page, 'ata pronta');
 
-  await page.getByRole('button', { name: 'Imprimir ou salvar em PDF' }).click();
+  await page.getByRole('button', { name: 'Salvar em PDF' }).click();
   await expect.poll(() => page.evaluate(() => window.__impressoes)).toBe(1);
   await page.emulateMedia({ media: 'print' });
   await expect(folha).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Imprimir ou salvar em PDF' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Salvar em PDF' })).toBeHidden();
   await page.emulateMedia({ media: 'screen' });
 
   await page.getByRole('button', { name: 'Apagar a ata' }).click();

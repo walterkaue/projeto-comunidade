@@ -224,13 +224,13 @@ export const tela: Tela = (raiz) => {
     const e = a.encaminhamentos[i]!;
     const n = i + 1;
     const campo = (k: string, rotulo: string, tipo: string, valor: string, max = 120) =>
-      `<label class="campo-rotulo" for="ata-encaminhamentos-${i}-${k}">${rotulo} (encaminhamento ${n})</label>
+      `<label class="campo-rotulo" for="ata-encaminhamentos-${i}-${k}">${rotulo} (combinado ${n})</label>
       <input class="campo-entrada" type="${tipo}" autocomplete="off"${ATRIBUTOS_SEM_CORRETOR} id="ata-encaminhamentos-${i}-${k}" data-lista="encaminhamentos" data-i="${i}" data-k="${k}"${tipo === 'text' ? ` maxlength="${max}"` : ''} value="${esc(valor)}">`;
     return `<li class="item item-ponto">
       ${campo('oque', 'O quê', 'text', e.oque, 200)}
       ${campo('quem', 'Quem', 'text', e.quem)}
       ${campo('ate', 'Até quando', 'date', e.ate)}
-      <div class="item-botoes"><button type="button" class="botao botao-sec" id="encaminhamentos-${i}-tirar" data-acao="tirar" data-lista="encaminhamentos" data-i="${i}" aria-label="Tirar o encaminhamento ${n}">Tirar</button></div>
+      <div class="item-botoes"><button type="button" class="botao botao-sec" id="encaminhamentos-${i}-tirar" data-acao="tirar" data-lista="encaminhamentos" data-i="${i}" aria-label="Tirar o combinado ${n}">Tirar</button></div>
     </li>`;
   }
 
@@ -254,19 +254,19 @@ export const tela: Tela = (raiz) => {
       ${pontosDaPauta(rascunho.convocacao.pauta).length ? '<button type="button" class="botao botao-sec" data-acao="usar-pauta">Usar a pauta da reunião</button>' : ''}
       <ol class="reuniao-itens">${a.pontos.map((_, i) => pontoHtml(a, i)).join('')}</ol>
       <button type="button" class="botao botao-sec" id="acrescentar-pontos" data-acao="acrescentar" data-lista="pontos">Acrescentar ponto</button>
-      <h3>Encaminhamentos</h3>
-      <p class="campo-dica">O que ficou combinado: o quê, quem faz e até quando.</p>
+      <h3>O que ficou combinado</h3>
+      <p class="campo-dica">O quê, quem faz e até quando.</p>
       <ol class="reuniao-itens">${a.encaminhamentos.map((_, i) => encaminhamentoHtml(a, i)).join('')}</ol>
-      <button type="button" class="botao botao-sec" id="acrescentar-encaminhamentos" data-acao="acrescentar" data-lista="encaminhamentos">Acrescentar encaminhamento</button>
-      <h3>Guardar a ata</h3>
+      <button type="button" class="botao botao-sec" id="acrescentar-encaminhamentos" data-acao="acrescentar" data-lista="encaminhamentos">Acrescentar o que ficou combinado</button>
+      <h3>Salvar ou copiar a ata</h3>
       <div class="reuniao-botoes">
-        <button type="button" class="botao" data-acao="imprimir-ata">Imprimir ou salvar em PDF</button>
+        <button type="button" class="botao" data-acao="imprimir-ata">Salvar em PDF</button>
         <button type="button" class="botao botao-sec" data-acao="copiar-ata" aria-describedby="ata-nota-copiar">Copiar o texto</button>
         <button type="button" class="botao botao-sec" data-acao="ver-ata">Ver a ata pronta</button>
         <button type="button" class="botao botao-sec" data-acao="apagar-ata">Apagar a ata</button>
       </div>
       <p class="reuniao-nota" id="ata-nota-copiar">${AVISO_AO_COPIAR_A_ATA}</p>
-      <p class="reuniao-nota">No celular, em “Imprimir”, escolha “Salvar como PDF”.</p>
+      <p class="reuniao-nota">Vai abrir a janela de imprimir. Nela, escolha salvar em PDF.</p>
     </section>`;
   }
 

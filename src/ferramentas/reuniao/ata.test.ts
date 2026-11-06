@@ -77,7 +77,7 @@ describe('texto da ata', () => {
   });
   it('não mostra seções vazias', () => {
     const t2 = textoDaAta({ ...ataVazia(), organizacao: 'Grupo', data: '2026-11-12' });
-    expect(t2).not.toMatch(/PRESENTES|PAUTA E DECISÕES|ENCAMINHAMENTOS/);
+    expect(t2).not.toMatch(/PRESENTES|PAUTA E DECISÕES|O QUE FICOU COMBINADO/);
   });
 });
 
@@ -94,7 +94,13 @@ describe('HTML da ata', () => {
     expect(h).not.toMatch(/<img|<script|<b>|<i>|<u>/);
     expect(h).toContain('&lt;img src=x onerror=alert(1)&gt;');
   });
-  it('traz o aviso de modelo e a tabela de encaminhamentos', () => {
+  it('chama a lista de "O que ficou combinado", na ata pronta e no texto copiado', () => {
+    expect(htmlDaAta(ata)).toContain('<h3>O que ficou combinado</h3>');
+    expect(htmlDaAta(ata)).not.toMatch(/ncaminhamento/);
+    expect(textoDaAta(ata)).toContain('O QUE FICOU COMBINADO');
+    expect(textoDaAta(ata)).not.toMatch(/ncaminhamento/i);
+  });
+  it('traz o aviso de modelo e a tabela do que ficou combinado', () => {
     const h = htmlDaAta(ata);
     expect(h).toContain(AVISO_DO_MODELO);
     expect(h).toContain('<th scope="col">Até quando</th>');
