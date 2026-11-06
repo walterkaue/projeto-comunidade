@@ -1,5 +1,5 @@
 // Desenho do card nas telas do fluxo: o motor é o de sempre (cards/desenho.ts). Aqui ficam a espera pelas fontes,
-// o QR do cartaz e a miniatura fixa dos passos 1 e 2 com o botão "Ver maior".
+// o QR do cartaz, a miniatura fixa dos passos 1 e 2 e o diálogo "Ver a prévia maior" (passos 1, 2 e 3).
 
 import { matrizDoQr, type Matriz } from '../../comum/qr';
 import { nivelDoAparelho } from '../../comum/nivel';
@@ -58,13 +58,21 @@ export async function desenharCardEm(
 
 // ---------- miniatura dos passos 1 e 2 ----------
 
+/** Botão "Ver a prévia maior" (abre o diálogo de htmlDoDialogo). */
+export const BOTAO_VER_MAIOR = '<button type="button" class="botao botao-sec fluxo-ver" id="fluxo-ver-maior">Ver a prévia maior</button>';
+
 /** HTML da faixa fixa do topo e do diálogo "Ver a prévia maior". Textos fixos, nada digitado. */
 export function htmlDaMiniatura(): string {
   return `<div class="fluxo-mini">
       <canvas id="fluxo-mini-canvas" class="fluxo-mini-canvas" role="img" aria-label="Prévia do card"></canvas>
-      <button type="button" class="botao botao-sec fluxo-ver" id="fluxo-ver-maior">Ver a prévia maior</button>
+      ${BOTAO_VER_MAIOR}
     </div>
-    <dialog class="fluxo-dialogo" id="fluxo-dialogo" aria-labelledby="fluxo-dialogo-titulo">
+    ${htmlDoDialogo()}`;
+}
+
+/** HTML do diálogo "Como está ficando". Textos fixos, nada digitado. */
+export function htmlDoDialogo(): string {
+  return `<dialog class="fluxo-dialogo" id="fluxo-dialogo" aria-labelledby="fluxo-dialogo-titulo">
       <h2 id="fluxo-dialogo-titulo">Como está ficando</h2>
       <canvas id="fluxo-dialogo-canvas" class="fluxo-dialogo-canvas" role="img" aria-label="Prévia grande do card"></canvas>
       <button type="button" class="botao" id="fluxo-fechar">Fechar a prévia</button>
@@ -77,13 +85,35 @@ export interface Miniatura {
   limpar(): void;
 }
 
-/** Liga a miniatura e o diálogo que `htmlDaMiniatura` desenhou em `raiz`. */
-export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Miniatura {
+/**
+ * Liga o botão "Ver a prévia maior" ao diálogo de `htmlDoDialogo` em `raiz`. `desenharGrande` desenha no canvas
+ * do diálogo depois de abrir. Devolve a função que fecha o diálogo (para a limpeza da tela).
+ */
+export function ligarDialogo(raiz: HTMLElement, desenharGrande: (alvo: HTMLCanvasElement) => void): () => void {
   const q = <T extends HTMLElement>(id: string) => raiz.querySelector<T>(`[id="${id}"]`)!;
-  const canvas = q<HTMLCanvasElement>('fluxo-mini-canvas');
   const botao = q<HTMLButtonElement>('fluxo-ver-maior');
   const dialogo = q<HTMLDialogElement>('fluxo-dialogo');
   const grande = q<HTMLCanvasElement>('fluxo-dialogo-canvas');
+  botao.addEventListener('click', () => {
+    if (typeof dialogo.showModal === 'function') dialogo.showModal();
+    else dialogo.setAttribute('open', '');
+    desenharGrande(grande);
+  });
+  q<HTMLButtonElement>('fluxo-fechar').addEventListener('click', () => {
+    if (typeof dialogo.close === 'function') dialogo.close();
+    else dialogo.removeAttribute('open');
+    botao.focus();
+  });
+  // Esc também fecha: o foco volta ao botão que abriu.
+  dialogo.addEventListener('close', () => botao.focus());
+  return () => {
+    if (dialogo.open && typeof dialogo.close === 'function') dialogo.close();
+  };
+}
+
+/** Liga a miniatura e o diálogo que `htmlDaMiniatura` desenhou em `raiz`. */
+export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Miniatura {
+  const canvas = raiz.querySelector<HTMLCanvasElement>('[id="fluxo-mini-canvas"]')!;
   const nivel = nivelDoAparelho();
 
   let token = 0;
@@ -99,21 +129,12 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
   }
   const agendador = criarAgendador(esperaDoRedesenho(nivel), () => void desenhar());
 
-  botao.addEventListener('click', () => {
-    if (typeof dialogo.showModal === 'function') dialogo.showModal();
-    else dialogo.setAttribute('open', '');
+  const fecharDialogo = ligarDialogo(raiz, (grande) => {
     const d = obter();
     desenharCardEm(grande, d, d.formato, escalaDoFormato(d.formato, nivel), '')
       .then(() => grande.setAttribute('aria-label', descricaoDaImagem(d, d.formato)))
       .catch(() => undefined);
   });
-  q<HTMLButtonElement>('fluxo-fechar').addEventListener('click', () => {
-    if (typeof dialogo.close === 'function') dialogo.close();
-    else dialogo.removeAttribute('open');
-    botao.focus();
-  });
-  // Esc também fecha: o foco volta ao botão que abriu.
-  dialogo.addEventListener('close', () => botao.focus());
 
   void desenhar();
 
@@ -122,12 +143,15 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
     limpar() {
       token++;
       agendador.cancelar();
-      if (dialogo.open && typeof dialogo.close === 'function') dialogo.close();
+      fecharDialogo();
     },
   };
 }
 
 // ---------- altura das faixas fixas ----------
+
+/** Parte da altura da tela que a miniatura e a barra fixas podem ocupar juntas antes de soltar. */
+const LIMITE_DAS_FAIXAS = 0.4;
 
 /**
  * Mede a miniatura e a barra fixa (a altura muda com o tamanho do texto e com a quebra dos botões) e grava em
@@ -146,6 +170,9 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
       const recuo = Math.max(0, parseFloat(getComputedStyle(barra).paddingBottom) - 0.75 * rem) || 0;
       html.style.setProperty('--altura-barra', `${Math.max(0, barra.offsetHeight - recuo)}px`);
     }
+    // Texto grande: se as faixas fixas comerem mais de 40% da tela, elas soltam (rolam com a página).
+    const fixas = (mini?.offsetHeight ?? 0) + (barra?.offsetHeight ?? 0);
+    html.classList.toggle('fluxo-faixas-soltas', fixas > LIMITE_DAS_FAIXAS * window.innerHeight);
   };
   let obs: ResizeObserver | undefined;
   if (typeof ResizeObserver === 'function') {
@@ -213,6 +240,7 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
     timerDaSaida = setTimeout(atualizarTeclado, 100);
   };
   const aoRedimensionar = (): void => {
+    medir();
     atualizarTeclado();
     if (campoEmFoco()) mostrarCampo();
   };
@@ -230,7 +258,7 @@ export function medirFaixasFixas(raiz: HTMLElement): () => void {
     document.removeEventListener('focusout', aoSairDoFoco);
     vv?.removeEventListener('resize', aoRedimensionar);
     window.removeEventListener('resize', aoRedimensionar);
-    html.classList.remove('fluxo-teclado');
+    html.classList.remove('fluxo-teclado', 'fluxo-faixas-soltas');
     html.style.removeProperty('--altura-mini');
     html.style.removeProperty('--altura-barra');
   };

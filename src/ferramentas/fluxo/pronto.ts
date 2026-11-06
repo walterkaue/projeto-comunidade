@@ -1,4 +1,5 @@
-// Tela "Pronto" (#/fazer/<tipo>/pronto): um botão principal (imagem + texto no WhatsApp), as outras saídas
+// Tela "Pronto" (#/fazer/<tipo>/pronto): um botão principal (imagem + texto no WhatsApp), logo abaixo do título e
+// do aviso do exemplo (cabe na primeira tela de 360 × 640), depois a prévia, as outras saídas
 // (baixar, copiar, imprimir cartaz), "Mudar algo", "Fazer outro" e, na reunião, a ponte para a ata.
 // Nada daqui vai para link nem armazenamento; o único link com dados é o do evento (link.ts).
 
@@ -49,15 +50,16 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
     <h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">: </span><span class="fluxo-pronto-titulo">Pronto!</span></h1>
     ${d.origem === 'link' ? `<p class="fluxo-nota">${esc(NOTA_DO_LINK)}</p>` : ''}
-    ${aviso ? `<p class="fluxo-nota" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
-    <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
-    <a class="botao botao-sec" id="fluxo-regras" href="${esc(linkPara('regras'))}" hidden>Ver as Regras de uso</a>
-    <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
-    <p class="fluxo-estado" id="fluxo-estado"></p>
+    ${aviso ? `<p class="fluxo-nota fluxo-nota-curta" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
 
-    <button type="button" class="botao" id="fluxo-mandar" aria-describedby="${esc(idsDaDescricao(!!aviso, 'fluxo-mandar-dica'))}">Mandar no WhatsApp</button>
+    <button type="button" class="botao fluxo-mandar" id="fluxo-mandar" aria-describedby="${esc(idsDaDescricao(!!aviso, 'fluxo-mandar-dica'))}">Mandar no WhatsApp</button>
     <p class="campo-dica" id="fluxo-mandar-dica">Abre o menu do celular. Escolha o WhatsApp e a conversa.</p>
     <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(fraseDoLinkNoPronto(d))}</p>
+    <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
+    <a class="botao botao-sec" id="fluxo-regras" href="${esc(linkPara('regras'))}" hidden>Ver as Regras de uso</a>
+
+    <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
+    <p class="fluxo-estado" id="fluxo-estado"></p>
 
     <div class="fluxo-saidas">
       <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>
@@ -83,7 +85,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       d.tipo === 'reuniao'
         ? `<section class="fluxo-ata" aria-labelledby="fluxo-ata-titulo">
       <h2 id="fluxo-ata-titulo">E depois da reunião?</h2>
-      <button type="button" class="botao" id="fluxo-ata">Fazer a ata</button>
+      <button type="button" class="botao botao-sec" id="fluxo-ata">Fazer a ata</button>
       <p class="campo-dica">A ata já começa com a pauta. Ela fica só neste aparelho.</p>
     </section>`
         : ''

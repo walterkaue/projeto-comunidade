@@ -20,3 +20,4 @@ npm run e2e                       # faz o build, serve em localhost:4173 e roda 
 | `evento.spec.ts` | Página do evento, "Fazer o card" e "Criar outro" devolvendo o mesmo link, link removido com o motivo, denúncia com a revisão |
 | `ata.spec.ts` | Preencher, imprimir e apagar a ata |
 | `offline.spec.ts` | Sem rede depois da primeira visita: início, fluxo e ata |
+| `primeira-tela.spec.ts` | Nas cinco portas, em 360 × 640: o campo do título (passo 1), "Onde vai mandar?" e a cor (passo 3) e o "Mandar no WhatsApp" (Pronto) aparecem sem rolar; prévia do passo 3 com no máximo 40% da altura e "Ver a prévia maior"; só o "Mandar no WhatsApp" é escuro. Com texto a 200%, cada um fica inteiro à vista ao rolar até ele, sem faixa fixa por cima |

@@ -40,7 +40,7 @@ import {
 } from './apoio';
 import { logoAtual, trocarLogo } from './memoria';
 import { irAoPasso, voltarDoPasso } from './navegacao';
-import { desenharCardEm, htmlDaMiniatura, ligarMiniatura, medirFaixasFixas } from './previa';
+import { BOTAO_VER_MAIOR, desenharCardEm, htmlDaMiniatura, htmlDoDialogo, ligarDialogo, ligarMiniatura, medirFaixasFixas } from './previa';
 
 type PassoNumerado = 1 | 2 | 3;
 
@@ -51,9 +51,12 @@ const NOME_DO_PASSO = (d: DadosDoFluxo, passo: PassoNumerado): string =>
  * Título da tela: o verbo da porta, "Passo N de 3" e o nome do passo, tudo dentro do h1 (o leitor de tela lê
  * "Chamar para uma reunião. Passo 1 de 3: O quê"). Os separadores só aparecem para o leitor de tela.
  */
-function cabecalho(d: DadosDoFluxo, passo: PassoNumerado): string {
+function cabecalho(d: DadosDoFluxo, passo: PassoNumerado, aoLadoDaDica = ''): string {
   const { nota, dica } = notaEDicaDoPasso(d, passo);
-  const aviso = `${nota ? `<p class="fluxo-nota">${esc(nota)}</p>` : ''}${dica ? `<p class="fluxo-dica">${esc(dica)}</p>` : ''}`;
+  const htmlDaDica = dica ? `<p class="fluxo-dica">${esc(dica)}</p>` : '';
+  // Passo 1: a dica e "Apagar o exemplo" dividem a mesma linha (o primeiro campo cabe na primeira tela).
+  const linha = aoLadoDaDica ? `<div class="fluxo-dica-linha">${htmlDaDica}${aoLadoDaDica}</div>` : htmlDaDica;
+  const aviso = `${nota ? `<p class="fluxo-nota">${esc(nota)}</p>` : ''}${linha}`;
   return `<h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">. </span><span class="fluxo-passo">Passo ${passo} de 3</span><span class="fluxo-so-leitor">: </span><span class="fluxo-nome">${esc(NOME_DO_PASSO(d, passo))}</span></h1>
     ${aviso}`;
 }
@@ -80,7 +83,10 @@ export function montarPasso(raiz: HTMLElement, d: DadosDoFluxo, passo: PassoNume
 
 // ---------- passos 1 e 2 ----------
 
-/** Reunião: título, local e pauta vão no link do convite (avisa antes de a pessoa escrever; fica na ordem de leitura). */
+/**
+ * Reunião: título, local e pauta vão no link do convite. Fica num quadro logo acima da pauta (o título cabe na
+ * primeira tela) e também é lido junto com a pauta (aria-describedby), para quem pula de campo em campo.
+ */
 const AVISO_DO_LINK_DA_REUNIAO =
   'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.';
 const DICA_DO_LOCAL_DA_REUNIAO = 'Escreva o endereço como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
@@ -89,13 +95,12 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
-  const avisoDoLink = semCorretor ? `<p class="fluxo-dica">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
-      ` : '';
-  return `${avisoDoLink}${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
+  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
       ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
-          ? campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })
+          ? `<p class="fluxo-quadro" id="fluxo-aviso-do-link">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
+      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })}`
           : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, maximo: LIMITES.texto, linhas: 3 })
       }`;
 }
@@ -129,8 +134,7 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
 function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => void {
   raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
     ${htmlDaMiniatura()}
-    ${cabecalho(d, passo)}
-    ${passo === 1 ? `<p class="fluxo-apagar-linha"><button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button></p>` : ''}
+    ${cabecalho(d, passo, passo === 1 ? `<button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>` : '')}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
     </form>
@@ -141,6 +145,11 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   const form = q<HTMLFormElement>('fluxo-form');
   const entrada = (id: string) => q<HTMLInputElement | HTMLTextAreaElement>(id);
   const mini = ligarMiniatura(raiz, () => d);
+  // O aviso do link da reunião também descreve a pauta (antes da dica dela).
+  const pauta = raiz.querySelector<HTMLTextAreaElement>('[id="fluxo-pauta"]');
+  if (pauta && raiz.querySelector('[id="fluxo-aviso-do-link"]')) {
+    pauta.setAttribute('aria-describedby', `fluxo-aviso-do-link ${pauta.getAttribute('aria-describedby') ?? ''}`.trim());
+  }
   const medidas = medirFaixasFixas(raiz);
 
   const apagar = raiz.querySelector<HTMLButtonElement>('[id="fluxo-apagar"]');
@@ -282,8 +291,9 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     ${cabecalho(d, 3)}
     <section class="fluxo-previa" aria-label="Prévia">
       <p class="fluxo-estado" id="fluxo-estado"></p>
-      <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas></div>
+      <div class="fluxo-moldura fluxo-moldura-passo3"><canvas id="fluxo-canvas" role="img" aria-label="Prévia do card"></canvas>${BOTAO_VER_MAIOR}</div>
     </section>
+    ${htmlDoDialogo()}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       <fieldset class="campo campo-grupo" id="fluxo-formato">
         <legend class="campo-rotulo">Onde vai mandar?</legend>
@@ -327,6 +337,13 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const estado = q('fluxo-estado');
   const medidas = medirFaixasFixas(raiz);
   let vivo = true;
+  // A prévia daqui já é desenhada no tamanho de verdade (só a tela a reduz): o diálogo mostra uma cópia dela.
+  const fecharDialogo = ligarDialogo(raiz, (grande) => {
+    grande.width = canvas.width;
+    grande.height = canvas.height;
+    grande.getContext('2d')?.drawImage(canvas, 0, 0);
+    grande.setAttribute('aria-label', canvas.getAttribute('aria-label') ?? 'Prévia grande do card');
+  });
 
   // Mensagem importante: fica na tela e também vai pelo aviso falado (uma vez por mensagem nova).
   let ultimoEstado = '';
@@ -445,6 +462,7 @@ function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     token++;
     agendador.cancelar();
     falarACor.cancelar();
+    fecharDialogo();
     medidas();
   };
 }
