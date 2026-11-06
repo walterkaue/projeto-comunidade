@@ -1,0 +1,6 @@
+# Saídas da simulação B (fora do git). As fotos que provam achados vão para docs/auditoria/2026-11-06/fotos/.
+.fotos/
+.saidas/
+.resultados*/
+.relatorio/
+node_modules/

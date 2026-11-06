@@ -1,0 +1,11 @@
+{
+  "name": "sim-b-apoio",
+  "private": true,
+  "type": "module",
+  "description": "Só para a simulação B (ler o QR do PDF do cartaz). Nada daqui entra no site.",
+  "devDependencies": {
+    "jsqr": "^1.4.0",
+    "mupdf": "^1.28.1",
+    "pngjs": "^7.0.0"
+  }
+}

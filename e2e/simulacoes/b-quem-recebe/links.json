@@ -1,0 +1,62 @@
+{
+  "reuniao-sindicato": {
+    "tipo": "reuniao",
+    "titulo": "Assembleia da categoria",
+    "organizacao": "Sindicato da categoria",
+    "data": "21/11/2026",
+    "hora": "19:00",
+    "local": "Salão da sede, Rua das Flores, 120, Centro",
+    "dados": "1rWyJBc3NlbWJsZWlhIGRhIGNhdGVnb3JpYSIsIjIwMjYtMTEtMjEiLCIxOTowMCIsIiIsIlNhbMOjbyBkYSBzZWRlLCBSdWEgZGFzIEZsb3JlcywgMTIwLCBDZW50cm8iLCJQYXV0YTpcbjEuIFJlYWp1c3RlIGRvIGFub1xuMi4gUGxhbm8gZGUgc2HDumRlXG4zLiBJbmZvcm1lcyIsIlNpbmRpY2F0byBkYSBjYXRlZ29yaWEiXQ",
+    "caracteresDoLink": 279
+  },
+  "reuniao-moradores": {
+    "tipo": "reuniao",
+    "titulo": "Reunião da associação",
+    "organizacao": "Associação de Moradores do bairro",
+    "data": "14/11/2026",
+    "hora": "19:30",
+    "local": "Escola estadual do bairro, Rua 7, nº 1234",
+    "dados": "1rWyJSZXVuacOjbyBkYSBhc3NvY2lhw6fDo28iLCIyMDI2LTExLTE0IiwiMTk6MzAiLCIiLCJFc2NvbGEgZXN0YWR1YWwgZG8gYmFpcnJvLCBSdWEgNywgbsK6IDEyMzQiLCJQYXV0YTpcbjEuIEJ1cmFjb3MgZGEgcnVhIGRlIGJhaXhvXG4yLiBGZXN0YSBqdW5pbmFcbjMuIEluZm9ybWVzIiwiQXNzb2NpYcOnw6NvIGRlIE1vcmFkb3JlcyBkbyBiYWlycm8iXQ",
+    "caracteresDoLink": 303
+  },
+  "reuniao-longa": {
+    "tipo": "reuniao",
+    "titulo": "Assembleia geral ordinária",
+    "organizacao": "Associação de Moradores do bairro",
+    "data": "28/11/2026",
+    "hora": "19:00",
+    "local": "Salão comunitário, Av. Central, 500, fundos",
+    "dados": "1rWyJBc3NlbWJsZWlhIGdlcmFsIG9yZGluw6FyaWEiLCIyMDI2LTExLTI4IiwiMTk6MDAiLCIiLCJTYWzDo28gY29tdW5pdMOhcmlvLCBBdi4gQ2VudHJhbCwgNTAwLCBmdW5kb3MiLCJQYXV0YTpcbjEuIEFiZXJ0dXJhIGUgbGVpdHVyYSBkYSBwYXV0YVxuMi4gUHJlc3Rhw6fDo28gZGUgY29udGFzIGRvIHNlbWVzdHJlXG4zLiBSZWZvcm1hIGRvIHNhbMOjbzogb3LDp2FtZW50b3MgcmVjZWJpZG9zXG40LiBDYWxlbmTDoXJpbyBkZSBtdXRpcsO1ZXMgYXTDqSBvIGZpbSBkbyBhbm9cbjUuIEZlc3RhIGRlIGZpbSBkZSBhbm86IGNvbWlzc8OjbyBlIGRhdGFcbjYuIEhvcnRhIGNvbXVuaXTDoXJpYTogZGl2aXPDo28gZG9zIGNhbnRlaXJvc1xuNy4gU2VndXJhbsOnYSBuYSBzYcOtZGEgZGEgZXNjb2xhIMOgIG5vaXRlXG44LiBJbHVtaW5hw6fDo28gZGEgcHJhw6dhIGUgcGVkaWRvIMOgIHByZWZlaXR1cmFcbjkuIEVsZWnDp8OjbyBkYSBub3ZhIGNvb3JkZW5hw6fDo29cbjEwLiBJbmZvcm1lcyBnZXJhaXNcbjExLiBFbmNlcnJhbWVudG8iLCJBc3NvY2lhw6fDo28gZGUgTW9yYWRvcmVzIGRvIGJhaXJybyJd",
+    "caracteresDoLink": 793
+  },
+  "evento-sp-19h": {
+    "tipo": "evento",
+    "titulo": "Sarau na praça",
+    "organizacao": "Coletivo cultural do bairro",
+    "data": "21/11/2026",
+    "hora": "19:00",
+    "local": "Praça da Matriz, São Paulo, SP",
+    "dados": "1rWyJTYXJhdSBuYSBwcmHDp2EiLCIyMDI2LTExLTIxIiwiMTk6MDAiLCIiLCJQcmHDp2EgZGEgTWF0cml6LCBTw6NvIFBhdWxvLCBTUCIsIk3DunNpY2EsIHBvZXNpYSBlIHJvZGEgZGUgY29udmVyc2EuIFRyYWdhIHN1YSBjYWRlaXJhLiIsIkNvbGV0aXZvIGN1bHR1cmFsIGRvIGJhaXJybyJd",
+    "caracteresDoLink": 253
+  },
+  "evento-mutirao": {
+    "tipo": "evento",
+    "titulo": "Mutirão de limpeza do córrego",
+    "organizacao": "Grupo da horta comunitária",
+    "data": "15/11/2026",
+    "hora": "08:00",
+    "local": "Rua do Córrego, 45",
+    "dados": "1rWyJNdXRpcsOjbyBkZSBsaW1wZXphIGRvIGPDs3JyZWdvIiwiMjAyNi0xMS0xNSIsIjA4OjAwIiwiIiwiUnVhIGRvIEPDs3JyZWdvLCA0NSIsIkxldmUgbHV2YSBlIGdhcnJhZmEgZGUgw6FndWEuIFNhw61kYSBlbSBmcmVudGUgw6AgcGFkYXJpYS4iLCJHcnVwbyBkYSBob3J0YSBjb211bml0w6FyaWEiXQ",
+    "caracteresDoLink": 263
+  },
+  "evento-bazar": {
+    "tipo": "evento",
+    "titulo": "Bazar beneficente",
+    "organizacao": "Grupo de mães da escola",
+    "data": "22/11/2026",
+    "hora": "09:00",
+    "local": "Pátio da escola municipal, Rua da Paz, 300",
+    "dados": "1rWyJCYXphciBiZW5lZmljZW50ZSIsIjIwMjYtMTEtMjIiLCIwOTowMCIsIiIsIlDDoXRpbyBkYSBlc2NvbGEgbXVuaWNpcGFsLCBSdWEgZGEgUGF6LCAzMDAiLCJSb3VwYXMsIGxpdnJvcyBlIGJyaW5xdWVkb3MgYSBwcmXDp28gYmFpeG8uIiwiR3J1cG8gZGUgbcOjZXMgZGEgZXNjb2xhIl0",
+    "caracteresDoLink": 252
+  }
+}
