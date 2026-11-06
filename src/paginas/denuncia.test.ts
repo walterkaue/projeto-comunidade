@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { EMAIL_CONTATO } from '../comum/marca';
 import { urlSegura } from '../comum/html';
-import { corpoDaDenuncia, gmailDeDenuncia, mailtoDeDenuncia, textoParaCopiar, validarDenuncia, type Denuncia } from './denuncia';
+import {
+  corpoDaDenuncia,
+  gmailDeDenuncia,
+  MAILTO_SEGURO,
+  mailtoDeDenuncia,
+  mailtoPodeCortar,
+  textoParaCopiar,
+  validarDenuncia,
+  type Denuncia,
+} from './denuncia';
 
 const link = 'https://walterkaue.github.io/projeto-comunidade/#/evento/abc123';
 const comLink: Denuncia = { link, onde: '', tipo: 'golpe', descricao: 'Pede a senha do banco para dar a cesta.' };
@@ -76,5 +85,26 @@ describe('texto com metade de emoji', () => {
     const d = { ...semLink, descricao: 'Texto com emoji partido \uD83D no meio, mais texto.' };
     expect(() => mailtoDeDenuncia(d)).not.toThrow();
     expect(() => gmailDeDenuncia(d)).not.toThrow();
+  });
+});
+
+// Auditoria de segurança, 05/11/2026, B8: alguns aplicativos de e-mail cortam "mailto:" perto de 2.000 caracteres.
+describe('link comprido demais para o aplicativo de e-mail', () => {
+  const site = 'https://walterkaue.github.io/projeto-comunidade/#/evento/1r';
+  const denuncia = (n: number): Denuncia => ({ link: site + 'A'.repeat(n), onde: '', tipo: 'golpe', descricao: 'Pede PIX.' });
+
+  it('link curto: o aplicativo de e-mail serve', () => {
+    expect(mailtoPodeCortar(denuncia(200))).toBe(false);
+  });
+
+  it('link acima de cerca de 1.800 caracteres: recomenda Gmail ou copiar', () => {
+    expect(mailtoPodeCortar(denuncia(MAILTO_SEGURO))).toBe(true);
+    expect(mailtoPodeCortar(denuncia(3900))).toBe(true);
+  });
+
+  it('conta o e-mail inteiro, não só o link', () => {
+    const d = denuncia(1500);
+    expect(d.link.length).toBeLessThan(MAILTO_SEGURO);
+    expect(mailtoPodeCortar({ ...d, descricao: 'ç'.repeat(100) })).toBe(true);
   });
 });

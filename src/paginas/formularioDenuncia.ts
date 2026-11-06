@@ -10,6 +10,7 @@ import {
   TIPOS_DE_PROBLEMA,
   gmailDeDenuncia,
   mailtoDeDenuncia,
+  mailtoPodeCortar,
   textoParaCopiar,
   validarDenuncia,
   type Denuncia,
@@ -64,12 +65,33 @@ function htmlDaRevisao(d: Denuncia): string {
       <textarea class="campo-entrada campo-area" id="den-texto" rows="9" readonly>${esc(textoParaCopiar(d))}</textarea>
     </div>
     <h3>Escolha como enviar</h3>
-    <a class="botao" href="${esc(urlSegura(mailtoDeDenuncia(d)))}">Enviar pelo aplicativo de e-mail</a>
-    <a class="botao botao-sec" href="${esc(urlSegura(gmailDeDenuncia(d)))}" target="_blank" rel="noopener noreferrer" aria-label="Enviar pelo Gmail no navegador (abre outro site)">Enviar pelo Gmail no navegador</a>
+    ${mailtoPodeCortar(d) ? jeitosParaLinkComprido(d) : jeitosDeEnviar(d)}
+    <button type="button" class="botao botao-sec" data-corrigir>Corrigir</button>`;
+}
+
+const botaoDoAplicativo = (d: Denuncia, classe: string) =>
+  `<a class="${classe}" href="${esc(urlSegura(mailtoDeDenuncia(d)))}">Enviar pelo aplicativo de e-mail</a>`;
+const botaoDoGmail = (d: Denuncia, classe: string) =>
+  `<a class="${classe}" href="${esc(urlSegura(gmailDeDenuncia(d)))}" target="_blank" rel="noopener noreferrer" aria-label="Enviar pelo Gmail no navegador (abre outro site)">Enviar pelo Gmail no navegador</a>`;
+const NOTA_DO_GMAIL = '<p>No Gmail pelo navegador, o texto vai dentro do endereço da página e fica no histórico do navegador. Se preferir que não fique, copie o texto.</p>';
+const BOTAO_DE_COPIAR = '<button type="button" class="botao botao-sec" data-copiar-denuncia>Copiar o texto</button>';
+
+function jeitosDeEnviar(d: Denuncia): string {
+  return `${botaoDoAplicativo(d, 'botao')}
+    ${botaoDoGmail(d, 'botao botao-sec')}
     <p>No Gmail pelo navegador, o texto vai dentro do endereço da página e fica no histórico do navegador. Se preferir que não fique, use o aplicativo de e-mail ou copie o texto.</p>
     <p>Se nenhum dos dois abrir, copie o texto e mande de qualquer e-mail para <strong>${esc(EMAIL_CONTATO)}</strong>.</p>
-    <button type="button" class="botao botao-sec" data-copiar-denuncia>Copiar o texto</button>
-    <button type="button" class="botao botao-sec" data-corrigir>Corrigir</button>`;
+    ${BOTAO_DE_COPIAR}`;
+}
+
+/** Link comprido (auditoria de segurança, B8): o aplicativo de e-mail pode cortar. Gmail e copiar vêm antes. */
+function jeitosParaLinkComprido(d: Denuncia): string {
+  return `<p><strong>Este link é muito comprido.</strong> O aplicativo de e-mail pode cortar o link, e aí não dá para conferir a denúncia. Use "Enviar pelo Gmail no navegador" ou "Copiar o texto".</p>
+    ${botaoDoGmail(d, 'botao')}
+    ${NOTA_DO_GMAIL}
+    ${BOTAO_DE_COPIAR}
+    <p>Copiou? Mande de qualquer e-mail para <strong>${esc(EMAIL_CONTATO)}</strong>.</p>
+    ${botaoDoAplicativo(d, 'botao botao-sec')}`;
 }
 
 /** Liga o formulário: valida, mostra a revisão e os jeitos de enviar. */

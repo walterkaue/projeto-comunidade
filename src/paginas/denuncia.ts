@@ -74,6 +74,17 @@ export function mailtoDeDenuncia(d: Denuncia, email: string = EMAIL_CONTATO): st
   return `mailto:${email}?subject=${encodeURIComponent(ASSUNTO_DA_DENUNCIA)}&body=${encodeURIComponent(corpoDaDenuncia(d))}`;
 }
 
+/**
+ * Alguns aplicativos de e-mail (no Windows, perto de 2.000 caracteres) cortam um "mailto:" comprido, e a denúncia
+ * chegaria com o link incompleto (auditoria de segurança, B8). Acima disto, a revisão recomenda o Gmail ou copiar.
+ */
+export const MAILTO_SEGURO = 1800;
+
+/** O "mailto:" desta denúncia pode chegar cortado? */
+export function mailtoPodeCortar(d: Denuncia, email: string = EMAIL_CONTATO): boolean {
+  return d.link.length > MAILTO_SEGURO || mailtoDeDenuncia(d, email).length > MAILTO_SEGURO;
+}
+
 /** Gmail no navegador, já com destinatário, assunto e corpo (para quem não tem aplicativo de e-mail). */
 export function gmailDeDenuncia(d: Denuncia, email: string = EMAIL_CONTATO): string {
   const p = new URLSearchParams({ view: 'cm', fs: '1', to: email, su: ASSUNTO_DA_DENUNCIA, body: corpoDaDenuncia(d) });
