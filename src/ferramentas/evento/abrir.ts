@@ -33,7 +33,10 @@ const padrao: Dependencias = { bloqueado: (d) => motivoDoLinkBloqueado(d), ler: 
 /** Letras que podem sobrar no fim do link: "." ou " Obrigada!" sim; texto comprido ou contato, não. */
 export const SOBRA_MAXIMA = 40;
 
-/** O que colou depois dos dados é só resto de mensagem? Nunca texto comprido nem conteúdo que o evento recusa. */
+/**
+ * O que colou depois dos dados é só resto de mensagem? Nunca texto comprido, algarismo, @ (o filtro deixa
+ * passar alguns telefones disfarçados, e aqui não há por que aceitar número) nem conteúdo que o evento recusa.
+ */
 export function sobraAceitavel(sobra: string): boolean {
   if (!sobra) return true;
   let texto: string;
@@ -42,7 +45,7 @@ export function sobraAceitavel(sobra: string): boolean {
   } catch {
     return false;
   }
-  return Array.from(texto).length <= SOBRA_MAXIMA && motivoDeRecusa(texto) === null;
+  return Array.from(texto).length <= SOBRA_MAXIMA && !/[\p{N}@＠]/u.test(texto.normalize('NFKC')) && motivoDeRecusa(texto) === null;
 }
 
 export async function abrirEvento(dados: string, deps: Dependencias = padrao): Promise<Aberto> {

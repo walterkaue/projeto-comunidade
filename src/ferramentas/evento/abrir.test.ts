@@ -22,11 +22,15 @@ const sempre = (e: Evento): Evento => {
 };
 
 // Resto de mensagem colado no fim: abre.
-const INOFENSIVOS = ['.', ')', ',', '%20Obrigada!', '%0A', '?x=1', ' ', '.%20Valeu,%20at%C3%A9%20amanh%C3%A3!'];
+const INOFENSIVOS = ['.', ')', ',', '%20Obrigada!', '%0A', ' ', '.%20Valeu,%20at%C3%A9%20amanh%C3%A3!'];
 // Conteúdo que o evento não aceita, texto comprido ou escape quebrado: não abre, porque a página ainda repassa o
 // endereço inteiro no QR e no "Compartilhar" (revisão de privacidade de 06/11/2026).
 const COM_CONTEUDO = [
   '%20pix%2012345678909',
+  // Telefone que o filtro deixaria passar: na sobra, nenhum algarismo nem @.
+  '.%20Zap%2011%2098765%20--%204321',
+  '%20%40coletivo',
+  '?x=1',
   '.%20Chame%20no%20zap%2011%2098765-4321',
   '%20golpe.com',
   '%20Projeto%20Comunidade%20conferiu',

@@ -180,10 +180,14 @@ describe('recusa de conteúdo perigoso', () => {
     }
   });
 
-  it('o ponto sem espaço antes de "com" é o falso positivo conhecido, com a mensagem que explica', () => {
+  it('o ponto sem espaço antes de "com" é o falso positivo conhecido: a mensagem pede para tirar o endereço', () => {
+    // Sem a dica "coloque um espaço": ela ensinaria a escrever "golpe. Com" (revisão de 06/11/2026). Com outra
+    // palavra depois do ponto, a dica aparece ("Av.das Flores").
     const r = com({ descricao: 'Vamos.Com todos' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.erros.descricao).toMatch(/coloque um espaço/);
+    if (!r.ok) expect(r.erros.descricao).toMatch(/Tire o endereço\.$/);
+    const av = com({ local: 'Av.das Flores, 100' });
+    if (!av.ok) expect(av.erros.local).toMatch(/coloque um espaço/);
   });
 });
 

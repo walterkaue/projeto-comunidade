@@ -326,7 +326,6 @@ describe('B-10: site de outro dono, senha de atendimento e documento com foto', 
   passa([
     'Inscrições pelo site da escola',
     'Lançamento oficial do projeto da horta',
-    'Resultado oficial do site da escola',
     'Distribuição de senhas no Banco de Alimentos',
     'Banco de sangue: senha na recepção',
     'Passe na portaria com documento com foto',
@@ -390,18 +389,17 @@ describe('mensagens de recusa (WCAG 3.3.3)', () => {
     const casos: [string, string][] = [
       ['Das 19:30/21:00', 'Se for horário, escreva 19h30 às 21h.'],
       ['CEP 01234567', 'Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".'],
-      ['Contato: 10/11-15/11', 'Se for período, escreva "de 10/11 a 15/11".'],
+      ['Feira 10/11-15/11 2026', 'Se for período, escreva "de 10/11 a 15/11".'],
       ['Sarau @ praça da matriz', 'Se o @ quer dizer "em", escreva a palavra, como em "Sarau na praça".'],
       ['Distribuição de senhas no Banco do Brasil', 'troque a palavra senha por ficha, como em "Retire a ficha".'],
       ['Ficha (token) de entrada', 'troque a palavra token por ficha.'],
       ['Mande seu CPF', 'escreva "traga documento com foto".'],
       ['Pague R$ 20 na entrada', 'Se for preço, escreva só o valor, como em "Entrada: 10 reais".'],
       ['Pague pelo PicPay', 'o site não aceita a palavra PicPay'],
-      ['Mutirao-de-limpeza-da-praca-central-2026', 'Se é nome com hífens, separe com espaço'],
+      ['Mutirao-de-limpeza-da-praca-central-do-bairro', 'Se é nome com hífens, separe com espaço'],
       ['Conteúdo criado por quem enviou este link', 'o site já mostra o aviso no alto da página do evento.'],
-      ['Confirmado pelo site', 'diga de quem, como em "site da escola".'],
+      ['Inscrições pelo site', 'diga de quem, como em "site da escola".'],
       ['Av.das Flores, 100', 'coloque um espaço, como em "Av. das Flores".'],
-      ['Vamos.Com todos', 'coloque um espaço'],
       ['Idade < 12 anos', 'sinais de menor e maior (< >)'],
       ['Festa&nbsp;junina', 'como em "Pão e café".'],
       ['Ligue 11 91234-5678', 'escreva "fale com a organização pelo grupo".'],
@@ -454,7 +452,20 @@ describe('revisão de 06/11/2026: golpes que a mudança tinha soltado continuam 
       'Evento conferido no nosso site',
       'Evento aprovado na nossa plataforma',
     ]);
-    passa(['Evento aprovado pelo site da escola', 'Evento aprovado pela moderação da escola', 'Verificado pelo site da escola']);
+    // Dizer que um site, a plataforma ou a moderação conferiu conta com qualquer dono, como na main
+    // ("da casa" quer dizer "nosso"; segunda passada da revisão de privacidade).
+    recusa('plataforma', [
+      'Evento aprovado pelo site da escola',
+      'Evento aprovado pela moderação da escola',
+      'Verificado pelo site da escola',
+      'Resultado oficial do site da escola',
+      'Aprovado pelo site da casa',
+      'Conferido pela plataforma da rede',
+      'Verificado pelo site da casa',
+      'Ingresso garantido pela plataforma da casa',
+      'Evento aprovado pelo sistema da casa',
+    ]);
+    passa(['Inscrições pelo site da escola', 'Lançamento oficial do projeto da horta']);
     // Pedido de pagamento por site: barrado pela regra de pagamento, que vem antes.
     recusa('pix', ['Pague pelo site da plataforma', 'Pague pelo site do sistema', 'Pague pelo site do evento', 'Pague pelo site do projeto hoje']);
   });
@@ -505,6 +516,47 @@ describe('revisão de 06/11/2026: golpes que a mudança tinha soltado continuam 
   });
   describe('hashtag não esconde chave aleatória', () => {
     barra(['#deadbeef-1234-5678-9abc-def012345678']);
+  });
+  describe('segunda passada da revisão de privacidade', () => {
+    recusa('link', ['Acesse golpe. com', 'golpe. net', 'Veja golpe. br']);
+    passa(['Feira. Com todos', 'Chegou o dia. Venha cedo']);
+    recusa('dados', [
+      'Passe na sala virtual com documento',
+      'Passe na sala do Zoom com documento com foto',
+      'Passe na portaria virtual com documento',
+      'Passe na secretaria online com documento',
+      'Passe na sala do Telegram com documento',
+      'Passe na sede pelo e-mail com documento',
+    ]);
+    recusa('pix', [
+      'Doe pelo site da organização',
+      'Compre o ingresso pelo site da escola',
+      'Contribuição pelo site da associação',
+      'Pague no site da organização',
+      'Pagamento via site da escola',
+      'Pague através do site da organização',
+      'Pague pela página do evento',
+    ]);
+    recusa('plataforma', [
+      '🅿 Comunidade',
+      'Р Comunidade',
+      'p comunidade',
+      'p-comunidade',
+      'Р.Comunidade',
+      '🅿.Comunidade',
+      'Conteúdo criado por quem enviou',
+      'Criado por quem enviou o link. O site não confere.',
+    ]);
+    recusa('contato', ['Zap 11 98765 -- 4321', 'Ligue 11 98765 / / 4321']);
+    it('as dicas não ensinam a driblar', () => {
+      const m = (t: string) => mensagemDaRecusa(t, motivoDeRecusa(t)!);
+      expect(m('Aprovado pelo site')).not.toMatch(/diga de quem/);
+      for (const t of ['Acesse golpe.Com', 'Acesse golpe.Online', 'Acesse golpe.Net/abc', 'Vamos.Com todos']) expect(m(t), t).not.toMatch(/espaço/);
+      expect(m('Chave 7d9f2c1a-3b4e-4f6a-9c8d-1e2f3a4b5c6d')).not.toMatch(/hífens/);
+      expect(m('Fale: 11 9876:5432')).not.toMatch(/horário/);
+      expect(m('Fale: 11 23:45-23:59')).not.toMatch(/horário/);
+      expect(m('Contato: 10/11-15/11')).not.toMatch(/período/);
+    });
   });
   describe('conferência com a versão da main (roteiro do revisor de privacidade)', () => {
     recusa('pix', ['p\ni\nx', 'Pague pela plataforma da organização', 'Faça o pagamento pelo site da organização', 'Contribua pelo app da associação']);

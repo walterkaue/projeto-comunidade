@@ -84,7 +84,11 @@ const PAGAMENTO = [
   new RegExp(`${INICIO}(?:ag|cc)${FIM}${ENTRE}(?:\\d{3}|r\\$\\s*\\d)`, 'u'),
   // Pagamento por um site, de qualquer dono ("pague pela plataforma da organização"): o site de outro dono só
   // passa para inscrição e informação (B-10), nunca para pagamento.
-  new RegExp(`${INICIO}(?:pague|paguem|pagar|pagamento|pagamentos|deposite|transfira|contribua)${FIM}.{0,40}${INICIO}pel[oa]\\s+(?:site|plataforma|sistema|aplicativo|app)${FIM}`, 'u'),
+  new RegExp(
+    `${INICIO}(?:pague|paguem|pagar|pagamentos?|deposite|transfira|contribua|contribuicao|doe|doem|doacao|doacoes|compre|comprem|compra|venda|ingressos?\\s+pagos?)${FIM}` +
+      `.{0,40}${INICIO}(?:pel[oa]|n[oa]|via|atraves\\s+d[oa])\\s+(?:site|plataforma|sistema|aplicativo|app|pagina|portal)${FIM}`,
+    'u',
+  ),
   // "Doc" e "Ted" também são nome ("Mostra Doc 2026", "Festa do Ted 2026"; B-09): contam com valor em reais ou
   // número de 3+ algarismos ("TED de 200", "TED 12345-6"), menos quando o número é um ano.
   new RegExp(`${INICIO}(?:ted|doc)${FIM}${ENTRE}(?:r\\$\\s*\\d|(?!(?:19|20)\\d{2}(?!\\d))\\d{3})`, 'u'),
@@ -141,6 +145,29 @@ const NOME_COM_INICIAL =
         'u',
       )
     : null;
+// O mesmo sem ponto, em qualquer caixa, conferido no texto já sem disfarce ("p comunidade", "🅿 Comunidade",
+// "Р Comunidade" com Р cirílico, "p-comunidade"). Com "/" ou "." depois da letra, é "para" e passa.
+const NOME_COM_INICIAL_SEM_PONTO =
+  NOME_P.length > 1
+    ? new RegExp(`(?<![\\p{L}\\p{N}])${NOME_P[0]!.charAt(0)}(?:[^\\S\\n]+|[-_]+)?${NOME_P.slice(1).join(JUNTA)}(?![\\p{L}\\p{N}])`, 'u')
+    : null;
+// Texto sem disfarce mas com as maiúsculas: letras de enfeite viram maiúsculas, "Р" e "Ρ" (cirílico e grego)
+// viram "P", outras letras parecidas viram latinas e os acentos saem. Só para NOME_COM_INICIAL.
+const maiusculaDesde = (inicio: number) => (c: string) => String.fromCharCode(65 + c.codePointAt(0)! - inicio);
+function comCaixa(texto: string): string {
+  return texto
+    .normalize('NFKC')
+    .replace(IGNORAVEIS, '')
+    .replace(/[\u{1F1E6}-\u{1F1FF}]/gu, maiusculaDesde(0x1f1e6))
+    .replace(/[\u{1F110}-\u{1F129}]/gu, maiusculaDesde(0x1f110))
+    .replace(/[\u{1F130}-\u{1F149}]/gu, maiusculaDesde(0x1f130))
+    .replace(/[\u{1F150}-\u{1F169}]/gu, maiusculaDesde(0x1f150))
+    .replace(/[\u{1F170}-\u{1F189}]/gu, maiusculaDesde(0x1f170))
+    .replace(/[РΡ]/g, 'P')
+    .replace(/[Ͱ-ϿЀ-ӿɐ-ʯ]/g, (c) => PARECIDAS[c] ?? c)
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '');
+}
 // "Este site" depois de "do/da": o nome curto, o nome inteiro, palavras que falam do próprio site ou da página
 // do evento ("site da plataforma", "site do evento", "site da moderação") ou a primeira palavra do nome sem
 // "de/da/do" depois ("pelo site do projeto", "do projeto hoje"). "Projeto da horta" e "escola" são de outro dono.
@@ -152,28 +179,27 @@ const VERIFICOU = '(?:conferid|checad|aprovad|verificad|validad|certificad|homol
 
 const PLATAFORMA = [
   // "Oficial" e "verificado" sozinhos são comuns ("lançamento oficial da feira"): só contam ligados ao site
-  // ou ao próprio conteúdo ("evento verificado", "conteúdo oficial", "oficial do site"). "Oficial do projeto
-  // da horta" e "oficial do site da escola" falam de outro dono (B-10).
-  new RegExp(
-    `${ANTES}(?:oficia(?:l|is)|verificad[oa]s?)\\s+(?:d[oa]|pel[oa])\\s+(?:site|plataforma|sistema|${NOME_P[0] ?? 'projeto'})${DEPOIS}${DE_OUTRO}`,
-    'u',
-  ),
+  // ou ao próprio conteúdo ("evento verificado", "conteúdo oficial", "oficial do site"). Dizer que o site, a
+  // plataforma ou o sistema conferiu conta com qualquer dono ("verificado pelo site da casa" é imitar o site).
+  // Só "oficial do projeto da horta" fala de outro dono (B-10).
+  new RegExp(`${ANTES}(?:oficia(?:l|is)|verificad[oa]s?)\\s+(?:d[oa]|pel[oa])\\s+(?:site|plataforma|sistema)${DEPOIS}`, 'u'),
+  new RegExp(`${ANTES}verificad[oa]s?\\s+(?:d[oa]|pel[oa])\\s+${NOME_P[0] ?? 'projeto'}${DEPOIS}`, 'u'),
+  new RegExp(`${ANTES}oficia(?:l|is)\\s+(?:d[oa]|pel[oa])\\s+${NOME_P[0] ?? 'projeto'}${DEPOIS}${DE_OUTRO}`, 'u'),
   new RegExp(`${ANTES}(?:conteudo|evento|link|pagina|anuncio)s?\\s+(?:oficia(?:l|is)|verificad[oa]s?)${DEPOIS}`, 'u'),
-  new RegExp(
-    `${ANTES}(?:conferid|aprovad|validad|certificad|homologad|autorizad)[oa]s?\\s+(?:pel[oa]|por)\\s+(?:(?:site|plataforma|sistema)${DEPOIS}${DE_OUTRO}|projeto|ferramenta)`,
-    'u',
-  ),
+  new RegExp(`${ANTES}(?:conferid|aprovad|validad|certificad|homologad|autorizad)[oa]s?\\s+(?:pel[oa]|por)\\s+(?:site|plataforma|projeto|sistema|ferramenta)`, 'u'),
+  // "Pelo site" neutro: "Inscrições pelo site da escola" fala de outro dono e passa (B-10).
   new RegExp(`${ANTES}pel[oa]\\s+(?:site|plataforma)${DEPOIS}${DE_OUTRO}`, 'u'),
   // "Este evento foi conferido", "conteúdo checado", "evento aprovado" (B-07). "Evento aprovado em assembleia"
-  // e "aprovado pela diretoria" dizem quem aprovou e não é o site: passam.
+  // e "aprovado pela diretoria" dizem quem aprovou e não é o site: passam. "Em nosso site", "na plataforma da
+  // casa": se o site, a plataforma, o sistema ou a moderação aparece logo depois, conta.
   new RegExp(
     `${ANTES}(?:conteudo|evento|link|pagina|anuncio|convite)s?(?:\\s+(?:foi|foram|ja|esta|estao|e|sao|sera|serao|tambem|devidamente|totalmente|todo|todos)){0,3}\\s+${VERIFICOU}${DEPOIS}` +
-      // "em nosso site", "na nossa plataforma": até duas palavras antes do site ainda é o site.
-      String.raw`(?!\s+(?:pel[oa]s?|por|em|na|no|nas|nos|d[aeo]s?|durante|com)\s+(?!(?:\p{L}+\s+){0,2}(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS}${DE_OUTRO})\p{L})`,
+      String.raw`(?!\s+(?:pel[oa]s?|por|em|na|no|nas|nos|d[aeo]s?|durante|com)\s+(?!(?:\p{L}+\s+){0,2}(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS})\p{L})`,
     'u',
   ),
-  // "Checado pela equipe do site", "aprovado pela moderação" (B-07): quem conferiu é o site.
-  new RegExp(`${ANTES}${VERIFICOU}\\s+(?:pel[oa]s?|por)\\s+(?:\\p{L}+\\s+){0,3}(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS}${DE_OUTRO}`, 'u'),
+  // "Checado pela equipe do site", "aprovado pela moderação", "aprovado pelo site da casa" (B-07): quem
+  // conferiu é um site ou a moderação, de qualquer dono.
+  new RegExp(`${ANTES}${VERIFICOU}\\s+(?:pel[oa]s?|por|n[ao]s?|em)\\s+(?:\\p{L}+\\s+){0,3}(?:site|plataforma|sistema|moderacao|moderadores?)${DEPOIS}`, 'u'),
   new RegExp(`${ANTES}selo\\s+(?:de\\s+)?(?:verificacao|verificado)${DEPOIS}`, 'u'),
 ];
 
@@ -185,6 +211,9 @@ const FRASES_DO_SITE = new RegExp(
   `${ANTES}(?:` +
     [
       'criado por quem enviou este link',
+      'conteudo criado por quem',
+      'o site nao confere',
+      'o site nao guarda',
       'nao confere nem guarda',
       'nunca faca pagamento pedido por',
       'nunca faca pagamento nem',
@@ -203,7 +232,8 @@ const CURTO_SOZINHO = new RegExp(`^[^\\p{L}\\p{N}]*${CURTO_RE}[^\\p{L}\\p{N}]*$`
 
 function imitaPlataforma(t: string, texto: string): boolean {
   if (NOME_RE && NOME_EM_QUALQUER_LUGAR.test(t)) return true;
-  if (NOME_COM_INICIAL?.test(texto.normalize('NFKC').replace(IGNORAVEIS, ''))) return true;
+  if (NOME_COM_INICIAL_SEM_PONTO?.test(t)) return true;
+  if (NOME_COM_INICIAL?.test(comCaixa(texto))) return true;
   if (CURTO_RE && CURTO_SOZINHO.test(t)) return true;
   if (FRASES_DO_SITE.test(t.replace(/[^\p{L}\p{N}]+/gu, ' '))) return true;
   return PLATAFORMA.some((re) => re.test(t));
@@ -238,6 +268,8 @@ const MINIMO_DE_DIGITOS = 8;
 const SEQUENCIA = /\d(?:[^\p{L}\d\n]{0,3}\d)*/gu;
 // O mesmo, aceitando também "e"/"ou" entre os grupos ("Zap 98765 e 4321").
 const SEQUENCIA_COM_LIGACAO = /\d(?:[^\p{L}\d\n]{0,3}\d|\s+(?:e|ou|mais)\s+\d)*/gu;
+// Com palavra de contato, até 6 sinais entre os grupos também juntam ("Zap 11 98765 -- 4321").
+const SEQUENCIA_LARGA = /\d(?:[^\p{L}\d\n]{0,6}\d)*/gu;
 // Palavras de contato (sem acento, minúsculas). Com uma delas no texto, faixa de horário e lista em ordem voltam a
 // contar como número, e "e"/"ou" junta os grupos ("Fale: 11 98765 e 4321").
 const PALAVRA_DE_CONTATO =
@@ -294,6 +326,7 @@ function temNumeroLongo(texto: string, juntarLinhas = false): boolean {
     });
   if (!rigido) limpo = limpo.replace(LISTA, (l, i: number, s: string) => (ehListaEmOrdem(l) && !temNumeroDoLado(s, i, l.length) ? ' ' : l));
   for (const m of limpo.matchAll(SEQUENCIA)) if (contaDigitos(m[0]) >= MINIMO_DE_DIGITOS) return true;
+  if (rigido) for (const m of limpo.matchAll(SEQUENCIA_LARGA)) if (contaDigitos(m[0]) >= MINIMO_DE_DIGITOS) return true;
   // Com palavra de contato logo antes, "e"/"ou" também junta os grupos.
   for (const m of limpo.matchAll(SEQUENCIA_COM_LIGACAO)) {
     if (contaDigitos(m[0]) < MINIMO_DE_DIGITOS) continue;
@@ -365,8 +398,9 @@ const BANCO = String.raw`(?:banco(?!\s+d[eoa]s?\s+(?:alimentos?|sangue|leite|rou
 // Só vale para "passe/passem" + um lugar de uma lista fechada (portaria, recepção, secretaria...) + "com
 // documento", sem palavra de conversa no meio ("passe no meu pv com documento" conta) e sem outro dado depois.
 const LUGAR_DE_IR = '(?:portaria|recepcao|entrada|balcao|secretaria|guiche|sede|salao|biblioteca|escola|igreja|quadra|sala)';
-const CONVERSA = '(?:privado|pv|inbox|direct|dm|zap|zapzap|whats|whatsapp|chat|conversa|mensagem|telefone|celular|grupo)';
-const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em)\s+(?:(?:nossa|nosso|sua|seu)\s+)?${LUGAR_DE_IR}${F}(?![^\n]{0,40}${B}${CONVERSA}${F})[^\n]{0,40}?${B}com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo|selfie|rosto)${F}))`;
+const CONVERSA =
+  '(?:privado|pv|inbox|direct|dm|zap|zapzap|zapp|whats|whatsapp|wpp|chat|conversa|mensagem|telefone|celular|grupo|virtual|online|digital|zoom|meet|chamada|video|videochamada|app|aplicativo|site|link|plataforma|e-?mail|telegram|insta|instagram)';
+const PASSE_NA_PORTARIA = String.raw`(?!\s+(?:n[ao]s?|pel[ao]s?|em)\s+(?:(?:nossa|nosso|sua|seu)\s+)?${LUGAR_DE_IR}${F}(?![^\n]{0,40}${B}${CONVERSA}${F})(?:\s+(?!com${F})\p{L}+){0,2}\s+com\s+(?:(?:o|a|os|as|seu|sua|seus|suas|um|uma)\s+)?documentos?${F}(?![^\n]{0,40}${B}(?:cpf|rg|senhas?|cartao|codigo|selfie|rosto)${F}))`;
 const DADOS: readonly RegExp[] = [
   new RegExp(String.raw`${B}senhas?${F}.{0,40}${B}(cartao|cartoes|${BANCO}|pix)`, 'u'),
   new RegExp(String.raw`${B}(cartao|cartoes|${BANCO}|pix)${F}.{0,40}${B}senhas?${F}`, 'u'),
@@ -391,6 +425,9 @@ function motivoNoTexto(t: string, texto: string): Motivo | null {
   // "palavra.xx" sem espaço (letras minúsculas), como "centro.br": quase sempre é endereço de site.
   const semInvisiveis = texto.normalize('NFKC').replace(IGNORAVEIS, '');
   if (LINK.some((re) => re.test(t)) || /[\p{L}\p{N}]\.[a-z]{2,}(?![\p{L}\p{N}])/u.test(semInvisiveis)) return 'link';
+  // "golpe. com": espaço depois do ponto e final de site comum em minúscula. Frase nova começa com maiúscula
+  // ("Feira. Com todos" passa).
+  if (/[\p{Ll}\p{N}]\.\s+(?:com|net|org|br|gov|edu|io|app|site|online|info|xyz|top|club|shop|store|link|ly)(?![\p{L}\p{N}])/u.test(semInvisiveis)) return 'link';
   if (temPix(t) || temPagamento(t) || temCodigo(t)) return 'pix';
   if (temPedidoDeDado(t)) return 'dados';
   if (imitaPlataforma(t, texto)) return 'plataforma';
@@ -462,9 +499,13 @@ const resolve = (texto: string, motivo: Motivo, troca: (s: string) => string): b
   const novo = troca(texto);
   return novo !== texto && motivoDeRecusa(novo) !== motivo;
 };
-// Ponto sem espaço antes de palavra que começa com maiúscula ("Vamos.Com todos") ou que não é final de endereço
-// ("Av.das Flores"). Antes de "com", "br" e parecidos em minúscula não há dica: seria ensinar "golpe. com".
-const PONTO_COLADO = new RegExp(String.raw`[\p{L}\p{N}]\.(?:\p{Lu}\p{Ll}|(?!(?:${TLDS})(?![\p{L}\p{N}]))\p{Ll})`, 'u');
+// Ponto sem espaço antes de palavra que não é final de endereço ("Av.das Flores"). Antes de "com", "Com", "net",
+// "br" e parecidos não há dica, nem em "Vamos.Com todos": seria ensinar "golpe. Com".
+const PONTO_COLADO = new RegExp(String.raw`[\p{L}\p{N}]\.(?!(?:${TLDS})(?![\p{L}\p{N}]))\p{L}`, 'iu');
+// Hora sozinha ("19:30", sem algarismo nem dois-pontos colados): "9876:5432" não é hora.
+const HORA_SOZINHA = /(?<![\d:])([01]?\d|2[0-3]):([0-5]\d)(?![\d:])/g;
+// Palavras de conferência: com elas, não há a dica "diga de quem" ("aprovado pelo site da casa" é imitar o site).
+const CONFERENCIA = new RegExp(`(?:${VERIFICOU}|oficia(?:l|is)|selo)`, 'u');
 
 /** A mensagem de recusa com o exemplo que resolve este texto (horário, CEP, Pix, senha...), ou só o pedido. */
 export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
@@ -473,24 +514,29 @@ export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
   const com = (frase: string): string => `${pedido} ${frase}`;
   const palavra = (re: string): boolean => new RegExp(`(?<![\\p{L}\\p{N}])(?:${re})(?![\\p{L}\\p{N}])`, 'u').test(t);
   switch (motivo) {
-    case 'contato':
-      if (resolve(texto, motivo, (s) => s.replace(/(\d{1,2}):(\d{2})/g, '$1h$2'))) return com('Se for horário, escreva 19h30 às 21h.');
+    case 'contato': {
+      // Com palavra de contato no texto, nenhuma dica de horário ou período: "Fale: 11 23:45-23:59" é telefone.
+      const semContato = !PALAVRA_DE_CONTATO.test(t);
+      if (semContato && resolve(texto, motivo, (s) => s.replace(HORA_SOZINHA, '$1h$2'))) return com('Se for horário, escreva 19h30 às 21h.');
       if (palavra('cep') && resolve(texto, motivo, (s) => s.replace(/(?<!\d)(\d{5})(\d{3})(?!\d)/g, '$1-$2'))) {
         return com('Escreva o CEP com hífen ou tire o CEP, como em "CEP 01234-567".');
       }
-      if (resolve(texto, motivo, (s) => s.replace(/(\d{1,2}\/\d{1,2})\s*[-–—]\s*(\d{1,2}\/\d{1,2})/g, 'de $1 a $2'))) {
+      if (semContato && resolve(texto, motivo, (s) => s.replace(/(\d{1,2}\/\d{1,2})\s*[-–—]\s*(\d{1,2}\/\d{1,2})/g, 'de $1 a $2'))) {
         return com('Se for período, escreva "de 10/11 a 15/11".');
       }
       // Só o @ solto, entre espaços: num e-mail ou num @ de rede social, a dica ensinaria a disfarçar o contato.
       if (/(?:^|\s)@(?:\s|$)/u.test(texto) && resolve(texto, motivo, (s) => s.replace(/@/g, ' em '))) {
         return com('Se o @ quer dizer "em", escreva a palavra, como em "Sarau na praça".');
       }
-      return PALAVRA_DE_CONTATO.test(t) || t.includes('@') ? com(EXEMPLO.contato) : pedido;
+      return !semContato || t.includes('@') ? com(EXEMPLO.contato) : pedido;
+    }
     case 'pix':
       if (temPicPay(t)) return 'o site não aceita a palavra PicPay, nem em nome de evento. Troque a palavra.';
       if (temPix(t)) return 'o site não aceita a palavra Pix, nem em nome de evento. Troque a palavra.';
       if (temPagamento(t)) return `o evento não aceita pedido de pagamento nem dado de banco. Tire esse trecho. ${EXEMPLO.pix}`;
-      if (/(?<!\S)(?=\S*-)\S{30,}/u.test(t) && resolve(texto, motivo, (s) => s.replace(/-/g, ' '))) {
+      // Só para nome feito de palavras com hífen ("Mutirao-de-limpeza-..."): numa chave aleatória, que tem
+      // algarismos entre os hífens, separar com espaço ensinaria a passar a chave.
+      if (/(?<!\S)\p{L}+(?:-\p{L}+)+(?!\S)/u.test(t) && /(?<!\S)\S{30,}/u.test(t) && resolve(texto, motivo, (s) => s.replace(/-/g, ' '))) {
         return 'parece ter um código ou chave comprida, e o evento não aceita isso. Se é nome com hífens, separe com espaço, como em "Mutirão de limpeza".';
       }
       return 'parece ter um código ou chave comprida, e o evento não aceita isso. Tire o código.';
@@ -515,7 +561,7 @@ export function mensagemDaRecusa(texto: string, motivo: Motivo): string {
       if (FRASES_DO_SITE.test(t.replace(/[^\p{L}\p{N}]+/gu, ' '))) {
         return 'o evento não pode repetir o aviso do site. Tire essa frase: o site já mostra o aviso no alto da página do evento.';
       }
-      return palavra('site|plataforma') ? com(EXEMPLO.plataforma) : pedido;
+      return palavra('site|plataforma') && !CONFERENCIA.test(t) ? com(EXEMPLO.plataforma) : pedido;
     case 'html':
       if (/[<>]/.test(t)) return 'não use os sinais de menor e maior (< >). Escreva com palavras, como em "menos de 12 anos".';
       return 'não use códigos com & e ponto e vírgula. Escreva só o texto, como em "Pão e café".';
