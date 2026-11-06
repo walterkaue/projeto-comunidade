@@ -430,7 +430,9 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const painel = q('fluxo-confirma');
   const seguir = q<HTMLButtonElement>('fluxo-confirma-seguir');
   const primeiro = q<HTMLButtonElement>('fluxo-confirma-mudar');
-  let confirmado = false;
+  // Cada motivo é confirmado por si: confirmar o exemplo em "Baixar" não cala o aviso de que "Mandar" vai sem o link.
+  let confirmouExemplo = false;
+  let confirmouSemLink = false;
   let quemAbriu: HTMLElement | undefined;
   let aoSeguir: (() => unknown) | undefined;
   let paraTentar = false;
@@ -441,14 +443,17 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const semLinkAgora = (): boolean => valeSemLink && agenda && !!resultado && !resultado.link && !exemploNoLink(d);
   /** Dados de link com órgão público ainda não conferido (os passos 1 e 2 foram pulados). */
   const orgaoAgora = (): boolean => perguntarDoOrgaoNoPronto(d);
+  const exemploPendente = (): typeof doExemplo => (confirmouExemplo ? [] : doExemplo);
+  const semLinkPendente = (): boolean => semLinkAgora() && !confirmouSemLink;
 
   /** Escreve a frase e o primeiro botão do painel com o que vale agora. Falso = não há nada a perguntar. */
   function preencherPainel(): boolean {
-    const sem = semLinkAgora();
+    const sem = semLinkPendente();
     const orgao = orgaoAgora();
-    if (!sem && !orgao && !doExemplo.length) return false;
-    paraTentar = soFaltaARede(!!resultado?.semRede, sem, doExemplo.length, orgao);
-    q('fluxo-confirma-texto').textContent = frasePainel(sem, doExemplo.length ? fraseDaConfirmacao(doExemplo) : '', orgao ? PERGUNTA_DO_ORGAO : '');
+    const exemplo = exemploPendente();
+    if (!sem && !orgao && !exemplo.length) return false;
+    paraTentar = soFaltaARede(!!resultado?.semRede, sem, exemplo.length, orgao);
+    q('fluxo-confirma-texto').textContent = frasePainel(sem, exemplo.length ? fraseDaConfirmacao(exemplo) : '', orgao ? PERGUNTA_DO_ORGAO : '');
     primeiro.textContent = paraTentar ? 'Tentar de novo' : 'Mudar algo';
     return true;
   }
@@ -475,15 +480,11 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   /** O primeiro toque, com partes do exemplo ou sem o link, só abre o painel logo abaixo do botão. Depois de confirmar, não pergunta mais. */
   function comConfirmacao(botao: HTMLElement, verbo: string, acao: () => unknown, semLink = false): () => Promise<void> {
     return async () => {
-      if (confirmado) {
-        void acao();
-        return;
-      }
       // Link ainda sendo preparado: espera, para saber se a mensagem vai com ele.
       if (agenda && !resultado) await linkPronto;
       if (!vivo) return;
       valeSemLink = semLink;
-      if (!precisaConfirmar(doExemplo, confirmado, semLinkAgora(), orgaoAgora())) {
+      if (!precisaConfirmar(exemploPendente(), false, semLinkPendente(), orgaoAgora())) {
         void acao();
         return;
       }
@@ -504,7 +505,8 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   }
   seguir.addEventListener('click', () => {
     const acao = aoSeguir;
-    confirmado = true;
+    confirmouExemplo = true;
+    if (semLinkAgora()) confirmouSemLink = true;
     // Quem seguiu mesmo assim respondeu à pergunta do órgão pelos dois passos que foram pulados.
     if (orgaoAgora()) confirmarOrgaoNoPronto(d);
     fecharPainel();

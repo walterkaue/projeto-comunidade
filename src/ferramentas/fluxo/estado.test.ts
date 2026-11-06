@@ -691,8 +691,14 @@ describe('Desfazer: prazo e passo vazio', () => {
     expect(avisoDeApagar(false, false)).toBe('Tudo apagado.');
   });
   it('passo 1 vazio: título, organização, texto e pauta sem nada (ou só espaços)', () => {
-    expect(passo1Vazio({ ...base(), titulo: ' ', organizacao: '', texto: '', pauta: '' })).toBe(true);
+    expect(passo1Vazio({ ...base(), titulo: ' ', organizacao: '', texto: '', pauta: '', local: '' })).toBe(true);
     expect(passo1Vazio({ ...base(), titulo: '', organizacao: '', texto: 'x', pauta: '' })).toBe(false);
+  });
+  it('o local do exemplo, que o apagar também limpa, conta: há o que desfazer', () => {
+    const d = { ...base(), titulo: '', organizacao: '', texto: '', pauta: '' };
+    expect(passo1Vazio(d)).toBe(false);
+    expect(passo1Vazio({ ...d, local: '' })).toBe(true);
+    expect(passo1Vazio({ ...d, local: 'Rua das Flores, 10' })).toBe(true);
   });
 });
 

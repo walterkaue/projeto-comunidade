@@ -177,6 +177,26 @@ test('C-01: sem rede E com partes do exemplo, o primeiro botão do painel é "Mu
   await expect(painel.locator('#fluxo-confirma-mudar')).toHaveText('Mudar algo');
 });
 
+test('C-01: confirmar o exemplo em "Baixar" não cala o aviso de que "Mandar" vai sem o link', async ({ page }) => {
+  const evento = PORTAS[1];
+  await page.route('**/assets/{partes,formato,bloqueio}-*.js', (rota) => rota.abort());
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
+  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await irAteOPronto(page, evento);
+  await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
+  const painel = page.locator('#fluxo-confirma');
+  await page.getByRole('button', { name: 'Baixar a imagem' }).click();
+  await expect(painel).toContainText('Isto ainda tem partes do exemplo');
+  await expect(painel).not.toContainText('A mensagem vai sem o link do evento.');
+  await page.locator('#fluxo-confirma-seguir').click();
+  await expect(painel).toBeHidden();
+  await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
+  await expect(painel).toBeVisible();
+  await expect(painel).toContainText('A mensagem vai sem o link do evento.');
+  await expect(painel).not.toContainText('Isto ainda tem partes do exemplo');
+});
+
 // ---------- D1: título que fala em nome de órgão público ----------
 
 test('D1: órgão público no título abre a pergunta; "Seguir" avança e o mesmo texto não pergunta de novo', async ({ page }) => {

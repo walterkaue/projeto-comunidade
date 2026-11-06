@@ -64,7 +64,12 @@ export async function linkDoFluxo(
   if (linkAindaVale(d)) {
     // O link original pode passar do máximo (o QR do cartaz falharia). Não gera outro: ele seria outro evento.
     // Se o formato não carregar (sem rede), fica com o original: é ele que a lista de bloqueio conhece.
-    const maximo = deps?.maximo ?? (await carregar().then((p) => p.maximo, () => Number.POSITIVE_INFINITY));
+    // Este ramo só precisa do formato (o limite), não da lista de bloqueio.
+    const maximo =
+      deps?.maximo ??
+      (await (carregar === padrao ? import('../evento/formato').then((f) => f.LINK_MAXIMO) : carregar().then((p) => p.maximo)).catch(
+        () => Number.POSITIVE_INFINITY,
+      ));
     return d.link.length > maximo ? { link: '', aviso: MENSAGEM_DO_LINK_GRANDE } : { link: d.link, aviso: '' };
   }
   try {

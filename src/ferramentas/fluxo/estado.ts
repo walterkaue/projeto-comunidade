@@ -365,7 +365,8 @@ export function apagarOPasso1(d: DadosDoFluxo): void {
 export const rotuloDeApagar = (origem: Origem): string => (origem === 'exemplo' ? 'Apagar o exemplo' : 'Apagar tudo');
 
 /** Título, organização, texto e pauta já estavam vazios? Então apagar não tem o que desfazer. */
-export const passo1Vazio = (d: DadosDoFluxo): boolean => ![d.titulo, d.organizacao, d.texto, d.pauta].some((t) => t.trim() !== '');
+export const passo1Vazio = (d: DadosDoFluxo): boolean =>
+  ![d.titulo, d.organizacao, d.texto, d.pauta].some((t) => t.trim() !== '') && !camposDoExemplo(d).includes('local');
 
 /** Aviso depois de apagar, com o prazo do "Desfazer" (10 s). Sem cópia guardada, não fala em Desfazer. */
 export const PRAZO_DO_DESFAZER_S = 10;
