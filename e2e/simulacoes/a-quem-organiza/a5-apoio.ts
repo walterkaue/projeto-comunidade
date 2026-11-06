@@ -17,7 +17,7 @@ export const porta = (tipo: Porta['tipo']): Porta => PORTAS.find((p) => p.tipo =
 export const TIPOS: [string, RegExp][] = [
   ['associacao-de-moradores', /^Associação de Moradores/],
   ['sindicato', /^Sindicato/],
-  ['grupo-de-oracao', /^Grupo de Oração/],
+  ['grupo-de-oracao', /^(Grupo de Oração|Casa de Matriz Africana|Centro Espírita)/], // o grupo religioso agora alterna entre 3 tradições (exemplos.ts)
   ['nucleo-de-bairro', /^Núcleo de Bairro/],
   ['coletivo-cultural', /^Coletivo/],
   ['instituto-ong', /^Instituto/],

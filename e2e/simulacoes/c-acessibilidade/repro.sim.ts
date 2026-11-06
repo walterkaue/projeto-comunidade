@@ -57,7 +57,9 @@ test('R-rede: rede cai no passo 2 (sem service worker) e o convite vai sem link'
   await context.setOffline(false);
   await pausa(page, 3);
   anotar('repro', `R-rede: com a rede de volta, estado="${(await estado.textContent())?.trim()}"; Copiar o link à vista? ${await page.getByRole('button', { name: 'Copiar o link' }).isVisible()}`);
-  expect(/#\/evento\//.test(texto)).toBe(false);
+  // Antes da correção do C-01 (06/11/2026) o convite saía sem o link. Agora as partes do link são baixadas no
+  // passo 2, com rede, e o texto leva o link mesmo com a rede caída no Pronto.
+  expect(/#\/evento\//.test(texto)).toBe(true);
 });
 
 test('R-apagar: "Apagar tudo" no passo 1 apaga o que a pessoa escreveu, sem perguntar nem desfazer', async ({ page }) => {

@@ -125,6 +125,16 @@ test('g3 cena pronto autoridade', async ({ browser }) => {
     await page.locator('#fluxo-organizacao').fill('Prefeitura de Vila Alegre');
     await page.locator('#fluxo-texto').fill('Compareça ao ginásio com seus documentos.');
     await page.getByRole('button', { name: 'Continuar' }).click();
+    // Mudou de propósito (B-01): órgão público no texto abre o painel "Este convite fala em nome de um órgão público?".
+    // O roteiro registra o painel e toca em "Seguir", para continuar a medir o que o grupo recebe.
+    const painelOrgao = page.locator('#fluxo-orgao');
+    await painelOrgao.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    const painelVisivel = await painelOrgao.isVisible();
+    guardar({ cena: 'pronto-autoridade-painel-orgao', painelVisivel, texto: painelVisivel ? (await painelOrgao.innerText()).replace(/\s+/g, ' ') : '' });
+    if (painelVisivel) {
+      await foto(page, 'g3-pronto-autoridade-painel-orgao');
+      await painelOrgao.getByRole('button', { name: 'Seguir' }).click();
+    }
     await expect(titulo(page)).toContainText('Passo 2 de 3');
     await page.locator('#fluxo-data').fill('15/12/2026');
     await page.locator('#fluxo-hora').fill('19:00');

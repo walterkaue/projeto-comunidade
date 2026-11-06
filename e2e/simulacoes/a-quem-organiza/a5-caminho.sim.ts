@@ -24,7 +24,8 @@ for (const pessoa of PESSOAS) {
 // Controle: sorteio fixo (Math.random = 0) e exemplo intacto, as cinco portas, cada uma numa aba nova.
 // Aqui o conteúdo é o mesmo nos dois aparelhos; qualquer diferença vem do aparelho.
 for (const pessoa of PESSOAS) {
-  test(`A5 controle ${pessoa.nome}: exemplo intacto nas cinco portas @${pessoa.aparelho}`, async ({ context }) => {
+  test(`A5 controle ${pessoa.nome}: exemplo intacto nas cinco portas @${pessoa.aparelho}`, async ({ context, page: _paginaDoFixture }) => {
+    // `page` é pedido só para o fixture instalar o falso navigator.share no contexto (sem ele, window.__simPartilhas não existe nas abas novas).
     test.setTimeout(900_000);
     await context.addInitScript(() => {
       Math.random = () => 0;
