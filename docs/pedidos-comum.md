@@ -18,6 +18,13 @@ Nenhum.
 
 ## Pedidos atendidos
 
+### 2026-11-06 · sessão correções do fluxo · limite do link em `src/comum/entreTelas.ts` menor que o da página do evento
+- **O que precisa:** `TAMANHO_MAXIMO.link` (4000) é menor que o que a página do evento aceita (dados de até 6000). Igualar o limite ao da página, ou recusar na leitura links acima de `LINK_MAXIMO`.
+- **Por quê:** "Fazer o card" de um link entre 4000 e 6000 perde o link original, e o Pronto gera outro evento, que escapa do bloqueio.
+- **Sugestão de assinatura:** nenhuma; só alinhar a constante (ou a conferência de `conferirDadosDoCard`) com `LINK_MAXIMO`.
+- **Cópia provisória:** nenhuma.
+- **Atendido em 06/11/2026** (sessão de correções do comum): `conferirDadosDoCard` aceita todo link que `ehLinkDoEvento` aceita, com dados até `DADOS_DO_EVENTO_MAXIMO` (6000, o mesmo `DADOS_MAXIMO` da página; um teste confere). `TAMANHO_MAXIMO` não tem mais `link`. Link maior que `LINK_MAXIMO` chega ao fluxo, que avisa e não gera outro.
+
 No fluxo único (05/11/2026), as mudanças em código compartilhado (`src/comum/rotas.ts`, `src/main.ts`, `src/paginas/inicio.ts`, `tema.css`, `componentes.css`, `index.html`) foram feitas pela própria conversa de integração, sem pedido aberto: rotas `#/fazer` e `#/ata`, despacho por parte, partes já baixadas sem "Carregando…", `[hidden]` global, botões de 52 px, aviso falado acima da barra fixa e `interactive-widget=resizes-content` no viewport. Na aproximação do desenho aprovado (05/11/2026), também sem pedido: portas do início com destaque, ícones e tokens `--porta-*` em `tema.css`, rodapé comum escondido no fluxo (`mostraORodapeComum` em `rotas.ts`) e `ignoreVary` no `public/sw.js`.
 
 Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
@@ -59,10 +66,3 @@ Atendidos em 05/11/2026, na junção da Onda 1 (conversa principal):
 - **O que precisa:** (1) `src/comum/saida.ts`: ligar o `<p>` da folha de saída ao diálogo com `aria-describedby`, para o leitor de tela ler "Você vai sair do… e abrir <domínio>" ao abrir; (2) `src/comum/componentes.css`: `html { scroll-padding-bottom: 5rem; }` para o aviso (`.aviso-vivo`, fixo no rodapé por 5 s) não cobrir o botão focado; (3) um rodapé ou `<nav>` comum a todas as telas (hoje o rodapé com Sobre, Termos e Regras só existe na página inicial): quem abre um link de evento no WhatsApp não encontra Termos, Regras nem "Como denunciar" sem voltar ao início.
 - **Por quê:** achados da revisão de acessibilidade (WCAG 2.4.3, 4.1.2, 2.4.5). A tela do evento já tem os links "Conhecer o Projeto Comunidade" e "Denunciar".
 
-Nenhum.
-
-### 2026-11-06 · sessão correções do fluxo · limite do link em `src/comum/entreTelas.ts` menor que o da página do evento
-- **O que precisa:** `TAMANHO_MAXIMO.link` (4000) é menor que o que a página do evento aceita (dados de até 6000). Igualar o limite ao da página, ou recusar na leitura links acima de `LINK_MAXIMO`.
-- **Por quê:** "Fazer o card" de um link entre 4000 e 6000 perde o link original, e o Pronto gera outro evento, que escapa do bloqueio.
-- **Sugestão de assinatura:** nenhuma; só alinhar a constante (ou a conferência de `conferirDadosDoCard`) com `LINK_MAXIMO`.
-- **Cópia provisória:** nenhuma.

@@ -5,8 +5,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { DADOS_MAXIMO, LINK_MAXIMO } from '../ferramentas/evento/formato';
 import {
   conferirDadosDoCard,
+  DADOS_DO_EVENTO_MAXIMO,
   dadosDoLinkDoEvento,
   ENDERECO_DO_CARDS,
   ehLinkDoEvento,
@@ -65,6 +67,17 @@ describe('card preenchido pela memória da aba', () => {
     expect(d.titulo).toHaveLength(80);
     expect(d.titulo?.endsWith('…')).toBe(true);
     expect(d.texto).toBe('linha um');
+  });
+
+  // Pedido de 06/11/2026: link que a página do evento abre, mas grande demais para o QR, não pode sumir no
+  // caminho até o fluxo. Sem ele, o Pronto faria outro link, que escapa da lista de bloqueio.
+  it('passa inteiro todo link que a página do evento abre', () => {
+    expect(DADOS_DO_EVENTO_MAXIMO).toBe(DADOS_MAXIMO);
+    const site = 'https://walterkaue.github.io/projeto-comunidade/#/evento/';
+    const grande = `${site}1r${'A'.repeat(DADOS_MAXIMO - 2)}`;
+    expect(grande.length).toBeGreaterThan(LINK_MAXIMO);
+    expect(conferirDadosDoCard({ link: grande }, BASE).link).toBe(grande);
+    expect(conferirDadosDoCard({ link: `${site}1r${'A'.repeat(DADOS_MAXIMO - 1)}` }, BASE).link).toBeUndefined();
   });
 
   it('não lança com dado estranho', () => {

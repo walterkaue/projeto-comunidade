@@ -33,8 +33,17 @@ export interface DadosDoCard {
   link?: string;
 }
 
-/** Tamanho máximo de cada campo ao passar de uma ferramenta para outra (o que passar é cortado). */
-export const TAMANHO_MAXIMO = { titulo: 80, local: 120, texto: 140, organizacao: 60, link: 4000 } as const;
+/**
+ * Tamanho máximo de cada campo de texto ao passar de uma ferramenta para outra (o que passar é cortado).
+ * O link não tem limite próprio: vale o da página do evento (DADOS_DO_EVENTO_MAXIMO, em ehLinkDoEvento).
+ */
+export const TAMANHO_MAXIMO = { titulo: 80, local: 120, texto: 140, organizacao: 60 } as const;
+
+/**
+ * Tamanho máximo dos dados depois de "#/evento/": o mesmo que a página do evento aceita (DADOS_MAXIMO em
+ * src/ferramentas/evento/formato.ts; um teste confere que os dois batem).
+ */
+export const DADOS_DO_EVENTO_MAXIMO = 6000;
 
 const TEXTOS = ['titulo', 'local', 'texto', 'organizacao'] as const;
 const DATA = /^\d{4}-\d{2}-\d{2}$/;
@@ -65,9 +74,11 @@ export function conferirDadosDoCard(entrada: DadosDoCard, base: string): DadosDo
   }
   if (typeof entrada.data === 'string' && DATA.test(entrada.data)) d.data = entrada.data;
   if (typeof entrada.hora === 'string' && HORA.test(entrada.hora)) d.hora = entrada.hora;
-  // Link cortado viraria QR quebrado: comprido demais, fica de fora.
+  // O link nunca é cortado (viraria outro evento). Todo link que a página do evento abre passa inteiro, mesmo
+  // o que é grande demais para o QR: quem decide é o fluxo, que avisa e não gera outro link no lugar
+  // (um link novo escaparia da lista de bloqueio; pedido de 06/11/2026 em docs/pedidos-comum.md).
   const link = entrada.link;
-  if (typeof link === 'string' && link.length <= TAMANHO_MAXIMO.link && ehLinkDoEvento(link, base)) d.link = link;
+  if (typeof link === 'string' && ehLinkDoEvento(link, base)) d.link = link;
   return d;
 }
 
@@ -90,10 +101,10 @@ const pastaDoSite = (pathname: string) => pathname.replace(/index\.html$/, '');
 
 /**
  * Os dados de um link de evento só têm letras sem acento, números, "-" e "_" (base64url, ver
- * src/ferramentas/evento/formato.ts; 6000 = DADOS_MAXIMO de lá). Qualquer outro sinal ("$", "(", "'", ";")
- * fica de fora: o link da denúncia vai por e-mail até quem modera e não pode levar comando do shell.
+ * src/ferramentas/evento/formato.ts). Qualquer outro sinal ("$", "(", "'", ";") fica de fora: o link da
+ * denúncia vai por e-mail até quem modera e não pode levar comando do shell.
  */
-const DADOS_DO_EVENTO = /^#\/evento\/[A-Za-z0-9_-]{3,6000}$/;
+const DADOS_DO_EVENTO = new RegExp(`^#/evento/[A-Za-z0-9_-]{3,${DADOS_DO_EVENTO_MAXIMO}}$`);
 
 /**
  * O link é de um evento DESTE site? Mesmo endereço (origem e pasta) que `base` e "#/evento/<dados>".
