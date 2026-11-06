@@ -128,9 +128,12 @@ async function redePrimeiro(req) {
   }
 }
 
+// ignoreVary: o pedido do <script type="module"> leva o cabeçalho Origin e a cópia guardada na instalação não;
+// com "Vary: Origin" na resposta (servidor de teste, alguns CDNs), o cache não acharia nada e o site não abriria
+// sem rede. Os arquivos aqui são do próprio site e não mudam por pedido.
 async function cachePrimeiro(req) {
   const cache = await caches.open(CACHE_ARQUIVOS);
-  const guardada = await cache.match(req);
+  const guardada = await cache.match(req, { ignoreVary: true });
   if (guardada) return guardada;
   const resp = await fetch(req);
   if (resp.ok) await cache.put(req, resp.clone());
@@ -139,7 +142,7 @@ async function cachePrimeiro(req) {
 
 async function cacheEAtualiza(req) {
   const cache = await caches.open(CACHE_ARQUIVOS);
-  const guardada = await cache.match(req);
+  const guardada = await cache.match(req, { ignoreVary: true });
   const nova = fetch(req)
     .then(async (resp) => {
       if (resp.ok) await cache.put(req, resp.clone());
@@ -165,7 +168,7 @@ async function redeOuGuardada(req) {
   } catch {
     // sem rede: cai na guardada
   }
-  const guardada = await cache.match(req);
+  const guardada = await cache.match(req, { ignoreVary: true });
   if (guardada) return guardada;
   // Sem cópia guardada: espera a rede de verdade (pode ainda chegar).
   return daRede.catch(() => Response.error());
