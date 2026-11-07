@@ -1,7 +1,8 @@
 // Cenários 1 e 2: as cinco portas (os campos começam vazios, com o exemplo em cinza) e a reunião e o evento sem
 // organização e sem texto.
 
-import { abrirPorta, conferirTela, esperarOPronto, expect, irAteOPronto, linkNoTexto, mandar, ORGANIZACAO, partilhas, PORTAS, test, titulo } from './apoio';
+import { abrirPorta, conferirTela, esperarOPronto, expect, irAteOPronto, linkNoTexto, mandar, ORGANIZACAO, partilhas, PORTAS, test, titulo, type Porta } from './apoio';
+import type { Page } from '@playwright/test';
 import { camposDoPasso1, DADOS, exemplosDosCampos, preencherPasso1, preencherPasso2 } from './fluxo-apoio';
 
 const LINK_DO_EVENTO = /^http:\/\/localhost:\d+\/#\/evento\/[A-Za-z0-9_-]+$/;
@@ -393,4 +394,76 @@ test('A-01: no Pronto de "Contar uma conquista", a descrição da imagem tem "Co
   // A descrição é refeita quando a imagem termina de desenhar.
   await expect(canvas).toHaveAttribute('aria-label', /^Imagem de .*formato Grupo./);
   expect(await canvas.getAttribute('aria-label')).toContain('Título: Conseguimos.');
+});
+
+// ---------- nova cara: passo 3 e Pronto ----------
+
+async function irAteOPassoTres(page: Page, porta: Porta): Promise<void> {
+  await preencherPasso1(page, porta);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await preencherPasso2(page, porta);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 3 de 3');
+  await page.waitForTimeout(300);
+}
+
+for (const esquema of ['light', 'dark'] as const) {
+  test(`passo 3 (${esquema}): formato e cor aparecem sem rolar; a escolhida leva ✓; a lupa abre a prévia`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: esquema });
+    const evento = PORTAS[1];
+    await abrirPorta(page, evento);
+    await irAteOPassoTres(page, evento);
+
+    await expect(page.locator('main')).toHaveAttribute('data-porta', 'evento');
+    const medidas = await page.evaluate(() => {
+      const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+      return { formato: r('#fluxo-formato').bottom, cor: r('#fluxo-cor').bottom, barra: r('.fluxo-barra').top, canvas: r('#fluxo-canvas').height / innerHeight };
+    });
+    expect(medidas.formato).toBeLessThan(medidas.barra);
+    expect(medidas.cor, 'as bolinhas cabem acima da barra').toBeLessThanOrEqual(medidas.barra);
+    expect(medidas.canvas).toBeLessThanOrEqual(0.4);
+
+    // Opções empilhadas de 54 px, radios de verdade; a escolhida mostra o ✓ e a explicação muda.
+    await expect(page.getByRole('radio', { name: /^Grupo/ })).toBeChecked();
+    const alturas = await page.locator('.fluxo-seg-item label').evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().height)));
+    expect(Math.min(...alturas)).toBeGreaterThanOrEqual(54);
+    await page.getByRole('radio', { name: /^Cartaz/ }).check();
+    await expect(page.locator('#fluxo-formato-expl')).toHaveText('Folha A4, para imprimir e pôr no mural');
+    await expect(page.locator('.fluxo-seg-item input:checked + label .fluxo-seg-check')).toBeVisible();
+    await expect(page.locator('#fluxo-canvas')).toHaveAttribute('aria-label', /^Cartaz de evento/);
+
+    // Bolinhas: a escolhida leva ✓ por dentro, e o radio diz qual é.
+    await page.getByRole('radio', { name: 'Mar' }).check();
+    await expect(page.locator('.fluxo-bola-item input:checked + label .fluxo-bola-check')).toBeVisible();
+    await expect(page.locator('#fluxo-cor-nome')).toHaveText('Mar');
+
+    const lupa = page.getByRole('button', { name: 'Ver a prévia maior' });
+    const caixa = await lupa.boundingBox();
+    expect(caixa!.width).toBeGreaterThanOrEqual(48);
+    await lupa.click();
+    await expect(page.getByRole('dialog', { name: 'Como está ficando' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(lupa).toBeFocused();
+    await conferirTela(page, `passo 3 ${esquema}`);
+  });
+}
+
+test('Pronto da reunião: Mandar logo abaixo do topo, "Outros jeitos de usar" e o quadro da ata', async ({ page }) => {
+  const reuniao = PORTAS[0];
+  await abrirPorta(page, reuniao);
+  await preencherPasso1(page, reuniao);
+  await irAteOPronto(page, reuniao);
+  await expect(page.locator('main')).toHaveAttribute('data-porta', 'reuniao');
+
+  const alto = await page.getByRole('button', { name: 'Mandar no WhatsApp' }).boundingBox();
+  expect(alto!.height).toBeGreaterThanOrEqual(60);
+  expect(alto!.y + alto!.height).toBeLessThanOrEqual(640);
+  await expect(page.getByRole('heading', { level: 2, name: 'Outros jeitos de usar' })).toBeVisible();
+  for (const nome of ['Baixar a imagem', 'Copiar só o texto', 'Copiar o link', 'Imprimir cartaz para o mural']) {
+    await expect(page.getByRole('button', { name: nome })).toHaveClass(/botao-ter/);
+  }
+  const ata = page.getByRole('region', { name: 'E depois da reunião?' });
+  await expect(ata).toContainText('A ata já abre com a pauta.');
+  await expect(ata.getByRole('button', { name: 'Fazer a ata' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Fazer outro' })).toBeVisible();
 });
