@@ -3,6 +3,7 @@
 
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test as base, type Page } from '@playwright/test';
+import { ORGANIZACAO_DE_TESTE, preencherObrigatoriosVazios } from './fluxo-apoio';
 
 declare global {
   interface Window {
@@ -95,11 +96,16 @@ export async function abrirPorta(page: Page, porta: Porta, conferir = false): Pr
   await expect(page).toHaveURL(new RegExp(`#/fazer/${porta.tipo}$`));
 }
 
-/** Do passo 1 (já preenchido) até o Pronto, com o que já está nos campos. */
+/**
+ * Do passo 1 até o Pronto, com o que já está nos campos. Os campos começam vazios (o exemplo é só o cinza de dentro
+ * deles): os obrigatórios que ainda estiverem vazios são preenchidos aqui (fluxo-apoio.ts).
+ */
 export async function irAteOPronto(page: Page, porta: Porta, conferir = false): Promise<void> {
+  await preencherObrigatoriosVazios(page, porta, 1);
   if (conferir) await conferirTela(page, `${porta.tipo}: passo 1`);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
+  await preencherObrigatoriosVazios(page, porta, 2);
   if (conferir) await conferirTela(page, `${porta.tipo}: passo 2`);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 3 de 3');
@@ -118,7 +124,7 @@ export async function esperarOPronto(page: Page, porta: Pick<Porta, 'agenda'>): 
 /** O que o falso navigator.share recebeu até agora. */
 export const partilhas = (page: Page) => page.evaluate(() => window.__partilhas);
 
-/** Toca em "Mandar no WhatsApp"; se o painel do exemplo abrir, confirma. Devolve o texto mandado. */
+/** Toca em "Mandar no WhatsApp"; se o painel de confirmação (sem o link, órgão público) abrir, confirma. Devolve o texto mandado. */
 export async function mandar(page: Page): Promise<string> {
   const antes = (await partilhas(page)).length;
   await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
@@ -133,5 +139,5 @@ export function linkNoTexto(texto: string): string {
   return /Mais detalhes: (\S+)/.exec(texto)?.[1] ?? '';
 }
 
-/** Organização fictícia e neutra, para trocar a do exemplo. */
-export const ORGANIZACAO = 'Associação de Moradores Jardim das Acácias';
+/** Organização fictícia e neutra. */
+export const ORGANIZACAO = ORGANIZACAO_DE_TESTE;

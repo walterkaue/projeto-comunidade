@@ -5,6 +5,7 @@
 
 import type { Locator, Page } from '@playwright/test';
 import { abrirPorta, conferirTela, esperarOPronto, expect, PORTAS, test, titulo } from './apoio';
+import { DADOS, preencherObrigatoriosVazios } from './fluxo-apoio';
 
 interface Caixa {
   top: number;
@@ -76,14 +77,17 @@ for (const escala of [100, 200] as const) {
         if (escala === 200) await expect(page.locator('html')).toHaveClass(/fluxo-faixas-soltas/);
         else await expect(page.locator('html')).not.toHaveClass(/fluxo-faixas-soltas/);
 
-        // 1. Passo 1: o primeiro campo inteiro; a dica do exemplo e "Apagar o exemplo" na mesma linha.
+        // 1. Passo 1: o primeiro campo inteiro; a dica e "Apagar tudo" (só com texto escrito) na mesma linha.
         await inteiroATela(page, page.locator('.campo:has(#fluxo-titulo)'), 'passo 1: campo do título', semRolar);
         const dica = page.locator('.fluxo-dica-linha .fluxo-dica');
-        const apagar = page.getByRole('button', { name: 'Apagar o exemplo' });
-        await expect(dica).toHaveText('Já vem com um exemplo. Troque pelo que for seu.');
+        const apagar = page.getByRole('button', { name: 'Apagar tudo' });
+        await expect(dica).toHaveText('Escreva com as suas palavras. O que está em cinza é só exemplo.');
+        await expect(apagar).toBeHidden();
+        await page.locator('#fluxo-titulo').fill(DADOS.titulo);
+        await expect(apagar).toBeVisible();
         if (semRolar) {
           const [cd, ca] = [await caixa(dica), await caixa(apagar)];
-          expect(ca.top < cd.bottom && cd.top < ca.bottom, 'a dica e "Apagar o exemplo" na mesma linha').toBe(true);
+          expect(ca.top < cd.bottom && cd.top < ca.bottom, 'a dica e "Apagar tudo" na mesma linha').toBe(true);
         }
         if (porta.tipo === 'reuniao') {
           // O aviso do link fica num quadro logo acima da pauta, com o mesmo texto, e é lido junto com ela e com o título.
@@ -97,8 +101,10 @@ for (const escala of [100, 200] as const) {
         }
         if (escala === 200) await conferirTela(page, `${porta.tipo}: passo 1 a 200%`);
 
+        await preencherObrigatoriosVazios(page, porta, 1);
         await page.getByRole('button', { name: 'Continuar' }).click();
         await expect(titulo(page)).toContainText('Passo 2 de 3');
+        await preencherObrigatoriosVazios(page, porta, 2);
         await page.getByRole('button', { name: 'Continuar' }).click();
         await expect(titulo(page)).toContainText('Passo 3 de 3');
         await page.waitForTimeout(200);
@@ -126,16 +132,16 @@ for (const escala of [100, 200] as const) {
         await esperarOPronto(page, porta);
         await page.waitForTimeout(200);
 
-        // 3. Pronto: título, aviso do exemplo, "Mandar no WhatsApp" e só depois a prévia.
+        // 3. Pronto: título, "Mandar no WhatsApp" e só depois a prévia.
         const mandar = page.getByRole('button', { name: 'Mandar no WhatsApp' });
         await inteiroATela(page, mandar, 'Pronto: Mandar no WhatsApp', semRolar);
         const ordem = await page.evaluate(() =>
-          ['h1', '#fluxo-aviso-exemplo', '#fluxo-mandar', '#fluxo-canvas'].map((s) => {
+          ['h1', '#fluxo-mandar', '#fluxo-canvas'].map((s) => {
             const el = document.querySelector(s)!;
-            return [...document.querySelectorAll('h1, #fluxo-aviso-exemplo, #fluxo-mandar, #fluxo-canvas')].indexOf(el);
+            return [...document.querySelectorAll('h1, #fluxo-mandar, #fluxo-canvas')].indexOf(el);
           }),
         );
-        expect(ordem, 'título, aviso do exemplo, Mandar no WhatsApp, prévia').toEqual([0, 1, 2, 3]);
+        expect(ordem, 'título, Mandar no WhatsApp, prévia').toEqual([0, 1, 2]);
 
         // 4. Só "Mandar no WhatsApp" é escuro; "Fazer a ata" (reunião) é de contorno.
         const escuros = await page.evaluate(() => {
@@ -157,6 +163,7 @@ for (const escala of [100, 200] as const) {
 test('320 px: as seis cores ficam lado a lado, com o nome inteiro, e a tela não rola para o lado', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await abrirPorta(page, PORTAS[2]);
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
   await page.getByRole('button', { name: 'Continuar' }).click();

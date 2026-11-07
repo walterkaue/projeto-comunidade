@@ -10,7 +10,8 @@ const EVENTO = PORTAS[1];
 /** Cria um evento pelo fluxo, com a organização trocada, e devolve o link e o título. */
 async function criarEvento(page: Page): Promise<{ link: string; tituloDoEvento: string }> {
   await abrirPorta(page, EVENTO);
-  const tituloDoEvento = await page.locator('#fluxo-titulo').inputValue();
+  const tituloDoEvento = 'Festa junina da vila';
+  await page.locator('#fluxo-titulo').fill(tituloDoEvento);
   await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
   await irAteOPronto(page, EVENTO);
   const link = linkNoTexto(await mandar(page));

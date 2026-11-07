@@ -1,49 +1,127 @@
-// Cenários 1 e 2: as cinco portas com o exemplo, e a reunião com a organização trocada.
+// Cenários 1 e 2: as cinco portas (os campos começam vazios, com o exemplo em cinza) e a reunião e o evento sem
+// organização e sem texto.
 
 import { abrirPorta, conferirTela, esperarOPronto, expect, irAteOPronto, linkNoTexto, mandar, ORGANIZACAO, partilhas, PORTAS, test, titulo } from './apoio';
+import { camposDoPasso1, DADOS, exemplosDosCampos, preencherPasso1, preencherPasso2 } from './fluxo-apoio';
 
-test.describe('as cinco portas com o exemplo', () => {
+const LINK_DO_EVENTO = /^http:\/\/localhost:\d+\/#\/evento\/[A-Za-z0-9_-]+$/;
+
+test.describe('as cinco portas começam vazias, com o exemplo só em cinza', () => {
   for (const porta of PORTAS) {
-    test(`${porta.verbo}: pede confirmação e não cria link`, async ({ page }) => {
+    test(`${porta.verbo}: preenche, e o que sai não leva nada do exemplo`, async ({ page }) => {
       await abrirPorta(page, porta, true);
-      await irAteOPronto(page, porta, true);
 
-      if (porta.agenda) {
-        await expect(page.locator('#fluxo-link-estado')).toHaveText('O link é criado quando você trocar o exemplo pelo seu.');
+      // Passo 1: campos vazios com "Ex.: …" em cinza; a miniatura avisa que usa o exemplo no que falta.
+      const campos = camposDoPasso1(porta);
+      for (const id of campos) {
+        await expect(page.locator(id)).toHaveValue('');
+        await expect(page.locator(id)).toHaveAttribute('placeholder', /^Ex\.: ./);
       }
-      await expect(page.getByRole('button', { name: 'Copiar o link' })).toBeHidden();
-      await expect(page.locator('#fluxo-aviso-exemplo')).toContainText('ainda');
+      const exemplos = await exemplosDosCampos(page, campos);
+      expect(exemplos.length).toBeGreaterThan(2);
+      const linhaDoExemplo = page.locator('#fluxo-mini-exemplo');
+      await expect(linhaDoExemplo).toBeVisible();
+      await expect(linhaDoExemplo).toHaveText('(com exemplo no que falta)');
+      // "Apagar tudo" só aparece quando há texto.
+      await expect(page.locator('#fluxo-apagar')).toBeHidden();
 
-      // O primeiro toque só abre o painel: nada é mandado ainda.
-      await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
-      const painel = page.locator('#fluxo-confirma');
-      await expect(painel).toBeVisible();
-      await expect(painel).toContainText('Isto ainda tem partes do exemplo');
-      // O foco vai para o grupo (o leitor lê a pergunta); o Tab leva ao primeiro botão.
-      await expect(painel).toBeFocused();
-      await page.keyboard.press('Tab');
-      await expect(painel.getByRole('button', { name: 'Mudar algo' })).toBeFocused();
-      expect(await partilhas(page)).toEqual([]);
-      await conferirTela(page, `${porta.tipo}: painel do exemplo`);
+      await preencherPasso1(page, porta);
+      // Reunião e evento ainda não têm dia, hora e local: a miniatura segue com o exemplo. Os outros já estão completos.
+      if (porta.agenda) await expect(linhaDoExemplo).toBeVisible();
+      else await expect(linhaDoExemplo).toBeHidden();
+      await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeVisible();
+      await conferirTela(page, `${porta.tipo}: passo 1 preenchido`);
+      await page.getByRole('button', { name: 'Continuar' }).click();
+      await expect(titulo(page)).toContainText('Passo 2 de 3');
 
-      await page.getByRole('button', { name: 'Mandar mesmo assim' }).click();
-      await expect.poll(async () => (await partilhas(page)).length).toBe(1);
-      const [enviado] = await partilhas(page);
-      expect(enviado!.arquivos).toBe(1);
-      expect(enviado!.texto).not.toContain('#/evento/');
-      expect(linkNoTexto(enviado!.texto)).toBe('');
+      // Passo 2: só o local tem exemplo em cinza (dia e hora, não).
+      if (porta.agenda) {
+        await expect(page.locator('#fluxo-local')).toHaveAttribute('placeholder', /^Ex\.: ./);
+        exemplos.push(...(await exemplosDosCampos(page, ['#fluxo-local'])));
+        await expect(page.locator('#fluxo-data')).not.toHaveAttribute('placeholder', /./);
+        await expect(page.locator('#fluxo-hora')).not.toHaveAttribute('placeholder', /./);
+        await expect(linhaDoExemplo).toBeVisible();
+        await preencherPasso2(page, porta);
+      }
+      await expect(linhaDoExemplo).toBeHidden();
+      await page.getByRole('button', { name: 'Continuar' }).click();
+      await expect(titulo(page)).toContainText('Passo 3 de 3');
+      await page.getByRole('button', { name: 'Ficou bom' }).click();
+      await esperarOPronto(page, porta);
+
+      // Pronto: sem aviso de exemplo; o texto mandado leva o que a pessoa escreveu e nada do exemplo.
+      await expect(page.locator('#fluxo-aviso-exemplo')).toHaveCount(0);
+      const texto = await mandar(page);
+      expect(texto).toContain(DADOS.titulo);
+      expect(texto).toContain(DADOS.organizacao);
+      for (const e of exemplos) expect(texto, `o exemplo "${e}" não vai no texto`).not.toContain(e);
+      if (porta.agenda) {
+        expect(linkNoTexto(texto)).toMatch(LINK_DO_EVENTO);
+        await expect(page.getByRole('button', { name: 'Copiar o link' })).toBeVisible();
+      } else {
+        expect(texto).not.toContain('#/evento/');
+      }
+      // A descrição da imagem do Pronto também não leva o exemplo.
+      const alt = (await page.locator('#fluxo-canvas').getAttribute('aria-label')) ?? '';
+      for (const e of exemplos) expect(alt, `o exemplo "${e}" não vai na descrição da imagem`).not.toContain(e);
+      await conferirTela(page, `${porta.tipo}: Pronto`);
     });
   }
 });
 
-test('reunião com a organização trocada: aviso, link, QR e ponte para a ata', async ({ page }) => {
+test('o endereço e a volta ao passo 1 não levam o exemplo: o que a pessoa escreveu fica e o resto continua em cinza', async ({ page }) => {
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+  expect(page.url()).not.toContain('horta');
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await expect(page.locator('#fluxo-titulo')).toHaveValue(DADOS.titulo);
+  await expect(page.locator('#fluxo-organizacao')).toHaveValue('');
+  await expect(page.locator('#fluxo-organizacao')).toHaveAttribute('placeholder', /^Ex\.: ./);
+});
+
+for (const porta of [PORTAS[0], PORTAS[1]]) {
+  test(`${porta.verbo}: sem organização e sem texto o link sai, e quem recebe vê a página do evento`, async ({ page }) => {
+    await abrirPorta(page, porta);
+    await preencherPasso1(page, porta, { organizacao: false, texto: false });
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await expect(titulo(page)).toContainText('Passo 2 de 3');
+    await preencherPasso2(page, porta);
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await page.getByRole('button', { name: 'Ficou bom' }).click();
+    await esperarOPronto(page, porta);
+
+    await expect(page.locator('#fluxo-link-estado')).toHaveText('');
+    await expect(page.getByRole('button', { name: 'Copiar o link' })).toBeVisible();
+    const texto = await mandar(page);
+    const link = linkNoTexto(texto);
+    expect(link).toMatch(LINK_DO_EVENTO);
+    // Sem organização não sobra linha vazia nem nome de organização do exemplo.
+    expect(texto).not.toMatch(/^_/m);
+    expect(texto).toContain(DADOS.titulo);
+
+    // Quem recebe: aba nova, sem nada na memória.
+    const recebida = await page.context().newPage();
+    await recebida.goto(link);
+    await expect(titulo(recebida)).toHaveText(DADOS.titulo);
+    await expect(recebida.getByText('Quem chama', { exact: false })).toHaveCount(0);
+    await expect(recebida.getByText('Não deu para abrir este evento')).toHaveCount(0);
+    await expect(recebida.getByText(DADOS.local, { exact: false }).first()).toBeVisible();
+    if (porta.tipo === 'reuniao') await expect(recebida.getByText('Contas do ano')).toBeVisible();
+    await conferirTela(recebida, `${porta.tipo}: página do evento sem organização`);
+    await recebida.close();
+  });
+}
+
+test('reunião com organização: aviso, link, QR e ponte para a ata', async ({ page }) => {
   const reuniao = PORTAS[0];
   await abrirPorta(page, reuniao);
 
   await expect(page.getByText('Título, local e pauta vão no link do convite')).toBeVisible();
-  const pauta = (await page.locator('#fluxo-pauta').inputValue()).split('\n').filter(Boolean);
-  expect(pauta.length).toBeGreaterThan(0);
-  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await preencherPasso1(page, reuniao);
+  const pauta = DADOS.pauta.split('\n');
 
   await irAteOPronto(page, reuniao);
 
@@ -57,7 +135,7 @@ test('reunião com a organização trocada: aviso, link, QR e ponte para a ata',
 
   const texto = await mandar(page);
   const link = linkNoTexto(texto);
-  expect(link).toMatch(/^http:\/\/localhost:\d+\/#\/evento\/[A-Za-z0-9_-]+$/);
+  expect(link).toMatch(LINK_DO_EVENTO);
   expect(texto).toContain(ORGANIZACAO);
   for (const item of pauta) expect(texto).toContain(item);
 
@@ -77,9 +155,10 @@ test('reunião com a organização trocada: aviso, link, QR e ponte para a ata',
 test('C-01: o passo 2 já baixa as partes do evento; sem rede no Pronto, o link sai', async ({ page, context }) => {
   const evento = PORTAS[1];
   await abrirPorta(page, evento);
-  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await preencherPasso1(page, evento);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
+  await preencherPasso2(page, evento);
   // Dá tempo de as partes (partes, formato, bloqueio) chegarem; o passo 2 não mostra nada disso.
   await page.waitForLoadState('networkidle');
   await context.setOffline(true);
@@ -136,17 +215,14 @@ test('C-01: sem link, só Mandar e Copiar o texto perguntam; Baixar não; falta 
   const partes = '**/assets/{partes,formato,bloqueio}-*.js';
   await page.route(partes, (rota) => rota.abort());
   await abrirPorta(page, evento);
-  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
-  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
-  await page.locator('#fluxo-texto').fill('Traga uma cadeira e um prato');
+  await preencherPasso1(page, evento);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
-  await page.locator('#fluxo-local').fill('Salão da associação, Rua dos Ipês, 12');
+  await preencherPasso2(page, evento);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('button', { name: 'Ficou bom' }).click();
   await esperarOPronto(page, evento);
   await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
-  await expect(page.locator('#fluxo-aviso-exemplo')).toHaveCount(0);
   const painel = page.locator('#fluxo-confirma');
 
   // Baixar a imagem não pergunta pela falta do link.
@@ -160,41 +236,6 @@ test('C-01: sem link, só Mandar e Copiar o texto perguntam; Baixar não; falta 
   await expect(painel).toBeVisible();
   await expect(painel).toContainText('A mensagem vai sem o link do evento.');
   await expect(painel.locator('#fluxo-confirma-mudar')).toHaveText('Tentar de novo');
-});
-
-test('C-01: sem rede E com partes do exemplo, o primeiro botão do painel é "Mudar algo"', async ({ page }) => {
-  const evento = PORTAS[1];
-  await page.route('**/assets/{partes,formato,bloqueio}-*.js', (rota) => rota.abort());
-  await abrirPorta(page, evento);
-  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
-  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
-  await irAteOPronto(page, evento);
-  await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
-  await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
-  const painel = page.locator('#fluxo-confirma');
-  await expect(painel).toContainText('A mensagem vai sem o link do evento.');
-  await expect(painel).toContainText('Isto ainda tem partes do exemplo');
-  await expect(painel.locator('#fluxo-confirma-mudar')).toHaveText('Mudar algo');
-});
-
-test('C-01: confirmar o exemplo em "Baixar" não cala o aviso de que "Mandar" vai sem o link', async ({ page }) => {
-  const evento = PORTAS[1];
-  await page.route('**/assets/{partes,formato,bloqueio}-*.js', (rota) => rota.abort());
-  await abrirPorta(page, evento);
-  await page.locator('#fluxo-titulo').fill('Mutirão da horta');
-  await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
-  await irAteOPronto(page, evento);
-  await expect(page.locator('#fluxo-tentar-link')).toBeVisible();
-  const painel = page.locator('#fluxo-confirma');
-  await page.getByRole('button', { name: 'Baixar a imagem' }).click();
-  await expect(painel).toContainText('Isto ainda tem partes do exemplo');
-  await expect(painel).not.toContainText('A mensagem vai sem o link do evento.');
-  await page.locator('#fluxo-confirma-seguir').click();
-  await expect(painel).toBeHidden();
-  await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
-  await expect(painel).toBeVisible();
-  await expect(painel).toContainText('A mensagem vai sem o link do evento.');
-  await expect(painel).not.toContainText('Isto ainda tem partes do exemplo');
 });
 
 // ---------- D1: título que fala em nome de órgão público ----------
@@ -256,13 +297,14 @@ test('D1: com letra a 200%, depois de abrir a pergunta do órgão, o começo del
   await expect(page.getByRole('button', { name: 'Continuar' })).toBeFocused();
 });
 
-test('passo 1: o Tab passa por "Ver a prévia maior" e "Apagar o exemplo" antes do Título, mas a leitura começa no h1', async ({ page }) => {
+test('passo 1: o Tab passa por "Ver a prévia maior" e "Apagar tudo" antes do Título, mas a leitura começa no h1', async ({ page }) => {
   await abrirPorta(page, PORTAS[2]);
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
   await page.locator('h1').focus();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Ver a prévia maior' })).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Apagar o exemplo' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('#fluxo-titulo')).toBeFocused();
   // No código, o h1 vem primeiro e a miniatura logo depois dele.
@@ -273,23 +315,69 @@ test('passo 1: o Tab passa por "Ver a prévia maior" e "Apagar o exemplo" antes 
   expect(ordem).toEqual(['h1', 'fluxo-mini', 'fluxo-dica-linha']);
 });
 
-// ---------- D7: apagar e Desfazer ----------
+// ---------- D7: apagar tudo e Desfazer, sem relógio ----------
 
-test('D7: "Apagar o exemplo" vira "Desfazer" e devolve o título', async ({ page }) => {
+test('D7: "Apagar tudo" vira "Desfazer" (sem relógio) e devolve o que estava escrito', async ({ page }) => {
   const aviso = PORTAS[2];
   await abrirPorta(page, aviso);
-  const campo = page.locator('#fluxo-titulo');
-  const antes = await campo.inputValue();
-  expect(antes.length).toBeGreaterThan(0);
+  const titulo1 = page.locator('#fluxo-titulo');
+  const texto = page.locator('#fluxo-texto');
+  // Com tudo vazio, não há o que apagar.
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeHidden();
+  await titulo1.fill(DADOS.titulo);
+  await texto.fill(DADOS.texto);
+  await page.locator('#fluxo-organizacao').fill(DADOS.organizacao);
 
-  await page.getByRole('button', { name: 'Apagar o exemplo' }).click();
-  await expect(campo).toHaveValue('');
-  await expect(campo).toBeFocused();
+  await page.getByRole('button', { name: 'Apagar tudo' }).click();
+  await expect(titulo1).toHaveValue('');
+  await expect(texto).toHaveValue('');
+  await expect(page.locator('#fluxo-organizacao')).toHaveValue('');
+  await expect(titulo1).toBeFocused();
+  await expect(page.locator('.aviso-vivo, [role="status"]').filter({ hasText: 'Tudo apagado. Para trazer de volta, toque em Desfazer.' }).first()).toBeAttached();
   const desfazer = page.getByRole('button', { name: 'Desfazer' });
   await expect(desfazer).toBeVisible();
 
+  // Sem prazo: passados mais de 10 segundos, o botão ainda é "Desfazer".
+  await page.waitForTimeout(11_000);
+  await expect(desfazer).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeHidden();
+
   await desfazer.click();
-  await expect(campo).toHaveValue(antes);
+  await expect(titulo1).toHaveValue(DADOS.titulo);
+  await expect(texto).toHaveValue(DADOS.texto);
+  await expect(page.locator('#fluxo-organizacao')).toHaveValue(DADOS.organizacao);
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeVisible();
+});
+
+test('D7: escrever de novo depois de apagar tira o "Desfazer"; sair do passo também', async ({ page }) => {
+  const aviso = PORTAS[2];
+  await abrirPorta(page, aviso);
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
+  await page.getByRole('button', { name: 'Apagar tudo' }).click();
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeVisible();
+
+  // Escrever de novo num campo do passo 1: a cópia some e o botão volta a "Apagar tudo".
+  await page.locator('#fluxo-titulo').fill('Outro título');
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeVisible();
+
+  // Apagar tudo de novo, sair do passo e voltar: não há mais o que desfazer, e o botão some (tudo vazio).
+  await page.getByRole('button', { name: 'Apagar tudo' }).click();
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeVisible();
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
+  await page.locator('#fluxo-titulo').fill('');
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeHidden();
+
+  // Sair do passo: a cópia se perde (fica só na variável da tela).
+  await page.locator('#fluxo-titulo').fill(DADOS.titulo);
+  await page.getByRole('button', { name: 'Apagar tudo' }).click();
+  await expect(page.getByRole('button', { name: 'Desfazer' })).toBeVisible();
+  await page.getByRole('button', { name: 'Voltar' }).click();
+  await expect(titulo(page)).toHaveText('O que você quer fazer?');
+  await page.getByRole('link', { name: new RegExp(aviso.verbo) }).click();
+  await expect(titulo(page)).toContainText('Passo 1 de 3');
   await expect(page.getByRole('button', { name: 'Desfazer' })).toBeHidden();
 });
 

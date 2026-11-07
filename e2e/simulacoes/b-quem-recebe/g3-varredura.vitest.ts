@@ -3,7 +3,7 @@
 import { writeFileSync } from 'node:fs';
 import { test } from 'vitest';
 import { codificar, decodificar, MENSAGEM_DO_PROBLEMA } from '../../../src/ferramentas/evento/formato';
-import { errosDoPasso, exemploDoFluxo } from '../../../src/ferramentas/fluxo/estado';
+import { dadosNovos, errosDoPasso, exemploDoRodizio } from '../../../src/ferramentas/fluxo/estado';
 import { TODAS, eventoBase, type CampoFluxo, type CampoLink } from './g3-apoio';
 
 const CAMPO_LINK: Record<CampoFluxo, CampoLink> = { titulo: 'titulo', organizacao: 'organizacao', texto: 'descricao', local: 'local' };
@@ -15,7 +15,7 @@ test('varredura', async () => {
     const fluxo: Record<string, { barrou: boolean; mensagem: string }> = {};
     const mao: Record<string, { estado: string; mensagem: string; exibido?: Record<string, string>; erros?: Record<string, string> }> = {};
     for (const campo of CAMPOS) {
-      const d = exemploDoFluxo('evento', 0, new Date('2026-11-06T12:00:00'));
+      const d = dadosNovos('evento', exemploDoRodizio('evento', 0, new Date('2026-11-06T12:00:00')));
       d.titulo = 'Sarau na praça';
       d.organizacao = 'Coletivo cultural do bairro';
       d.texto = 'Música e poesia. Traga sua cadeira.';
