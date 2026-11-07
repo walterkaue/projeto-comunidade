@@ -94,11 +94,15 @@ const PARES_DA_BASE: readonly Par[] = [
   ['erro (borda) sobre o campo', '--erro', '--superficie', 3],
   ['texto do aviso de atenção', '--tinta', '--atencao', 4.5],
   ['aviso que some (papel sobre tinta)', '--papel', '--tinta', 4.5],
+  ['texto suave dentro do aviso de atenção', '--tinta-suave', '--atencao', 4.5],
+  ['erro dentro do aviso de atenção', '--erro', '--atencao', 4.5],
 ];
 
 const PARES_DA_PORTA: readonly Par[] = [
   ['cor sobre a página (texto, link, foco)', '--cor', '--papel', 4.5],
-  ['cor sobre o cartão (ícone)', '--cor', '--superficie', 3],
+  ['cor sobre o cartão (link de ação, foco, ícone)', '--cor', '--superficie', 4.5],
+  ['cor dentro do aviso de atenção (link, foco)', '--cor', '--atencao', 4.5],
+  ['erro dentro do aviso de informação', '--erro', '--cor-clara', 4.5],
   ['texto do botão sobre a cor', '--sobre-cor', '--cor', 4.5],
   ['tinta sobre a clara', '--tinta', '--cor-clara', 4.5],
   ['texto suave sobre a clara', '--tinta-suave', '--cor-clara', 4.5],
@@ -288,5 +292,20 @@ describe('componentes.css', () => {
     const b = bloco(css, i).dentro;
     expect(b).toContain('animation: none !important');
     expect(b).toContain('transition: none !important');
+  });
+});
+
+// public/offline.html não carrega o tema (abre sem o app): as cores vão escritas à mão e precisam bater com ele.
+describe('public/offline.html usa as cores do tema', () => {
+  const offline = readFileSync(new URL('../../public/offline.html', import.meta.url), 'utf-8');
+  const claro = tokens('claro');
+  const escuro = tokens('escuro');
+  it('claro: fundo papel, texto tinta; escuro: fundo papel escuro, texto tinta clara', () => {
+    expect(offline).toContain(`background:${hex(claro, '--papel')};color:${hex(claro, '--tinta')}`);
+    expect(offline).toContain(`body{background:${hex(escuro, '--papel')};color:${hex(escuro, '--tinta')}}`);
+  });
+  it('theme-color claro e escuro iguais ao papel', () => {
+    expect(offline).toContain(`content="${hex(claro, '--papel')}" media="(prefers-color-scheme: light)"`);
+    expect(offline).toContain(`content="${hex(escuro, '--papel')}" media="(prefers-color-scheme: dark)"`);
   });
 });

@@ -170,6 +170,8 @@ h1 {
   line-height: 1.15;
   letter-spacing: -0.01em;
   margin: 0 0 0.75rem;
+  /* Texto a 200% em 360 px: palavra comprida quebra em vez de ser cortada (o body corta o que passa). */
+  overflow-wrap: break-word;
 }
 
 h1:focus {
@@ -207,6 +209,7 @@ a {
   font-weight: 700;
   text-align: center;
   text-decoration: none;
+  overflow-wrap: break-word;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;

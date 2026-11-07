@@ -278,4 +278,10 @@ O ícone "pessoas" (lista de presença da ata) é o mesmo da porta da reunião.
 
 O campo (`campo`, `campo-rotulo`, `campo-dica`, `campo-entrada`, `campo-erro`) mantém os nomes de antes; muda só a cara: 52 px, fonte de 17 px, exemplo em `--exemplo`, foco de 3 px na `--cor`, erro com borda de 4 px. Componentes que ficam com as Sessões 2 e 3, cada uma no CSS da sua tela: porta do início, marca e faixa de cinco cores, topo do passo, linha da prévia, barra fixa de baixo, opções de formato e bolinhas de cor.
 
-**Alto contraste (forced-colors):** avisos, quadrados de ícone, cartão e painel ganham borda `CanvasText`; a pílula escolhida fica em `Highlight`; o botão principal mantém o fundo (regra de `tema.css`).
+**Alto contraste (forced-colors):** avisos, quadrados de ícone, cartão e painel ganham borda `CanvasText`; a pílula escolhida fica em `Highlight` (foco em `CanvasText`); o botão principal mantém o fundo (regra de `tema.css`).
+
+**Cuidados de acessibilidade ao usar** (da revisão de 07/11/2026):
+- **Painel (`<dialog class="painel">`):** dê nome com `aria-labelledby` (o título ou a pergunta em negrito); ponha `autofocus` no botão seguro ("Mudar o texto"), para o `showModal()` não focar a ação de risco; trate `cancel` (Esc) como a escolha segura; guarde quem abriu e devolva o foco a ele no `close` (se a tela refez o HTML, foque o elemento novo equivalente). Tocar no fundo escurecido não fecha: é uma confirmação.
+- **Pílulas:** o `div.pilulas` leva `role="group"` e `aria-label` (ex.: "Atalhos do dia").
+- **Avisos:** o ícone é `aria-hidden`, então o leitor de tela não ouve se é informação ou atenção. Onde o tipo importa e o texto não está na lista que não muda de redação (seção 8), comece a frase dizendo o que é. Nos textos da análise jurídica, só formato e lugar mudam.
+- **Exemplo no campo de uma linha:** o `::placeholder` não quebra linha. Use exemplos curtos (até uns 28 letras) em `<input>`; o que for maior vai numa área de texto.

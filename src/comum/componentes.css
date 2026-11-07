@@ -30,6 +30,9 @@ html {
   font-size: 1rem;
   line-height: 1.4;
   text-align: left;
+  /* Mensagem longa com texto a 200%: rola dentro, sem cortar o começo. */
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
@@ -515,6 +518,17 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   background: rgba(26, 21, 18, 0.6);
 }
 
+/* No escuro, o fundo da cor do papel quase não escurece: preto mais forte, e o painel ganha uma borda em cima. */
+@media (prefers-color-scheme: dark) {
+  .painel::backdrop {
+    background: rgba(0, 0, 0, 0.72);
+  }
+
+  .painel {
+    border-top: 1px solid var(--borda-campo);
+  }
+}
+
 .painel-acoes {
   display: grid;
   gap: 12px;
@@ -564,6 +578,11 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
     border-color: Highlight;
     background: Highlight;
     color: HighlightText;
+  }
+
+  /* Com forced-color-adjust: none o contorno não é trocado pelo sistema: o foco fica em CanvasText. */
+  .pilula[aria-pressed='true']:focus-visible {
+    outline-color: CanvasText;
   }
 
   .link-acao {
