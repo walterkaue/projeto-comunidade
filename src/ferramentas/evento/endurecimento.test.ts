@@ -8,6 +8,7 @@ import { NOME } from '../../comum/marca';
 import { abrirEvento } from './abrir';
 import { horarioPorExtenso, horariosDaAgenda } from './agenda';
 import { COMPRIMIR_A_PARTIR, codificar, dadosCanonicos, decodificar, paraBase64Url } from './formato';
+import { FAIXA_FORTE, faixaInicio } from './pagina';
 import { textosDoRemovido } from './removido';
 import { motivoDeRecusa, validarEvento, type Evento } from './validar';
 
@@ -221,11 +222,8 @@ describe('evento que passa da meia-noite', () => {
 
 describe('simulação B de 06/11/2026: a página do evento e o formulário', () => {
   it('B-07: a faixa da página do evento, copiada inteira ou por frase, é recusada', () => {
-    // Lida do próprio pagina.ts: se a faixa mudar, o teste lembra de pôr a frase nova em FRASES_DO_SITE (conteudo.ts).
-    const fonte = readFileSync(new URL('./pagina.ts', import.meta.url), 'utf8');
-    const m = /<p id="ev-faixa">([^<]+)<\/p>/.exec(fonte);
-    expect(m, 'faixa em pagina.ts').not.toBeNull();
-    const faixa = m![1]!.replace('${esc(NOME)}', NOME);
+    // Montada com as constantes de pagina.ts: se a faixa mudar, o teste lembra de pôr a frase nova em FRASES_DO_SITE (conteudo.ts).
+    const faixa = faixaInicio(NOME) + FAIXA_FORTE;
     // "mande documentos" na faixa nova é pego antes pelo filtro de pedido de dado: o motivo pode ser um dos dois,
     // mas a faixa e cada frase dela seguem recusadas.
     expect(['plataforma', 'dados']).toContain(motivoDeRecusa(faixa));

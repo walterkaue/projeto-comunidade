@@ -5,6 +5,11 @@ import { conferirTela, expect, test, titulo } from './apoio';
 test('ata: preencher, imprimir e apagar', async ({ page }) => {
   await page.goto('./#/ata');
   await expect(titulo(page)).toHaveText('Depois da reunião: a ata');
+  await expect(page.getByRole('heading', { level: 1, name: 'Depois da reunião: a ata' })).toBeVisible();
+  await expect(page.locator('main[data-porta="reuniao"]')).toHaveCount(1);
+  await expect(page.getByLabel('Organização')).toHaveValue('');
+  await expect(page.getByLabel('Organização')).toHaveAttribute('placeholder', /^Ex.: /);
+  await expect(page.getByText('(obrigatório)')).toHaveCount(0);
   await conferirTela(page, 'ata vazia');
 
   await page.getByLabel('Organização').fill('Coletivo Cultural Beira-Rio');

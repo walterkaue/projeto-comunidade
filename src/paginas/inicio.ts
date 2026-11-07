@@ -2,6 +2,8 @@
 // Vai no pacote inicial, então fica pequena: nada de imagem, só texto e CSS. Não importa nada de src/ferramentas/.
 
 import { NOME } from '../comum/marca';
+import { icone, type NomeDoIcone } from '../comum/icones';
+import './inicio.css';
 import { esc } from '../comum/html';
 import { linkPara, type NomeDaRota } from '../comum/rotas';
 import type { Tela } from '../comum/tela';
@@ -16,21 +18,8 @@ export const PORTAS: readonly { tipo: string; verbo: string; exemplos: string }[
   { tipo: 'agradecimento', verbo: 'Agradecer', exemplos: 'A quem ajudou' },
 ];
 
-// Ícones de traço (24x24), desenhados aqui: sem biblioteca. Só enfeite, por isso aria-hidden.
-const ICONES: Record<string, string> = {
-  reuniao:
-    '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 7 1.5 7 5.5"/>',
-  evento: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
-  aviso: '<path d="M3 10v4h4l8 5V5l-8 5H3zM18 9a4 4 0 0 1 0 6"/>',
-  resultado: '<path d="M7 4h10v5a5 5 0 0 1-10 0V4zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8"/>',
-  agradecimento: '<path d="M12 20s-8-4.7-8-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 8 2.5C20 15.3 12 20 12 20z"/>',
-};
-
-const icone = (tipo: string): string =>
-  `<svg class="porta-icone" viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICONES[tipo] ?? ''}</svg>`;
-
 // Hierarquia: a reunião em destaque, evento e aviso em largura cheia, conquista e agradecimento lado a lado.
-const PESO: Record<string, string> = { reuniao: 'destaque', evento: 'larga', aviso: 'larga' };
+const PESO: Record<string, string> = { reuniao: 'reuniao', evento: 'larga', aviso: 'larga' };
 
 export const RODAPE: readonly { rota: NomeDaRota; titulo: string }[] = [
   { rota: 'sobre', titulo: 'Sobre' },
@@ -41,25 +30,46 @@ export const RODAPE: readonly { rota: NomeDaRota; titulo: string }[] = [
   { rota: 'contato', titulo: 'Contato' },
 ];
 
-export const telaInicio: Tela = (raiz) => {
-  raiz.innerHTML = `<main class="tela inicio">
-    <p class="inicio-nome">${esc(NOME)}</p>
-    <h1 tabindex="-1">O que você quer fazer?</h1>
-    <p class="inicio-lema">Em 1 minuto você tem a imagem, o texto e o link para o WhatsApp. Sem cadastro.</p>
-    <nav aria-label="O que fazer">
-      <ul class="inicio-portas">
-        ${PORTAS.map(
-          (p) => `<li class="porta-${PESO[p.tipo] ?? 'meia'}"><a class="botao botao-grande" href="${linkPara('fazer', p.tipo)}">
-            ${icone(p.tipo)}
+const MARCA_CINCO_PONTOS = `<svg class="ini-marca-icone" viewBox="0 0 22 22" width="22" height="22" aria-hidden="true" focusable="false">
+      <circle cx="11" cy="4.5" r="3.2" class="ini-ponto-reuniao"/><circle cx="17.2" cy="9" r="3.2" class="ini-ponto-evento"/>
+      <circle cx="14.8" cy="16.5" r="3.2" class="ini-ponto-aviso"/><circle cx="7.2" cy="16.5" r="3.2" class="ini-ponto-resultado"/>
+      <circle cx="4.8" cy="9" r="3.2" class="ini-ponto-agradecimento"/></svg>`;
+
+const porta = (p: (typeof PORTAS)[number]): string => {
+  const peso = PESO[p.tipo] ?? 'meia';
+  const tipo = p.tipo as NomeDoIcone;
+  const quadro = peso === 'reuniao' ? 'icone-quadro-gg' : peso === 'larga' ? 'icone-quadro-g' : '';
+  const fim =
+    peso === 'reuniao'
+      ? `<span class="porta-seta">${icone('direita')}</span>`
+      : peso === 'larga'
+        ? icone('chevron', { classe: 'porta-chevron' })
+        : '';
+  return `<li class="ini-item ini-item-${peso}"><a class="porta porta-${peso}" data-porta="${p.tipo}" href="${linkPara('fazer', p.tipo)}">
+            <span class="icone-quadro ${quadro}">${icone(tipo, { tamanho: peso === 'meia' ? 24 : 28, traco: 2.25 })}</span>
             <span class="porta-texto">
-              <span class="botao-titulo">${esc(p.verbo)}</span>
-              <span class="botao-descricao">${esc(p.exemplos)}</span>
-            </span>
-          </a></li>`,
-        ).join('')}
+              <span class="porta-verbo">${esc(p.verbo)}</span>
+              <span class="porta-exemplos">${esc(p.exemplos)}</span>
+            </span>${fim}
+          </a></li>`;
+};
+
+export const telaInicio: Tela = (raiz) => {
+  raiz.innerHTML = `<div class="faixa-cores" aria-hidden="true"></div>
+  <main class="tela ini">
+    <p class="ini-marca">${MARCA_CINCO_PONTOS}<span>${esc(NOME)}</span></p>
+    <h1 tabindex="-1">O que você quer fazer?</h1>
+    <p class="ini-lema">Em 1 minuto você tem a imagem, o texto e o link para o WhatsApp. Sem cadastro.</p>
+    <nav aria-label="O que fazer">
+      <ul class="ini-portas">
+        ${PORTAS.map(porta).join('')}
       </ul>
     </nav>
-    <a class="botao botao-sec inicio-ata" href="${linkPara('ata')}">Depois da reunião: fazer a ata</a>
+    <a class="botao botao-sec ini-ata" data-porta="reuniao" href="${linkPara('ata')}">
+      <span class="icone-quadro icone-quadro-claro icone-quadro-p">${icone('ata', { tamanho: 18 })}</span>
+      <span class="ini-ata-texto">Depois da reunião: fazer a ata</span>
+      ${icone('chevron', { classe: 'porta-chevron' })}
+    </a>
   </main>
   <footer class="rodape">
     <nav aria-label="Informações">
