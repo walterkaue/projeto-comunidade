@@ -112,3 +112,30 @@ test('denúncia a partir da página do evento: a revisão mostra o link e a desc
   await expect(texto).toHaveValue(new RegExp(descricao.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   await conferirTela(recebida, 'denúncia: revisão');
 });
+
+// B-02 e cara nova: a faixa do evento (aviso de atenção) aparece inteira ao abrir em 360 x 640, com texto a 100% e a 200%.
+for (const escala of [100, 200] as const) {
+  test(`faixa do evento inteira à vista ao abrir em 360 x 640, texto a ${escala}%`, async ({ page }) => {
+    const { link } = await criarEvento(page);
+    const recebida = await page.context().newPage();
+    await recebida.setViewportSize({ width: 360, height: 640 });
+    if (escala === 200) {
+      await recebida.addInitScript(() => {
+        document.documentElement.style.setProperty('font-size', '200%');
+      });
+    }
+    await recebida.goto(link);
+    await expect(titulo(recebida)).not.toHaveText('Abrindo o evento…');
+    await expect(recebida.locator('main.evento')).toHaveAttribute('data-porta', 'evento');
+    const faixa = recebida.locator('aside.evento-faixa');
+    await expect(faixa).toHaveClass(/aviso-atencao/);
+    const c = await faixa.boundingBox();
+    expect(c).not.toBeNull();
+    expect(c!.y).toBeGreaterThanOrEqual(0);
+    expect(c!.y + c!.height).toBeLessThanOrEqual(640);
+    const den = await faixa.getByRole('link', { name: 'Denunciar', exact: true }).boundingBox();
+    expect(den!.height).toBeGreaterThanOrEqual(47.5);
+    expect(den!.y + den!.height).toBeLessThanOrEqual(640);
+    expect(await recebida.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+}
