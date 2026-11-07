@@ -33,18 +33,15 @@
 
 .faixa-provisoria {
   margin: 0.75rem 0 0;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--tinta);
-  border-radius: var(--raio);
-  background: var(--superficie);
 }
 
 .caixa {
   margin: 1rem 0;
   padding: 1rem;
-  border: 1px solid var(--borda-campo);
-  border-radius: var(--raio);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-cartao);
   background: var(--superficie);
+  box-shadow: var(--sombra);
 }
 
 .caixa h2 {

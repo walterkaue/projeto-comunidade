@@ -2,6 +2,7 @@
 
 import { LANCAMENTO_PUBLICO } from '../comum/marca';
 import { esc } from '../comum/html';
+import { icone } from '../comum/icones';
 import { VERSAO_DOS_TEXTOS, type Bloco, type Pagina } from './textos/tipos';
 
 // Remover junto com a faixa quando o advogado aprovar os textos (LANCAMENTO_PUBLICO = true).
@@ -13,7 +14,7 @@ const bloco = (b: Bloco) => (typeof b === 'string' ? `<p>${esc(b)}</p>` : `<ul>$
 /** A faixa só aparece em texto jurídico, enquanto o lançamento público não foi liberado. */
 export function faixaEmHtml(p: Pagina, lancamento: boolean = LANCAMENTO_PUBLICO): string {
   if (!p.juridico || lancamento) return '';
-  return `<p class="faixa-provisoria" role="note"><strong>${esc(FAIXA_PROVISORIA)}.</strong> Este texto ainda será conferido por um advogado e pode mudar.</p>`;
+  return `<div class="aviso-atencao faixa-provisoria" role="note">${icone('atencao', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p><strong>${esc(FAIXA_PROVISORIA)}.</strong> Este texto ainda será conferido por um advogado e pode mudar.</p></div></div>`;
 }
 
 export function secoesEmHtml(p: Pagina): string {
