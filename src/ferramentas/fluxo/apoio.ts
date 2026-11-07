@@ -2,6 +2,7 @@
 // O que depende do navegador fica em previa.ts, passos.ts e pronto.ts.
 
 import { mensagemDoResultado, type Resultado } from '../../comum/compartilhar';
+import type { NomeDoIcone } from '../../comum/icones';
 import { dadosDoLinkDoEvento } from '../../comum/entreTelas';
 import type { Nivel } from '../../comum/nivel';
 import { linkPara } from '../../comum/rotas';
@@ -15,6 +16,9 @@ export function paletaDoFluxo(d: Pick<DadosDoFluxo, 'paletaId' | 'corLivre'>): P
   if (d.paletaId === 'livre') return aplicarCorLivre(d.corLivre).paleta ?? PALETA_PADRAO;
   return paletaPorId(d.paletaId);
 }
+
+/** Ícone de cada formato no passo 3: celular (Status), conversa (Grupo) e impressora (Cartaz). */
+export const ICONE_DO_FORMATO: Record<Formato, NomeDoIcone> = { status: 'celular', conversa: 'conversa', cartaz: 'imprimir' };
 
 export const ALTURA_DA_MINIATURA = 96;
 

@@ -9,6 +9,7 @@ import {
   esperaDoRedesenho,
   dicaDoMandar,
   frasePainel,
+  ICONE_DO_FORMATO,
   MENSAGEM_DE_BAIXAR,
   nomeDoArquivoDoFluxo,
   notaDoCorte,
@@ -17,6 +18,8 @@ import {
   soFaltaARede,
   temMenuDeCompartilhar,
 } from './apoio';
+import { CAMINHOS } from '../../comum/icones';
+import { FORMATOS } from '../cards/modelos';
 import { cheio } from './dados-de-teste';
 
 const HOJE = new Date(2026, 10, 5);
@@ -200,5 +203,12 @@ describe('confirmação sem o link (C-01)', () => {
     expect(soFaltaARede(true, true, true)).toBe(false);
     expect(soFaltaARede(false, true, false)).toBe(false);
     expect(soFaltaARede(true, false, false)).toBe(false);
+  });
+});
+
+describe('ICONE_DO_FORMATO', () => {
+  it('cada formato tem um ícone que existe: celular, conversa e impressora', () => {
+    expect(ICONE_DO_FORMATO).toEqual({ status: 'celular', conversa: 'conversa', cartaz: 'imprimir' });
+    for (const f of FORMATOS) expect(CAMINHOS[ICONE_DO_FORMATO[f]]).toBeTruthy();
   });
 });

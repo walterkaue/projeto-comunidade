@@ -6,59 +6,64 @@ import './pronto.css';
 import { avisar } from '../../comum/aviso';
 import { limparErro, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
+import { icone } from '../../comum/icones';
 import { NOME } from '../../comum/marca';
 import { nivelDoAparelho } from '../../comum/nivel';
 import { escalaDoFormato, type Formato } from '../cards/modelos';
 import { lerLogo } from '../cards/logo';
 import { aplicarCorLivre, PALETAS, paletaPorId } from '../cards/paletas';
 import { EXPLICACAO_DO_FORMATO, FORMATOS, linkAindaVale, NOME_DO_FORMATO, type DadosDoFluxo } from './estado';
-import { criarAgendador, descricaoDaImagem, esperaDoRedesenho } from './apoio';
+import { criarAgendador, descricaoDaImagem, esperaDoRedesenho, ICONE_DO_FORMATO } from './apoio';
 import { logoAtual, trocarLogo } from './memoria';
 import { irAoPasso, voltarDoPasso } from './navegacao';
-import { BOTAO_VER_MAIOR, desenharCardEm, htmlDoDialogo, ligarDialogo, medirFaixasFixas } from './previa';
+import { desenharCardEm, htmlDoDialogo, ligarDialogo, medirFaixasFixas } from './previa';
 import { barra, topoDoPasso } from './topo';
 
 export function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const nivel = nivelDoAparelho();
-  // Formato: três botões lado a lado (radios de verdade, com o input escondido de forma acessível).
+  // Formato: três opções empilhadas, com ícone e nome (radios de verdade, com o input cobrindo a opção inteira).
+  // A escolhida ganha fundo claro, borda na cor da porta e o ✓ (nunca só a cor).
   const formatos = FORMATOS.map((f) => {
     const id = `fluxo-formato-${f}`;
     return `<div class="fluxo-seg-item">
         <input type="radio" id="${id}" name="fluxo-formato" value="${f}"${f === d.formato ? ' checked' : ''}>
-        <label for="${id}"><span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-so-leitor">. ${esc(EXPLICACAO_DO_FORMATO[f])}</span></label>
+        <label for="${id}">${icone(ICONE_DO_FORMATO[f], { classe: 'fluxo-seg-icone' })}<span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-so-leitor">. ${esc(EXPLICACAO_DO_FORMATO[f])}</span>${icone('check', { classe: 'fluxo-seg-check', traco: 2.5 })}</label>
       </div>`;
   }).join('');
-  // Cor: bolinhas com o nome curto embaixo (o leitor de tela lê o nome só uma vez, no rótulo).
+  // Cor: bolinhas com o nome curto embaixo (o leitor de tela lê o nome só uma vez, no rótulo). A escolhida leva
+  // anel na cor da porta, ✓ dentro e o nome em negrito.
   const paletas = PALETAS.map((p) => {
     const id = `fluxo-paleta-${p.id}`;
     return `<div class="fluxo-bola-item">
         <input type="radio" id="${id}" name="fluxo-paleta" value="${esc(p.id)}"${p.id === d.paletaId ? ' checked' : ''}>
-        <label for="${id}"><span class="fluxo-amostra" data-paleta="${esc(p.id)}" aria-hidden="true"></span><span class="fluxo-so-leitor">${esc(p.nome)}</span></label>
+        <label for="${id}"><span class="fluxo-amostra" data-paleta="${esc(p.id)}" aria-hidden="true"></span><span class="fluxo-bola-check" aria-hidden="true">${icone('check', { tamanho: 14, traco: 3 })}</span><span class="fluxo-so-leitor">${esc(p.nome)}</span></label>
         <span class="fluxo-bola-nome" aria-hidden="true">${esc(p.nome)}</span>
       </div>`;
   }).join('');
   const nomeDaCor = (id: string): string => (id === 'livre' ? 'Cor livre' : paletaPorId(id).nome);
 
-  raiz.innerHTML = `<main class="tela fluxo">
+  raiz.innerHTML = `<main class="tela fluxo fluxo-passo3" data-porta="${d.tipo}">
     ${topoDoPasso(d, 3)}
-    <section class="fluxo-previa" aria-label="Prévia">
-      <p class="fluxo-estado" id="fluxo-estado"></p>
-      <div class="fluxo-moldura fluxo-moldura-passo3"><canvas id="fluxo-canvas" role="img" aria-label="Prévia da imagem"></canvas>${BOTAO_VER_MAIOR}</div>
-    </section>
-    ${htmlDoDialogo()}
+    <p class="fluxo-estado" id="fluxo-estado"></p>
     <form class="fluxo-form" id="fluxo-form" novalidate>
-      <fieldset class="campo campo-grupo" id="fluxo-formato">
-        <legend class="campo-rotulo">Onde vai mandar?</legend>
-        <div class="fluxo-seg">${formatos}</div>
-        <p class="fluxo-formato-expl" id="fluxo-formato-expl">${esc(EXPLICACAO_DO_FORMATO[d.formato])}</p>
-      </fieldset>
+      <div class="fluxo-p3-linha">
+        <section class="fluxo-p3-previa" aria-label="Prévia">
+          <canvas id="fluxo-canvas" role="img" aria-label="Prévia da imagem"></canvas>
+          <button type="button" class="fluxo-lupa" id="fluxo-ver-maior" aria-label="Ver a prévia maior">${icone('lupa')}</button>
+        </section>
+        <fieldset class="campo campo-grupo fluxo-p3-formato" id="fluxo-formato">
+          <legend class="campo-rotulo">Onde vai mandar?</legend>
+          <div class="fluxo-seg">${formatos}</div>
+        </fieldset>
+      </div>
+      <p class="fluxo-formato-expl" id="fluxo-formato-expl">${esc(EXPLICACAO_DO_FORMATO[d.formato])}</p>
       <fieldset class="campo campo-grupo" id="fluxo-cor">
-        <legend class="campo-rotulo">Cor: <span id="fluxo-cor-nome">${esc(nomeDaCor(d.paletaId))}</span></legend>
+        <legend class="campo-rotulo">Cor da imagem<span class="fluxo-so-leitor">: <span id="fluxo-cor-nome">${esc(nomeDaCor(d.paletaId))}</span></span></legend>
         <div class="fluxo-bolas">${paletas}</div>
         <p class="campo-dica" id="fluxo-cor-aviso"${d.paletaId === 'livre' ? '' : ' hidden'}>Você escolheu uma cor livre, em Mais opções.</p>
       </fieldset>
       <details class="fluxo-mais">
-        <summary>Mais opções</summary>
+        <summary><span>Mais opções <span class="fluxo-mais-resumo">(logo, outra cor, rodapé)</span></span>${icone('abrir', { classe: 'fluxo-mais-seta' })}</summary>
         <div class="fluxo-mais-corpo">
           <div class="campo">
             <label class="campo-rotulo" for="fluxo-logo">Logo (opcional)</label>
@@ -80,6 +85,7 @@ export function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
         </div>
       </details>
     </form>
+    ${htmlDoDialogo()}
     ${barra('Ficou bom')}
   </main>`;
 
@@ -109,7 +115,6 @@ export function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   raiz.querySelectorAll<HTMLElement>('.fluxo-amostra').forEach((el) => {
     const p = paletaPorId(el.dataset.paleta ?? '');
     el.style.background = p.fundo;
-    el.style.borderColor = p.destaque;
     el.style.boxShadow = `inset 0 -10px 0 ${p.destaque}`;
   });
 
