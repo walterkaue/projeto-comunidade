@@ -7,7 +7,7 @@
   min-width: 0;
 }
 
-.fluxo .botao,
+.fluxo .botao:not(.botao-alto),
 .fluxo .campo-radio,
 .fluxo .campo-radio label {
   min-height: 52px;
@@ -390,31 +390,9 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
   }
 }
 
-/* Painel de confirmação do Pronto ("sem o link"). Os passos usam o <dialog class="painel">. */
-.fluxo-confirma {
-  display: grid;
-  gap: 12px;
-  margin: 0.5rem 0 0.75rem;
-  padding: 0.75rem;
-  border: 2px solid var(--borda-campo);
-  border-radius: var(--raio);
-  background: var(--superficie);
-  min-width: 0;
-}
-
+/* O painel de "sem o link" do Pronto tem o resto do estilo em pronto.css; aqui só garante que o hidden esconda. */
 .fluxo-confirma[hidden] {
   display: none;
-}
-
-.fluxo-confirma p {
-  margin: 0;
-  font-weight: 700;
-  color: var(--tinta);
-}
-
-.fluxo-confirma .botao {
-  width: 100%;
-  min-height: var(--toque);
 }
 
 /* Dia que já passou (C-09): avisa, não bloqueia. */
