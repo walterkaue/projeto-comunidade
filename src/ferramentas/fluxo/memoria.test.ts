@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { convocacaoVazia } from '../reuniao/convocacao';
 import { rascunho } from '../reuniao/rascunho';
-import { exemploDoFluxo, marcarMudanca, PERGUNTA_DA_TROCA_DO_RASCUNHO, dadosDoEvento } from './estado';
+import { cheio } from './dados-de-teste';
+import { dadosDoEvento, exemploDoRodizio, marcarMudanca, PERGUNTA_DA_TROCA_DO_RASCUNHO, SEM_EXEMPLO } from './estado';
 import { dadosDo, esquecerTudo, existe, guardar, trocarPorDadosDeLink } from './memoria';
 
 const HOJE = new Date(2026, 10, 5);
@@ -37,14 +38,14 @@ describe('Fazer outro', () => {
 describe('trocar o rascunho pelos dados de um link', () => {
   it('sem rascunho da pessoa, troca sem perguntar', () => {
     const confirmar = vi.fn(() => false);
-    guardar(exemploDoFluxo('evento', 0, HOJE));
+    guardar(cheio('evento', 0, HOJE));
     expect(trocarPorDadosDeLink(doLink(), confirmar)).toBe(true);
     expect(confirmar).not.toHaveBeenCalled();
     expect(dadosDo('evento').titulo).toBe('Festa');
   });
 
   it('com o que a pessoa escreveu, pergunta; recusou, o rascunho dela fica', () => {
-    const d = exemploDoFluxo('evento', 0, HOJE);
+    const d = cheio('evento', 0, HOJE);
     marcarMudanca(d);
     guardar(d);
     const confirmar = vi.fn(() => false);
@@ -69,8 +70,30 @@ describe('rodízio dos exemplos (D6)', () => {
       const mem = await import('./memoria');
       const est = await import('./estado');
       vi.restoreAllMocks();
-      expect(mem.dadosDo('reuniao', HOJE).pauta).toBe(est.exemploDoFluxo('reuniao', inicio, HOJE).pauta);
-      expect(mem.dadosDo('evento', HOJE).organizacao).toBe(est.exemploDoFluxo('evento', inicio + 1, HOJE).organizacao);
+      expect(mem.dadosDo('reuniao', HOJE).exemplo).toEqual(est.exemploDoRodizio('reuniao', inicio, HOJE));
+      expect(mem.dadosDo('evento', HOJE).exemplo).toEqual(est.exemploDoRodizio('evento', inicio + 1, HOJE));
     }
+  });
+
+  it('dados de link também ganham o próximo exemplo do rodízio (para o placeholder)', async () => {
+    vi.resetModules();
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    const mem = await import('./memoria');
+    const est = await import('./estado');
+    vi.restoreAllMocks();
+    const novo = doLink();
+    expect(novo.exemplo).toBe(SEM_EXEMPLO);
+    expect(mem.trocarPorDadosDeLink(novo, () => true)).toBe(true);
+    const { titulo, organizacao, texto, local } = est.exemploDoRodizio('evento', 0, HOJE);
+    expect(mem.dadosDo('evento', HOJE).exemplo).toMatchObject({ titulo, organizacao, texto, local });
+    expect(mem.dadosDo('evento', HOJE).titulo).toBe('Festa');
+  });
+
+  it('dados novos começam vazios; o exemplo fica à parte', () => {
+    const d = dadosDo('reuniao', HOJE);
+    expect([d.titulo, d.organizacao, d.texto, d.pauta, d.data, d.hora, d.local]).toEqual(['', '', '', '', '', '', '']);
+    expect(d.origem).toBe('novo');
+    expect(d.exemplo.titulo).not.toBe('');
+    expect(exemploDoRodizio('reuniao', 0, HOJE).titulo).not.toBe('');
   });
 });

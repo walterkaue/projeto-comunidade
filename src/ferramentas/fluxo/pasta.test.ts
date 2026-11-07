@@ -49,3 +49,27 @@ describe('texto digitado não entra no HTML sem esc', () => {
     }
   });
 });
+
+describe('o exemplo só ilustra (placeholder e miniatura dos passos 1 e 2)', () => {
+  const cita = /comExemplo|faltaAlgo|CamposDoExemplo|SEM_EXEMPLO|exemploDoRodizio|exemploVazio|\.exemplo\b/;
+  const podem = ['passos.ts', 'previa.ts', 'estado.ts', 'memoria.ts', 'dados-de-teste.ts'];
+
+  it.each(['passos.ts', 'previa.ts', 'estado.ts', 'memoria.ts'])('%s é um dos lugares que leem o exemplo', (arquivo) => {
+    expect(semComentarios(arquivo)).toMatch(cita);
+  });
+
+  it('pronto.ts, passo3.ts, link.ts, ponte.ts e apoio.ts não citam o exemplo', () => {
+    for (const f of ['pronto.ts', 'passo3.ts', 'link.ts', 'ponte.ts', 'apoio.ts']) expect(semComentarios(f), f).not.toMatch(cita);
+  });
+
+  it('nenhum outro arquivo da pasta cita o exemplo', () => {
+    for (const f of arquivos.filter((a) => a.endsWith('.ts') && !podem.includes(a))) expect(semComentarios(f), f).not.toMatch(cita);
+  });
+
+  it('só previa.ts e passos.ts usam comExemplo (a miniatura, o diálogo e os placeholders)', () => {
+    for (const f of arquivos.filter((a) => a.endsWith('.ts') && a !== 'estado.ts')) {
+      const usa = /comExemplo|faltaAlgo/.test(semComentarios(f));
+      expect(usa, f).toBe(f === 'previa.ts');
+    }
+  });
+});

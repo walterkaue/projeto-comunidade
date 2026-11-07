@@ -6,29 +6,33 @@ import { VOLTA_DO_RODIZIO } from '../cards/exemplos';
 import type { Logo } from '../cards/logo';
 import { convocacaoVazia } from '../reuniao/convocacao';
 import { rascunho } from '../reuniao/rascunho';
-import { exemploDoFluxo, PERGUNTA_DA_TROCA_DO_RASCUNHO, type DadosDoFluxo, type Tipo } from './estado';
+import { dadosNovos, exemploDoRodizio, exemploVazio, PERGUNTA_DA_TROCA_DO_RASCUNHO, type DadosDoFluxo, type Tipo } from './estado';
 
 const porTipo = new Map<Tipo, DadosDoFluxo>();
 let logo: Logo | undefined;
 
-// Rodízio dos exemplos: começa num ponto ao acaso da volta (0 … VOLTA_DO_RODIZIO − 1) e anda um a cada exemplo novo.
+// Rodízio dos exemplos (só ilustram os campos vazios): começa num ponto ao acaso da volta (0 … VOLTA_DO_RODIZIO − 1) e anda um a cada exemplo novo.
 let proximo = Math.floor(Math.random() * VOLTA_DO_RODIZIO);
 
 /** Há dados deste tipo na memória desta aba (quem abre /3 ou /pronto direto, depois de recarregar, não tem)? */
 export const existe = (tipo: Tipo): boolean => porTipo.has(tipo);
 
-/** Os dados do tipo. Na primeira vez (ou depois de "Fazer outro"), começa com um exemplo pronto. */
+/** Os dados do tipo. Na primeira vez (ou depois de "Fazer outro"), começa com tudo vazio e o próximo exemplo do rodízio. */
 export function dadosDo(tipo: Tipo, hoje: Date = new Date()): DadosDoFluxo {
   let d = porTipo.get(tipo);
   if (!d) {
-    d = exemploDoFluxo(tipo, proximo++, hoje);
+    d = dadosNovos(tipo, exemploDoRodizio(tipo, proximo++, hoje));
     porTipo.set(tipo, d);
   }
   return d;
 }
 
-/** Troca os dados do tipo (vindos de outra tela ou de "criar outro a partir deste"). */
-export function guardar(d: DadosDoFluxo): void {
+/**
+ * Troca os dados do tipo (vindos de outra tela ou de "criar outro a partir deste"). Dados de link chegam sem exemplo:
+ * ganham o próximo do rodízio, para o placeholder quando a pessoa esvaziar um campo.
+ */
+export function guardar(d: DadosDoFluxo, hoje: Date = new Date()): void {
+  if (exemploVazio(d.exemplo)) d.exemplo = exemploDoRodizio(d.tipo, proximo++, hoje);
   porTipo.set(d.tipo, d);
 }
 
@@ -42,7 +46,7 @@ export function trocarPorDadosDeLink(novo: DadosDoFluxo, confirmar: (pergunta: s
   return true;
 }
 
-/** "Fazer outro": esquece tudo (o próximo começa com outro exemplo), inclusive a convocação que foi para a ata. */
+/** "Fazer outro": esquece tudo (o próximo começa vazio, com outro exemplo), inclusive a convocação que foi para a ata. */
 export function esquecerTudo(): void {
   porTipo.clear();
   logo = undefined;

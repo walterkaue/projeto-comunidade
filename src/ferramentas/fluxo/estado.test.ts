@@ -10,20 +10,20 @@ import {
   copiaDoPasso1,
   devolverOPasso1,
   diaJaPassou,
-  lembreteDoDia,
   letrasQueFaltamNaPauta,
   PERGUNTA_DO_ORGAO,
   precisaPerguntarDoOrgao,
   perguntarDoOrgaoNoPronto,
   confirmarOrgaoNoPronto,
   passo1Vazio,
-  avisoDeApagar,
+  AVISO_DE_APAGAR,
+  botaoDeApagar,
+  ROTULO_APAGAR,
   ROTULO_DESFAZER,
   assinatura,
   atalhosDoDia,
-  avisoDoExemplo,
   camposDoCard,
-  camposDoExemplo,
+  type CamposDoExemplo,
   convocacaoDoFluxo,
   dadosDoCardPreparado,
   dadosDoEvento,
@@ -32,8 +32,6 @@ import {
   enderecoDoPasso,
   errosDoPasso,
   eventoDoFluxo,
-  exemploDoFluxo,
-  fraseDaConfirmacao,
   lerDataBr,
   lerDestino,
   linkAindaVale,
@@ -48,22 +46,31 @@ import {
   passoPendente,
   podePularOPasso2,
   proximoPasso,
-  rotuloDeApagar,
   textoParaMandar,
   TIPOS,
+  comExemplo,
+  dadosNovos,
+  exemploDoRodizio,
+  faltaAlgo,
+  SEM_EXEMPLO,
+  temAgenda,
   type DadosDoFluxo,
+  type Tipo,
 } from './estado';
+import { VOLTA_DO_RODIZIO } from '../cards/exemplos';
+import { descricaoDaImagem } from './apoio';
+import { cheio } from './dados-de-teste';
 
 const BASE = 'https://exemplo.test/projeto/';
 const SABADO = new Date(2026, 10, 7); // sábado, 07/11/2026
 const QUINTA = new Date(2026, 10, 5);
 
-const reuniao = (): DadosDoFluxo => exemploDoFluxo('reuniao', 0, QUINTA);
+const reuniao = (): DadosDoFluxo => cheio('reuniao', 0, QUINTA);
 
 describe('exemplos em rodízio', () => {
   it('cada porta começa preenchida, sem tela em branco', () => {
     for (const tipo of TIPOS) {
-      const d = exemploDoFluxo(tipo, 3, QUINTA);
+      const d = cheio(tipo, 3, QUINTA);
       expect(d.tipo).toBe(tipo);
       expect(d.titulo).not.toBe('');
       expect(d.organizacao).not.toBe('');
@@ -73,14 +80,14 @@ describe('exemplos em rodízio', () => {
   });
 
   it('gira entre os tipos de organização', () => {
-    const orgs = new Set(Array.from({ length: 7 }, (_, i) => exemploDoFluxo('evento', i).organizacao));
+    const orgs = new Set(Array.from({ length: 7 }, (_, i) => cheio('evento', i).organizacao));
     expect(orgs.size).toBe(7);
-    expect(exemploDoFluxo('evento', 7).organizacao).toBe(exemploDoFluxo('evento', 0).organizacao);
-    expect(exemploDoFluxo('evento', -1).organizacao).toBe(exemploDoFluxo('evento', 6).organizacao);
+    expect(cheio('evento', 7).organizacao).toBe(cheio('evento', 0).organizacao);
+    expect(cheio('evento', -1).organizacao).toBe(cheio('evento', 6).organizacao);
   });
 
   it('usa o índice cru: a pauta gira a cada 7 e dá a volta, também para trás', () => {
-    const pauta = (i: number) => exemploDoFluxo('reuniao', i, QUINTA).pauta;
+    const pauta = (i: number) => cheio('reuniao', i, QUINTA).pauta;
     expect(pauta(7)).toBe(pauta(0));
     expect(pauta(15)).toBe(pauta(1));
     expect(pauta(-1)).toBe(pauta(6));
@@ -94,8 +101,8 @@ describe('exemplos em rodízio', () => {
 
   it('o exemplo de reunião e de evento vira link de evento válido', () => {
     for (let i = 0; i < 7; i++) {
-      expect(validarEvento(eventoDoFluxo(exemploDoFluxo('reuniao', i, QUINTA))).ok).toBe(true);
-      expect(validarEvento(eventoDoFluxo(exemploDoFluxo('evento', i, QUINTA))).ok).toBe(true);
+      expect(validarEvento(eventoDoFluxo(cheio('reuniao', i, QUINTA))).ok).toBe(true);
+      expect(validarEvento(eventoDoFluxo(cheio('evento', i, QUINTA))).ok).toBe(true);
     }
   });
 });
@@ -172,23 +179,23 @@ describe('o que falta em cada passo', () => {
   it('passo 1: título e, na reunião, a pauta', () => {
     expect(errosDoPasso({ ...reuniao(), titulo: ' ' }, 1).titulo).toBe('escreva o título.');
     expect(errosDoPasso({ ...reuniao(), pauta: '\n \n' }, 1).pauta).toMatch(/pauta/);
-    expect(errosDoPasso({ ...exemploDoFluxo('aviso', 0), titulo: '' }, 1).titulo).toBeDefined();
+    expect(errosDoPasso({ ...cheio('aviso', 0), titulo: '' }, 1).titulo).toBeDefined();
   });
 
   it('passo 2: reunião e evento precisam de dia, hora e local; aviso não', () => {
     const e = errosDoPasso({ ...reuniao(), data: '', hora: '', local: '' }, 2);
     expect(Object.keys(e).sort()).toEqual(['data', 'hora', 'local']);
-    expect(errosDoPasso({ ...exemploDoFluxo('aviso', 0), data: '' }, 2)).toEqual({});
+    expect(errosDoPasso({ ...cheio('aviso', 0), data: '' }, 2)).toEqual({});
   });
 
   it('reunião e evento passam pela mesma regra do link (sem telefone, link nem PIX)', () => {
-    const ev = exemploDoFluxo('evento', 0, QUINTA);
+    const ev = cheio('evento', 0, QUINTA);
     expect(errosDoPasso({ ...ev, texto: 'Ligue 11 98765-4321' }, 1).texto).toBeDefined();
     expect(errosDoPasso({ ...ev, titulo: 'Veja www.golpe.com' }, 1).titulo).toBeDefined();
     expect(errosDoPasso({ ...reuniao(), pauta: 'Contas\nPIX: chave@exemplo.com' }, 1).pauta).toBeDefined();
     expect(errosDoPasso({ ...ev, local: 'Rua A, fone 11 98765-4321' }, 2).local).toBeDefined();
     // Card que não vira link (aviso) não passa pela regra do link: é a imagem da própria pessoa.
-    expect(errosDoPasso({ ...exemploDoFluxo('aviso', 0), texto: 'Ligue 11 98765-4321' }, 1)).toEqual({});
+    expect(errosDoPasso({ ...cheio('aviso', 0), texto: 'Ligue 11 98765-4321' }, 1)).toEqual({});
   });
 
   it('o erro do passo 2 não aparece no passo 1', () => {
@@ -206,11 +213,11 @@ describe('o que sai', () => {
   });
 
   it('os outros tipos não levam pauta no card', () => {
-    expect(camposDoCard(exemploDoFluxo('evento', 0, QUINTA)).pauta).toBeUndefined();
+    expect(camposDoCard(cheio('evento', 0, QUINTA)).pauta).toBeUndefined();
   });
 
   it('aviso não leva hora nem local no card', () => {
-    const c = camposDoCard({ ...exemploDoFluxo('aviso', 0), hora: '10:00', local: 'Praça' });
+    const c = camposDoCard({ ...cheio('aviso', 0), hora: '10:00', local: 'Praça' });
     expect(c.hora).toBe('');
     expect(c.local).toBe('');
   });
@@ -223,11 +230,11 @@ describe('o que sai', () => {
   });
 
   it('sem link, o texto não fala em link', () => {
-    expect(textoParaMandar(exemploDoFluxo('agradecimento', 0))).not.toMatch(/Mais detalhes/);
+    expect(textoParaMandar(cheio('agradecimento', 0))).not.toMatch(/Mais detalhes/);
   });
 
   it('o asterisco digitado não quebra o negrito', () => {
-    expect(textoParaMandar({ ...exemploDoFluxo('aviso', 0), titulo: '*Oi*' }).split('\n')[0]).toBe('*Oi*');
+    expect(textoParaMandar({ ...cheio('aviso', 0), titulo: '*Oi*' }).split('\n')[0]).toBe('*Oi*');
   });
 
   it('a descrição do link da reunião é a pauta numerada, inteira (sem corte com "…")', () => {
@@ -249,7 +256,7 @@ describe('o que sai', () => {
     const pauta = errosDoPasso({ ...reuniao(), pauta: 'Contas\nPIX: chave@exemplo.com' }, 1).pauta!;
     expect(pauta).not.toMatch(/descrição/);
     expect(pauta).toMatch(/a pauta/);
-    const texto = errosDoPasso({ ...exemploDoFluxo('evento', 0, QUINTA), texto: 'Ligue 11 98765-4321' }, 1).texto!;
+    const texto = errosDoPasso({ ...cheio('evento', 0, QUINTA), texto: 'Ligue 11 98765-4321' }, 1).texto!;
     expect(texto).not.toMatch(/descrição/);
     expect(texto).toMatch(/o texto/);
   });
@@ -339,7 +346,7 @@ describe('link original e notas de dados de link', () => {
     d.assinaturaDoLink = assinatura(d);
     d.linkOriginal = false;
     expect(fraseDoLinkNoPronto(d)).toBe(avisoDoLinkNoPronto('evento'));
-    expect(fraseDoLinkNoPronto(exemploDoFluxo('evento', 0, QUINTA))).toBe(avisoDoLinkNoPronto('evento'));
+    expect(fraseDoLinkNoPronto(cheio('evento', 0, QUINTA))).toBe(avisoDoLinkNoPronto('evento'));
   });
 
   it('nota e dica do passo: link no passo 1 troca a dica; no 3 vem acima dela; no 2 e sem link, só a dica', () => {
@@ -361,9 +368,9 @@ describe('link original e notas de dados de link', () => {
 });
 
 describe('origem dos dados', () => {
-  it('o exemplo começa como exemplo; mexer vira da pessoa; link continua link', () => {
-    const d = exemploDoFluxo('evento', 0, QUINTA);
-    expect(d.origem).toBe('exemplo');
+  it('dados novos começam como "novo"; mexer vira da pessoa; link continua link', () => {
+    const d = cheio('evento', 0, QUINTA);
+    expect(d.origem).toBe('novo');
     marcarMudanca(d);
     expect(d.origem).toBe('pessoa');
     marcarMudanca(d);
@@ -372,106 +379,156 @@ describe('origem dos dados', () => {
     marcarMudanca(l);
     expect(l.origem).toBe('link');
   });
+});
 
-  it('o botão de apagar só fala em exemplo quando é exemplo', () => {
-    expect(rotuloDeApagar('exemplo')).toBe('Apagar o exemplo');
-    expect(rotuloDeApagar('pessoa')).toBe('Apagar tudo');
-    expect(rotuloDeApagar('link')).toBe('Apagar tudo');
+/** Tudo o que o exemplo escreve (título, organização, texto, local e cada item da pauta). */
+const textosDoExemplo = (e: CamposDoExemplo): string[] =>
+  [e.titulo, e.organizacao, e.texto, e.local, ...e.pauta.split('\n')].filter((t) => t.trim() !== '');
+
+/** Todas as saídas que o exemplo nunca pode tocar, num texto só. */
+const saidas = (d: DadosDoFluxo, link = ''): string =>
+  [
+    JSON.stringify(camposDoCard(d, link)),
+    JSON.stringify(eventoDoFluxo(d)),
+    assinatura(d),
+    textoParaMandar(d, link),
+    JSON.stringify(convocacaoDoFluxo(d, link)),
+    descricaoDaImagem(d, 'conversa', link),
+    descricaoDaImagem(d, 'cartaz', link, true),
+  ].join('\n');
+
+/** O que a pessoa tem de escrever: só os obrigatórios do tipo. */
+function soOsObrigatorios(d: DadosDoFluxo): DadosDoFluxo {
+  d.titulo = 'Meu título';
+  if (d.tipo === 'reuniao') d.pauta = 'Meu assunto';
+  if (temAgenda(d.tipo)) Object.assign(d, { data: '2026-11-14', hora: '18:00', local: 'Meu lugar' });
+  return d;
+}
+
+describe('o exemplo é só ilustração (nunca entra nas saídas)', () => {
+  const tipos = [...TIPOS];
+  const indices = Array.from({ length: VOLTA_DO_RODIZIO }, (_, i) => i);
+
+  it('dados novos: todos os campos de texto, o dia e a hora vêm vazios, e o exemplo vem à parte', () => {
+    for (const tipo of tipos)
+      for (const i of indices) {
+        const ex = exemploDoRodizio(tipo, i, QUINTA);
+        const d = dadosNovos(tipo, ex);
+        expect([d.titulo, d.organizacao, d.texto, d.pauta, d.data, d.hora, d.local], `${tipo} ${i}`).toEqual(['', '', '', '', '', '', '']);
+        expect(d.origem).toBe('novo');
+        expect(d.exemplo).toBe(ex);
+        expect(ex.titulo).not.toBe('');
+      }
+  });
+
+  it('dados novos: nenhuma saída leva texto do exemplo (5 tipos, uma volta inteira do rodízio)', () => {
+    for (const tipo of tipos)
+      for (const i of indices) {
+        const ex = exemploDoRodizio(tipo, i, QUINTA);
+        const d = dadosNovos(tipo, ex);
+        const tudo = saidas(d, 'https://exemplo.test/#/evento/x');
+        for (const t of textosDoExemplo(ex)) expect(tudo, `${tipo} ${i}: ${t}`).not.toContain(t);
+        // o exemplo de reunião e de evento tem dia e hora: eles também ficam de fora
+        if (ex.data) expect(tudo).not.toContain(ex.data);
+        if (ex.hora) expect(tudo).not.toContain(ex.hora);
+      }
+  });
+
+  it('só com os obrigatórios: nenhuma saída leva texto do exemplo, e os opcionais vazios não aparecem', () => {
+    for (const tipo of tipos)
+      for (const i of indices) {
+        const ex = exemploDoRodizio(tipo, i, QUINTA);
+        const d = soOsObrigatorios(dadosNovos(tipo, ex));
+        const tudo = saidas(d);
+        for (const t of textosDoExemplo(ex)) expect(tudo, `${tipo} ${i}: ${t}`).not.toContain(t);
+        const c = camposDoCard(d);
+        expect([c.organizacao, c.texto]).toEqual(['', '']);
+        const texto = textoParaMandar(d);
+        expect(texto, `${tipo} sem organização`).not.toMatch(/^_/m);
+        expect(texto).not.toMatch(/_ _|__/);
+        expect(texto).not.toContain('Mais detalhes');
+        if (tipo !== 'reuniao') expect(eventoDoFluxo(d).descricao).toBe('');
+        expect(eventoDoFluxo(d).organizacao).toBe('');
+      }
+  });
+
+  it('a pessoa escreveu só alguns campos: o resto continua vazio, sem completar com o exemplo', () => {
+    const d = dadosNovos('evento', exemploDoRodizio('evento', 0, QUINTA));
+    d.titulo = 'Meu título';
+    expect(camposDoCard(d)).toMatchObject({ titulo: 'Meu título', organizacao: '', texto: '', local: '', data: '', hora: '' });
+    expect(errosDoPasso(d, 2)).toEqual({ data: 'escolha o dia.', hora: 'escolha a hora.', local: 'escreva o local.' });
   });
 });
 
-describe('o que ainda é do exemplo', () => {
-  it('o exemplo inteiro tem título, organização, texto e local marcados (pauta na reunião)', () => {
-    expect(camposDoExemplo(exemploDoFluxo('evento', 0, QUINTA))).toEqual(['titulo', 'organizacao', 'texto', 'local']);
-    expect(camposDoExemplo(exemploDoFluxo('reuniao', 0, QUINTA))).toEqual(['titulo', 'organizacao', 'pauta', 'local']);
-    // Sem agenda, o local não conta.
-    for (const tipo of ['aviso', 'resultado', 'agradecimento'] as const) {
-      expect(camposDoExemplo(exemploDoFluxo(tipo, 0, QUINTA))).toEqual(['titulo', 'organizacao', 'texto']);
-    }
+describe('comExemplo e faltaAlgo (miniatura e prévia maior dos passos 1 e 2)', () => {
+  const novo = (tipo: Tipo = 'evento', i = 0) => dadosNovos(tipo, exemploDoRodizio(tipo, i, QUINTA));
+
+  it('usa o exemplo nos campos vazios, incluindo dia e hora', () => {
+    const d = novo();
+    const c = comExemplo(d);
+    expect(c).toMatchObject(d.exemplo);
+    expect(c.tipo).toBe('evento');
+    expect(c.formato).toBe(d.formato);
   });
 
-  it('o atalho do dia e a hora não tiram a marca do exemplo', () => {
-    const d = exemploDoFluxo('evento', 0, QUINTA);
-    const antes = camposDoExemplo(d);
-    d.data = atalhosDoDia(QUINTA)[0]!.data;
+  it('só nos vazios: o que a pessoa escreveu fica, e espaços contam como vazio', () => {
+    const d = novo();
+    d.titulo = 'Meu título';
+    d.local = '   ';
     d.hora = '07:15';
-    marcarMudanca(d);
-    expect(d.origem).toBe('pessoa');
-    expect(camposDoExemplo(d)).toEqual(antes);
+    const c = comExemplo(d);
+    expect(c.titulo).toBe('Meu título');
+    expect(c.hora).toBe('07:15');
+    expect(c.local).toBe(d.exemplo.local);
+    expect(c.organizacao).toBe(d.exemplo.organizacao);
+    expect(c.data).toBe(d.exemplo.data);
   });
 
-  it('trocar só o título deixa a organização e o local marcados', () => {
-    const d = { ...exemploDoFluxo('evento', 2, QUINTA), titulo: 'Meu título' };
-    expect(camposDoExemplo(d)).toEqual(['organizacao', 'texto', 'local']);
+  it('não muda o original (devolve uma cópia)', () => {
+    const d = novo('reuniao', 3);
+    const antes = structuredClone(d);
+    const c = comExemplo(d);
+    expect(c).not.toBe(d);
+    expect(d).toEqual(antes);
+    expect(c.pauta).toBe(d.exemplo.pauta);
+    expect(d.pauta).toBe('');
   });
 
-  it('compara sem os espaços das pontas; campo vazio não é do exemplo', () => {
-    const ex = exemploDoFluxo('evento', 0, QUINTA);
-    expect(camposDoExemplo({ ...ex, titulo: `  ${ex.titulo}  ` })).toContain('titulo');
-    expect(camposDoExemplo({ ...ex, titulo: '', local: '   ' })).toEqual(['organizacao', 'texto']);
+  it('tudo preenchido: a cópia é igual e não falta nada', () => {
+    const d = cheio('evento', 2, QUINTA);
+    d.exemplo = { ...d.exemplo, titulo: 'Outro exemplo' };
+    expect(comExemplo(d)).toEqual(d);
+    expect(faltaAlgo(d)).toBe(false);
   });
 
-  it('dados de link não têm cópia do exemplo e nunca são marcados', () => {
-    const d = dadosDoEvento(
-      { titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '', local: 'Praça', descricao: 'Traga um prato', organizacao: 'Grupo' },
-      '',
-      BASE,
-    );
-    expect(d.doExemplo).toBeUndefined();
-    expect(camposDoExemplo(d)).toEqual([]);
+  it('faltaAlgo: verdade enquanto algum campo que a miniatura mostra está vazio', () => {
+    const d = novo();
+    expect(faltaAlgo(d)).toBe(true);
+    Object.assign(d, { titulo: 'a', organizacao: 'b', texto: 'c', data: '2026-11-14', hora: '18:00', local: 'd' });
+    expect(faltaAlgo(d)).toBe(false);
+    d.organizacao = '  ';
+    expect(faltaAlgo(d)).toBe(true);
   });
 
-  it('organização do catálogo conta como do exemplo mesmo sem a cópia (link antigo, digitada à mão)', () => {
-    const base = { ...exemploDoFluxo('evento', 0, QUINTA), titulo: 'Festa da rua', texto: 'Traga um prato', local: 'Rua das Flores, 10' };
-    delete base.doExemplo;
-    const org = exemploDoFluxo('evento', 0, QUINTA).organizacao;
-    expect(camposDoExemplo({ ...base, organizacao: org })).toEqual(['organizacao']);
-    expect(camposDoExemplo({ ...base, organizacao: `  ${org.toUpperCase()} ` })).toEqual(['organizacao']);
-    expect(camposDoExemplo({ ...base, organizacao: `${org} Sul` })).toEqual([]);
+  it('faltaAlgo só olha o que o tipo mostra: reunião não tem texto, aviso não tem dia nem local', () => {
+    const r = novo('reuniao');
+    Object.assign(r, { titulo: 'a', organizacao: 'b', pauta: 'c', data: '2026-11-14', hora: '18:00', local: 'd' });
+    expect(faltaAlgo(r)).toBe(false);
+    const a = novo('aviso');
+    Object.assign(a, { titulo: 'a', organizacao: 'b', texto: 'c' });
+    expect(faltaAlgo(a)).toBe(false);
+    expect(a.data).toBe('');
   });
 
-  it('a frase do aviso lista os campos, com "e" no fim e singular ou plural certo', () => {
-    expect(avisoDoExemplo([])).toBe('');
-    expect(avisoDoExemplo(['local'])).toBe('O local ainda é do exemplo. Troque pelo que for seu em Mudar algo.');
-    expect(avisoDoExemplo(['organizacao'])).toBe('A organização ainda é do exemplo. Troque pelo que for seu em Mudar algo.');
-    expect(avisoDoExemplo(['organizacao', 'local'])).toBe('A organização e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo.');
-    expect(avisoDoExemplo(['titulo', 'organizacao', 'pauta', 'local'])).toBe(
-      'O título, a organização, a pauta e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo.',
-    );
-  });
-
-  it('a frase da confirmação', () => {
-    expect(fraseDaConfirmacao(['organizacao', 'local'])).toBe('Isto ainda tem partes do exemplo: organização e local.');
-    expect(fraseDaConfirmacao(['titulo'])).toBe('Isto ainda tem partes do exemplo: título.');
-    expect(fraseDaConfirmacao(['titulo', 'organizacao', 'texto'])).toBe('Isto ainda tem partes do exemplo: título, organização e texto.');
-  });
-
-  it('"Apagar" limpa o local só quando ele ainda é o do exemplo; dia e hora ficam', () => {
-    const d = exemploDoFluxo('evento', 0, QUINTA);
-    const { data, hora } = d;
-    apagarOPasso1(d);
-    expect([d.titulo, d.organizacao, d.texto, d.pauta, d.local]).toEqual(['', '', '', '', '']);
-    expect([d.data, d.hora]).toEqual([data, hora]);
-    const e = { ...exemploDoFluxo('evento', 0, QUINTA), local: 'Rua das Flores, 10' };
-    apagarOPasso1(e);
-    expect(e.local).toBe('Rua das Flores, 10');
-  });
-
-  it('a cópia do exemplo não vaza para o evento, a assinatura nem o texto', () => {
-    for (const tipo of ['reuniao', 'evento'] as const) {
-      const d = exemploDoFluxo(tipo, 4, QUINTA);
-      const ex = { ...d.doExemplo! };
-      Object.assign(d, { titulo: 'Novo título', organizacao: 'Nova org', texto: 'Novo texto', pauta: 'Novo assunto', local: 'Novo local' });
-      const saidas = [
-        JSON.stringify(eventoDoFluxo(d)),
-        assinatura(d),
-        textoParaMandar(d, 'https://exemplo.test/#/evento/x'),
-        JSON.stringify(camposDoCard(d)),
-        JSON.stringify(convocacaoDoFluxo(d)),
-      ].join('\n');
-      for (const valor of [ex.titulo, ex.organizacao, ex.local]) expect(saidas).not.toContain(valor);
-      expect(Object.keys(eventoDoFluxo(d)).sort()).toEqual(['data', 'descricao', 'fim', 'inicio', 'local', 'organizacao', 'titulo']);
-    }
+  it('dados de link (sem exemplo ainda) não falta nada; com o exemplo, falta o que ficou vazio', () => {
+    const d = dadosDoEvento({ titulo: 'Festa', data: '2026-11-14', inicio: '18:00', fim: '', local: 'Praça', descricao: '', organizacao: '' }, '', BASE);
+    expect(d.exemplo).toBe(SEM_EXEMPLO);
+    expect(faltaAlgo(d)).toBe(false);
+    d.exemplo = exemploDoRodizio('evento', 1, QUINTA);
+    expect(faltaAlgo(d)).toBe(true);
+    expect(comExemplo(d).titulo).toBe('Festa');
+    expect(comExemplo(d).texto).toBe(d.exemplo.texto);
+    expect(d.texto).toBe('');
   });
 });
 
@@ -532,7 +589,7 @@ describe('contador de letras da pauta (A-02, B-19)', () => {
 });
 
 describe('quebra de linha no texto livre (A-09)', () => {
-  const texto = (t: string) => textoParaMandar({ ...exemploDoFluxo('evento', 0, QUINTA), texto: t, organizacao: '' });
+  const texto = (t: string) => textoParaMandar({ ...cheio('evento', 0, QUINTA), texto: t, organizacao: '' });
 
   it('mantém a quebra de linha e os emojis', () => {
     expect(texto('Venha com sua família 🙏\nTeremos roupas, livros e bolo 🎉😊')).toContain(
@@ -551,7 +608,7 @@ describe('quebra de linha no texto livre (A-09)', () => {
   });
 
   it('título, local e itens da pauta seguem numa linha só', () => {
-    const t = textoParaMandar({ ...exemploDoFluxo('evento', 0, QUINTA), titulo: 'Festa\nda   rua', local: 'Praça\nCentral' });
+    const t = textoParaMandar({ ...cheio('evento', 0, QUINTA), titulo: 'Festa\nda   rua', local: 'Praça\nCentral' });
     expect(t).toContain('*Festa da rua*');
     expect(t).toContain('📍 Praça Central');
     const r = textoParaMandar({ ...reuniao(), pauta: 'Um   assunto\nOutro' });
@@ -559,38 +616,8 @@ describe('quebra de linha no texto livre (A-09)', () => {
   });
 });
 
-describe('lembrete do dia (D4)', () => {
-  it('reunião e evento com o dia e a hora do exemplo: pede para conferir', () => {
-    expect(lembreteDoDia(exemploDoFluxo('evento', 0, QUINTA), QUINTA)).toBe('Confira o dia: sábado, 7 de novembro, às 9h30.');
-    expect(lembreteDoDia(exemploDoFluxo('reuniao', 0, QUINTA), QUINTA)).toBe('Confira o dia: sábado, 7 de novembro, às 19h.');
-  });
-
-  it('mudou o dia ou a hora: some', () => {
-    expect(lembreteDoDia({ ...exemploDoFluxo('evento', 0, QUINTA), data: '2026-11-14' }, QUINTA)).toBe('');
-    expect(lembreteDoDia({ ...exemploDoFluxo('evento', 0, QUINTA), hora: '10:00' }, QUINTA)).toBe('');
-  });
-
-  it('sem exemplo (aviso, ou dados sem a cópia) não há lembrete', () => {
-    expect(lembreteDoDia(exemploDoFluxo('aviso', 0, QUINTA), QUINTA)).toBe('');
-    const semExemplo = { ...exemploDoFluxo('evento', 0, QUINTA) };
-    delete semExemplo.diaDoExemplo;
-    expect(lembreteDoDia(semExemplo, QUINTA)).toBe('');
-  });
-
-  it('o dia do exemplo não sai em camposDoExemplo, evento, assinatura, texto nem card', () => {
-    const d = exemploDoFluxo('evento', 0, QUINTA);
-    expect(camposDoExemplo(d)).not.toContain('data');
-    expect(d.diaDoExemplo).toEqual({ data: '2026-11-07', hora: '09:30' });
-    const mudado = { ...d, data: '2026-12-01', hora: '08:00', diaDoExemplo: { data: '1999-01-02', hora: '03:04' } };
-    const saidas = [JSON.stringify(eventoDoFluxo(mudado)), assinatura(mudado), textoParaMandar(mudado), JSON.stringify(camposDoCard(mudado))].join('\n');
-    expect(saidas).not.toContain('1999');
-    expect(saidas).not.toContain('03:04');
-    expect(Object.keys(eventoDoFluxo(mudado)).sort()).toEqual(['data', 'descricao', 'fim', 'inicio', 'local', 'organizacao', 'titulo']);
-  });
-});
-
 describe('órgão público (D1)', () => {
-  const base = () => ({ ...exemploDoFluxo('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
+  const base = () => ({ ...cheio('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
 
   it('a pergunta é a do plano', () => {
     expect(PERGUNTA_DO_ORGAO).toBe(
@@ -614,9 +641,9 @@ describe('órgão público (D1)', () => {
   });
 
   it('na reunião, o passo 1 olha a pauta e não o texto; aviso não tem local', () => {
-    const r = { ...exemploDoFluxo('reuniao', 0, QUINTA), pauta: 'Conversa com a Prefeitura\nContas' };
+    const r = { ...cheio('reuniao', 0, QUINTA), pauta: 'Conversa com a Prefeitura\nContas' };
     expect(camposComOrgao(r, 1)).toEqual(['pauta']);
-    const a = { ...exemploDoFluxo('aviso', 0, QUINTA), local: 'Prefeitura' };
+    const a = { ...cheio('aviso', 0, QUINTA), local: 'Prefeitura' };
     expect(camposComOrgao(a, 2)).toEqual([]);
   });
 
@@ -643,7 +670,7 @@ describe('órgão público (D1)', () => {
 
   it('vale para todo tipo e toda organização', () => {
     for (const tipo of TIPOS) {
-      const d = { ...exemploDoFluxo(tipo, 3, QUINTA), titulo: 'Ofício da Secretaria de Saúde', organizacao: 'Coletivo cultural' };
+      const d = { ...cheio(tipo, 3, QUINTA), titulo: 'Ofício da Secretaria de Saúde', organizacao: 'Coletivo cultural' };
       expect(precisaPerguntarDoOrgao(d, 1), tipo).toBe(true);
     }
   });
@@ -666,7 +693,7 @@ describe('órgão público (D1)', () => {
 });
 
 describe('órgão público no Pronto de dados de link', () => {
-  const base = () => ({ ...exemploDoFluxo('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
+  const base = () => ({ ...cheio('evento', 0, QUINTA), organizacao: 'Associação de moradores', local: 'Quadra do bairro' });
   it('só pergunta para origem link, nos dois passos pulados; confirmar vale pelos dois', () => {
     const d: DadosDoFluxo = { ...base(), origem: 'link', titulo: 'Reunião com a Prefeitura', local: 'Prefeitura Regional' };
     expect(perguntarDoOrgaoNoPronto(d)).toBe(true);
@@ -683,35 +710,46 @@ describe('órgão público no Pronto de dados de link', () => {
   });
 });
 
-describe('Desfazer: prazo e passo vazio', () => {
-  const base = () => exemploDoFluxo('evento', 0, QUINTA);
-  it('o aviso diz o prazo; sem cópia, não fala em Desfazer', () => {
-    expect(avisoDeApagar(true, true)).toBe('Exemplo apagado. Para trazer de volta, toque em Desfazer em até 10 segundos.');
-    expect(avisoDeApagar(false, true)).toBe('Tudo apagado. Para trazer de volta, toque em Desfazer em até 10 segundos.');
-    expect(avisoDeApagar(false, false)).toBe('Tudo apagado.');
+describe('Apagar tudo e Desfazer, sem relógio (D7)', () => {
+  const base = () => cheio('evento', 0, QUINTA);
+
+  it('o rótulo é "Desfazer", o do apagar é "Apagar tudo" e o aviso não tem prazo', () => {
+    expect(ROTULO_DESFAZER).toBe('Desfazer');
+    expect(ROTULO_APAGAR).toBe('Apagar tudo');
+    expect(AVISO_DE_APAGAR).toBe('Tudo apagado. Para trazer de volta, toque em Desfazer.');
+    expect(AVISO_DE_APAGAR).not.toMatch(/segundo|[0-9]/);
   });
-  it('passo 1 vazio: título, organização, texto e pauta sem nada (ou só espaços)', () => {
-    expect(passo1Vazio({ ...base(), titulo: ' ', organizacao: '', texto: '', pauta: '', local: '' })).toBe(true);
+
+  it('passo 1 vazio: título, organização, texto e pauta sem nada (ou só espaços); o local não conta', () => {
+    expect(passo1Vazio({ ...base(), titulo: ' ', organizacao: '', texto: '', pauta: '' })).toBe(true);
     expect(passo1Vazio({ ...base(), titulo: '', organizacao: '', texto: 'x', pauta: '' })).toBe(false);
+    expect(passo1Vazio({ ...base(), titulo: '', organizacao: '', texto: '', pauta: '' })).toBe(true);
   });
-  it('o local do exemplo, que o apagar também limpa, conta: há o que desfazer', () => {
-    const d = { ...base(), titulo: '', organizacao: '', texto: '', pauta: '' };
-    expect(passo1Vazio(d)).toBe(false);
-    expect(passo1Vazio({ ...d, local: '' })).toBe(true);
-    expect(passo1Vazio({ ...d, local: 'Rua das Flores, 10' })).toBe(true);
+
+  it('o botão: some sem texto; aparece como "Apagar tudo" com texto; com a cópia vira "Desfazer"', () => {
+    const vazio = dadosNovos('evento', exemploDoRodizio('evento', 0, QUINTA));
+    expect(botaoDeApagar(vazio, false)).toEqual({ rotulo: 'Apagar tudo', escondido: true });
+    expect(botaoDeApagar({ ...vazio, titulo: 'a' }, false)).toEqual({ rotulo: 'Apagar tudo', escondido: false });
+    expect(botaoDeApagar(vazio, true)).toEqual({ rotulo: 'Desfazer', escondido: false });
+    // depois de Desfazer, a cópia some e o botão volta a "Apagar tudo"
+    expect(botaoDeApagar(base(), false)).toEqual({ rotulo: 'Apagar tudo', escondido: false });
   });
-});
 
-describe('Desfazer o apagar (D7)', () => {
-  it('o rótulo é "Desfazer"', () => expect(ROTULO_DESFAZER).toBe('Desfazer'));
+  it('apaga título, organização, texto e pauta; o local, o dia e a hora ficam', () => {
+    const d = base();
+    const { data, hora, local } = d;
+    apagarOPasso1(d);
+    expect([d.titulo, d.organizacao, d.texto, d.pauta]).toEqual(['', '', '', '']);
+    expect([d.data, d.hora, d.local]).toEqual([data, hora, local]);
+  });
 
-  it('devolve título, organização, texto, local e origem de antes do Apagar', () => {
-    const d = exemploDoFluxo('evento', 0, QUINTA);
+  it('devolve título, organização, texto e origem de antes do Apagar', () => {
+    const d = base();
     const antes = structuredClone(d);
     const copia = copiaDoPasso1(d);
     apagarOPasso1(d);
     marcarMudanca(d);
-    expect([d.titulo, d.organizacao, d.texto, d.local]).toEqual(['', '', '', '']);
+    expect([d.titulo, d.organizacao, d.texto]).toEqual(['', '', '']);
     expect(d.origem).toBe('pessoa');
     devolverOPasso1(d, copia);
     expect(d).toEqual(antes);

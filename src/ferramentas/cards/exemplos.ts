@@ -22,7 +22,7 @@ const TIPOS = [
   'Conselho Escolar Riacho Cinco Pedras',
 ] as const;
 
-/** Todos os nomes de organização dos exemplos (o fluxo confere se a organização é do catálogo). */
+/** Todos os nomes de organização dos exemplos (os testes conferem o equilíbrio e que nenhum é nome real). */
 export const ORGANIZACOES: readonly string[] = [...TIPOS, ...RELIGIOSAS.slice(1)];
 
 type Linha = readonly [titulo: string, texto: string, local: string];

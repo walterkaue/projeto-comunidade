@@ -9,7 +9,6 @@ import {
   esperaDoRedesenho,
   dicaDoMandar,
   frasePainel,
-  idsDaDescricao,
   MENSAGEM_DE_BAIXAR,
   nomeDoArquivoDoFluxo,
   notaDoCorte,
@@ -18,7 +17,7 @@ import {
   soFaltaARede,
   temMenuDeCompartilhar,
 } from './apoio';
-import { exemploDoFluxo } from './estado';
+import { cheio } from './dados-de-teste';
 
 const HOJE = new Date(2026, 10, 5);
 
@@ -114,7 +113,7 @@ describe('endereço da página do evento', () => {
 
 describe('nome do arquivo', () => {
   it('usa o formato escolhido ou o pedido', () => {
-    const d = exemploDoFluxo('evento', 0, HOJE);
+    const d = cheio('evento', 0, HOJE);
     d.formato = 'status';
     expect(nomeDoArquivoDoFluxo(d)).toBe('card-evento-status.png');
     expect(nomeDoArquivoDoFluxo(d, 'cartaz')).toBe('card-evento-cartaz.png');
@@ -148,28 +147,16 @@ describe('criarAgendador', () => {
 });
 
 describe('confirmação do Pronto (sem DOM)', () => {
-  it('sem campos do exemplo, nunca pergunta', () => {
-    expect(precisaConfirmar([], false)).toBe(false);
-    expect(precisaConfirmar([], true)).toBe(false);
+  it('só pergunta se a mensagem vai sem o link ou se falta a pergunta do órgão', () => {
+    expect(precisaConfirmar(false, false)).toBe(false);
+    expect(precisaConfirmar(true, false)).toBe(true);
+    expect(precisaConfirmar(false, true)).toBe(true);
   });
 
-  it('com campos do exemplo, pergunta', () => {
-    expect(precisaConfirmar(['organizacao', 'local'], false)).toBe(true);
-  });
-
-  it('depois de confirmar, não pergunta mais; visita nova pergunta de novo', () => {
-    let confirmou = false;
-    expect(precisaConfirmar(['titulo'], confirmou)).toBe(true);
-    confirmou = true;
-    expect(precisaConfirmar(['titulo'], confirmou)).toBe(false);
-    // Nova visita ao Pronto: a tela é montada de novo e o "já confirmou" começa falso.
-    confirmou = false;
-    expect(precisaConfirmar(['titulo'], confirmou)).toBe(true);
-  });
-
-  it('o aviso do exemplo vem primeiro no aria-describedby', () => {
-    expect(idsDaDescricao(true, 'fluxo-mandar-dica')).toBe('fluxo-aviso-exemplo fluxo-mandar-dica');
-    expect(idsDaDescricao(false, 'fluxo-mandar-dica')).toBe('fluxo-mandar-dica');
+  it('o exemplo não entra nunca: não existe mais painel nem aviso do exemplo', async () => {
+    const { readFileSync } = await import('node:fs');
+    const fonte = readFileSync(new URL('./pronto.ts', import.meta.url), 'utf8');
+    expect(fonte).not.toContain('fluxo-aviso-exemplo');
   });
 });
 
@@ -195,31 +182,23 @@ describe('nota do corte do cartaz (B-04)', () => {
 });
 
 describe('confirmação sem o link (C-01)', () => {
-  it('sem link pede confirmação mesmo sem exemplo; confirmado, não pergunta de novo', () => {
-    expect(precisaConfirmar([], false, true)).toBe(true);
-    expect(precisaConfirmar([], true, true)).toBe(false);
-    expect(precisaConfirmar([], false)).toBe(false);
-    expect(precisaConfirmar(['titulo'], false)).toBe(true);
+  it('sem link pede confirmação; sem link e sem órgão, não', () => {
+    expect(precisaConfirmar(true, false)).toBe(true);
+    expect(precisaConfirmar(false, false)).toBe(false);
   });
-  it('a frase junta o aviso do link e a do exemplo', () => {
-    expect(frasePainel(true, '')).toBe('A mensagem vai sem o link do evento.');
-    expect(frasePainel(false, 'Isto ainda tem partes do exemplo: local.')).toBe('Isto ainda tem partes do exemplo: local.');
-    expect(frasePainel(true, 'Isto ainda tem partes do exemplo: local.')).toBe(
-      'A mensagem vai sem o link do evento. Isto ainda tem partes do exemplo: local.',
-    );
+  it('a frase é o aviso do link que falta', () => {
+    expect(frasePainel(true)).toBe('A mensagem vai sem o link do evento.');
+    expect(frasePainel(false)).toBe('');
   });
-  it('a pergunta do órgão vem antes das outras frases e também pede confirmação', () => {
-    expect(precisaConfirmar([], false, false, true)).toBe(true);
-    expect(precisaConfirmar([], true, false, true)).toBe(false);
-    expect(frasePainel(true, 'Isto ainda tem partes do exemplo: local.', 'Pergunta?')).toBe(
-      'Pergunta? A mensagem vai sem o link do evento. Isto ainda tem partes do exemplo: local.',
-    );
-    expect(frasePainel(false, '', 'Pergunta?')).toBe('Pergunta?');
+  it('a pergunta do órgão vem antes do aviso do link e também pede confirmação', () => {
+    expect(precisaConfirmar(false, true)).toBe(true);
+    expect(frasePainel(true, 'Pergunta?')).toBe('Pergunta? A mensagem vai sem o link do evento.');
+    expect(frasePainel(false, 'Pergunta?')).toBe('Pergunta?');
   });
   it('"Tentar de novo" só quando a falta de rede é o único motivo', () => {
-    expect(soFaltaARede(true, true, 0, false)).toBe(true);
-    expect(soFaltaARede(true, true, 1, false)).toBe(false);
-    expect(soFaltaARede(true, true, 0, true)).toBe(false);
-    expect(soFaltaARede(false, true, 0, false)).toBe(false);
+    expect(soFaltaARede(true, true, false)).toBe(true);
+    expect(soFaltaARede(true, true, true)).toBe(false);
+    expect(soFaltaARede(false, true, false)).toBe(false);
+    expect(soFaltaARede(true, false, false)).toBe(false);
   });
 });

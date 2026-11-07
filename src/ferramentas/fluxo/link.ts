@@ -3,8 +3,8 @@
 
 import type { MotivoDaRemocao } from '../../comum/entreTelas';
 import { validarEvento, type Evento } from '../evento/validar';
-import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_LINK_COM_EXEMPLO, MENSAGEM_SEM_INTERNET, MENSAGEM_SEM_LINK } from './apoio';
-import { assinatura, eventoDoFluxo, exemploNoLink, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
+import { MENSAGEM_DO_LINK_GRANDE, MENSAGEM_LINK_REMOVIDO, MENSAGEM_SEM_INTERNET, MENSAGEM_SEM_LINK } from './apoio';
+import { assinatura, eventoDoFluxo, linkAindaVale, temAgenda, type DadosDoFluxo } from './estado';
 
 export interface ResultadoDoLink {
   /** Vazio quando não há link (tipo sem agenda, texto grande demais ou dados recusados). */
@@ -59,8 +59,6 @@ export async function linkDoFluxo(
   carregar: () => Promise<DependenciasDoLink> = padrao,
 ): Promise<ResultadoDoLink> {
   if (!temAgenda(d.tipo)) return { link: '', aviso: '' };
-  // O link é o que circula: com a organização do exemplo, não sai (docs/produto.md 7.6).
-  if (exemploNoLink(d)) return { link: '', aviso: MENSAGEM_LINK_COM_EXEMPLO };
   if (linkAindaVale(d)) {
     // O link original pode passar do máximo (o QR do cartaz falharia). Não gera outro: ele seria outro evento.
     // Se o formato não carregar (sem rede), fica com o original: é ele que a lista de bloqueio conhece.

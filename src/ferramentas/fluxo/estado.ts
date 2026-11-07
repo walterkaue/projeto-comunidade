@@ -10,7 +10,7 @@ import { ehLinkDoEvento, MODELOS_DE_CARD, TAMANHO_MAXIMO, type DadosDoCard, type
 import { linkPara, type Rota } from '../../comum/rotas';
 import { letras } from '../../comum/texto';
 import { citaOrgaoPublico } from '../../comum/conteudo';
-import { exemplo, ORGANIZACOES, proximoSabado } from '../cards/exemplos';
+import { exemplo, proximoSabado } from '../cards/exemplos';
 import { aplicarLimites, FORMATOS, type CamposDoCard, type Formato } from '../cards/modelos';
 import { PALETAS } from '../cards/paletas';
 import { onde, quando } from '../cards/textos';
@@ -21,12 +21,12 @@ export { MODELOS_DE_CARD as TIPOS, type ModeloDeCard as Tipo };
 
 // ---------- dados ----------
 
-/** De onde vieram os dados: exemplo da casa, link de evento ou o que a pessoa escreveu. */
-export type Origem = 'exemplo' | 'link' | 'pessoa';
+/** De onde vieram os dados: ainda sem mexer ('novo'), link de evento ou o que a pessoa escreveu. */
+export type Origem = 'novo' | 'link' | 'pessoa';
 
 export interface DadosDoFluxo {
   tipo: ModeloDeCard;
-  /** Vira 'pessoa' quando ela muda um campo dos passos 1 e 2 (de 'exemplo'); 'link' continua 'link'. */
+  /** Vira 'pessoa' quando ela muda um campo dos passos 1 e 2 (de 'novo'); 'link' continua 'link'. */
   origem: Origem;
   /** Só com origem 'link': o que do evento não coube aqui (oQueFicouDeFora). Texto fixo, nada digitado. */
   ficouDeFora: string;
@@ -58,17 +58,11 @@ export interface DadosDoFluxo {
   /** O link guardado é o que veio com o evento recebido (não um que o Pronto gerou). */
   linkOriginal?: boolean;
   /**
-   * Cópia dos campos do exemplo de onde a pessoa partiu (dados de link não têm). Serve só para dizer o que ainda é
-   * do exemplo (camposDoExemplo). Fica na memória da aba e NUNCA entra no evento, na assinatura, no texto, no nome
+   * O exemplo desta vez do rodízio: só ilustração (placeholder dos campos e miniatura dos passos 1 e 2, por
+   * comExemplo). NUNCA entra no evento, na assinatura, no texto, no card do passo 3 e do Pronto, no link, no nome
    * do arquivo, no endereço nem em armazenamento.
    */
-  doExemplo?: CamposDoExemplo;
-  /**
-   * Dia e hora do exemplo de onde a pessoa partiu (só reunião e evento). Serve só para o lembrete "Confira o dia" no
-   * Pronto (lembreteDoDia). Fica na memória da aba e NUNCA entra no evento, na assinatura, no texto, no link, no
-   * endereço nem em armazenamento.
-   */
-  diaDoExemplo?: { data: string; hora: string };
+  exemplo: CamposDoExemplo;
   /**
    * Combinações campo + texto que a pessoa já confirmou que não falam em nome de órgão público (confirmarOrgao).
    * Só na memória da aba; NUNCA entra no evento, na assinatura, no texto, no link nem no endereço.
@@ -76,14 +70,22 @@ export interface DadosDoFluxo {
   orgaoConfirmado?: string[];
 }
 
-/** Os campos que o aviso do exemplo confere (dia e hora ficam de fora: são escolhas que a pessoa confirma). */
+/** O que o exemplo ilustra: os campos dos passos 1 e 2 (dia e hora entram só na miniatura, nunca como placeholder). */
 export interface CamposDoExemplo {
   titulo: string;
   organizacao: string;
   texto: string;
   pauta: string;
+  data: string;
+  hora: string;
   local: string;
 }
+
+/** Sem exemplo ainda (dados de link, antes de memoria.ts tirar um do rodízio). */
+export const SEM_EXEMPLO: CamposDoExemplo = Object.freeze({ titulo: '', organizacao: '', texto: '', pauta: '', data: '', hora: '', local: '' });
+
+/** O exemplo está todo vazio (dados de link que ainda não ganharam o da vez)? */
+export const exemploVazio = (e: CamposDoExemplo): boolean => Object.values(e).every((v) => v === '');
 
 export const LIMITES = {
   titulo: TAMANHO_MAXIMO.titulo,
@@ -142,17 +144,13 @@ const PAUTAS: readonly string[][] = [
 ];
 
 /**
- * Exemplo pronto de um tipo. `indice` é o índice cru do rodízio (qualquer inteiro; dá a volta): o tipo de organização
- * e a pauta da reunião são `indice mod 7`; o nome da organização é decidido em cards/exemplos.ts.
- * Tudo fictício (cards/exemplos.ts). Nada de tela em branco.
+ * O exemplo número `indice` do rodízio (qualquer inteiro; dá a volta): o tipo de organização e a pauta da reunião são
+ * `indice mod 7`; o nome da organização é decidido em cards/exemplos.ts. Tudo fictício. Só ilustra (comExemplo).
  */
-export function exemploDoFluxo(tipo: ModeloDeCard, indice: number, hoje: Date = new Date()): DadosDoFluxo {
+export function exemploDoRodizio(tipo: ModeloDeCard, indice: number, hoje: Date = new Date()): CamposDoExemplo {
   const n = ((Math.trunc(indice) % PAUTAS.length) + PAUTAS.length) % PAUTAS.length;
   const e = exemplo(tipo, Math.trunc(indice), hoje);
   return {
-    tipo,
-    origem: 'exemplo',
-    ficouDeFora: '',
     titulo: e.titulo,
     organizacao: e.organizacao,
     texto: tipo === 'reuniao' ? '' : e.texto,
@@ -160,19 +158,43 @@ export function exemploDoFluxo(tipo: ModeloDeCard, indice: number, hoje: Date = 
     data: e.data,
     hora: e.hora,
     local: e.local,
+  };
+}
+
+/** Dados novos de um tipo: todos os campos de texto, o dia e a hora vazios; só o exemplo do rodízio vem junto. */
+export function dadosNovos(tipo: ModeloDeCard, exemploDaVez: CamposDoExemplo): DadosDoFluxo {
+  return {
+    tipo,
+    origem: 'novo',
+    ficouDeFora: '',
+    titulo: '',
+    organizacao: '',
+    texto: '',
+    pauta: '',
+    data: '',
+    hora: '',
+    local: '',
     ...APARENCIA_PADRAO,
     link: '',
     assinaturaDoLink: '',
-    ...(temAgenda(tipo) ? { diaDoExemplo: { data: e.data, hora: e.hora } } : {}),
-    doExemplo: {
-      titulo: e.titulo,
-      organizacao: e.organizacao,
-      texto: tipo === 'reuniao' ? '' : e.texto,
-      pauta: tipo === 'reuniao' ? PAUTAS[n]!.join('\n') : '',
-      local: e.local,
-    },
+    exemplo: exemploDaVez,
   };
 }
+
+const CAMPOS_DO_EXEMPLO = ['titulo', 'organizacao', 'texto', 'pauta', 'data', 'hora', 'local'] as const;
+
+/**
+ * Uma CÓPIA dos dados com o exemplo nos campos vazios (sem contar os espaços das pontas), para a miniatura e a prévia
+ * maior dos passos 1 e 2. Os dados de entrada não mudam. Não use em mais nenhum lugar.
+ */
+export function comExemplo(d: DadosDoFluxo): DadosDoFluxo {
+  const copia = { ...d };
+  for (const c of CAMPOS_DO_EXEMPLO) if (d[c].trim() === '' && d.exemplo[c] !== '') copia[c] = d.exemplo[c];
+  return copia;
+}
+
+/** A miniatura está usando o exemplo em algum campo (um campo vazio que o exemplo preencheria)? */
+export const faltaAlgo = (d: DadosDoFluxo): boolean => CAMPOS_DO_EXEMPLO.some((c) => d[c].trim() === '' && d.exemplo[c] !== '');
 
 const APARENCIA_PADRAO = { formato: 'conversa' as Formato, paletaId: PALETAS[0]!.id, corLivre: '#3d6b73', rodape: true };
 
@@ -199,6 +221,7 @@ export function dadosDoCardPreparado(d: DadosDoCard): DadosDoFluxo | null {
     ...APARENCIA_PADRAO,
     link: '',
     assinaturaDoLink: '',
+    exemplo: SEM_EXEMPLO,
   };
   if (d.link && temAgenda(tipo)) {
     dados.link = d.link;
@@ -235,6 +258,7 @@ export function dadosDoEvento(e: Evento, link: string, base: string): DadosDoFlu
     ...APARENCIA_PADRAO,
     link: '',
     assinaturaDoLink: '',
+    exemplo: SEM_EXEMPLO,
   };
   // O link de antes segue valendo enquanto a pessoa não muda nada, mesmo que hora de fim, quebras de linha ou
   // descrição longa tenham ficado de fora do card: é ele que leva o evento inteiro e pode ser denunciado.
@@ -274,8 +298,8 @@ export const fraseDoLinkNoPronto = (d: DadosDoFluxo): string =>
   d.origem === 'link' && d.linkOriginal && linkAindaVale(d) ? FRASE_DO_LINK_ORIGINAL : avisoDoLinkNoPronto(d.tipo);
 
 const DICA_DO_PASSO: Record<1 | 2 | 3, string> = {
-  1: 'Já vem com um exemplo. Troque pelo que for seu.',
-  2: 'Toque em Hoje, Amanhã ou Próximo sábado para escolher mais rápido.',
+  1: 'Escreva com as suas palavras. O que está em cinza é só exemplo.',
+  2: 'Escolha o dia num toque ou abra o calendário.',
   3: 'Escolha onde vai mandar e a cor. O resto já está pronto.',
 };
 
@@ -293,90 +317,37 @@ export function notaEDicaDoPasso(
 }
 export const PERGUNTA_DA_TROCA_DO_RASCUNHO = 'Trocar o que você estava fazendo pelos dados deste evento?';
 
-/** A pessoa mudou um campo dos passos 1 e 2: o exemplo passa a ser dela. Dados de link continuam de link. */
+/** A pessoa mudou um campo dos passos 1 e 2: os dados passam a ser dela. Dados de link continuam de link. */
 export function marcarMudanca(d: Pick<DadosDoFluxo, 'origem'>): void {
-  if (d.origem === 'exemplo') d.origem = 'pessoa';
+  if (d.origem === 'novo') d.origem = 'pessoa';
 }
 
-// ---------- o que ainda é do exemplo ----------
+// ---------- apagar tudo e desfazer (passo 1) ----------
 
-export type CampoDeExemplo = 'titulo' | 'organizacao' | 'texto' | 'pauta' | 'local';
-type ParaOExemplo = Pick<DadosDoFluxo, 'tipo' | 'doExemplo' | 'titulo' | 'organizacao' | 'texto' | 'pauta' | 'local'>;
-
-/**
- * Quais campos ainda estão iguais aos do exemplo de onde a pessoa partiu (sem os espaços das pontas), na ordem da
- * tela. Campo vazio não é do exemplo. Dia e hora não contam. O local só conta em reunião e evento. A organização também conta quando for uma
- * do catálogo de exemplos (sem diferença de maiúsculas), mesmo sem a cópia do exemplo.
- */
-export function camposDoExemplo(d: ParaOExemplo): CampoDeExemplo[] {
-  const ex = d.doExemplo;
-  const quais: CampoDeExemplo[] = ['titulo', 'organizacao', d.tipo === 'reuniao' ? 'pauta' : 'texto'];
-  if (temAgenda(d.tipo)) quais.push('local');
-  return quais.filter((c) => {
-    const atual = d[c].trim();
-    if (atual === '') return false;
-    if (ex && atual === ex[c].trim()) return true;
-    // Dados sem cópia do exemplo (link gerado antes desta regra, exemplo digitado à mão): a organização do catálogo.
-    return c === 'organizacao' && daOrganizacaoDoCatalogo(atual);
-  });
-}
-
-const semMaiusculas = (t: string): string => t.trim().toLocaleLowerCase('pt-BR');
-const daOrganizacaoDoCatalogo = (t: string): boolean => ORGANIZACOES.some((o) => semMaiusculas(o) === semMaiusculas(t));
-
-/**
- * A organização ainda é do exemplo? Então o link do evento não é criado: é ela que faria o convite parecer de
- * outra organização (regra 9). O título do exemplo, que pode ser o de verdade ("Assembleia da categoria"), fica só
- * no aviso e na confirmação (decisão do Kauê, 06/11/2026).
- */
-export const exemploNoLink = (d: ParaOExemplo): boolean => camposDoExemplo(d).includes('organizacao');
-
-const NOME_DO_CAMPO: Record<CampoDeExemplo, string> = {
-  titulo: 'título',
-  organizacao: 'organização',
-  texto: 'texto',
-  pauta: 'pauta',
-  local: 'local',
-};
-const ARTIGO_DO_CAMPO: Record<CampoDeExemplo, string> = { titulo: 'o', organizacao: 'a', texto: 'o', pauta: 'a', local: 'o' };
-
-/** "a", "a e b", "a, b e c". */
-const listar = (itens: string[]): string =>
-  itens.length < 2 ? (itens[0] ?? '') : `${itens.slice(0, -1).join(', ')} e ${itens[itens.length - 1]}`;
-
-/** Aviso do Pronto: "A organização e o local ainda são do exemplo. Troque pelo que for seu em Mudar algo." */
-export function avisoDoExemplo(campos: readonly CampoDeExemplo[]): string {
-  if (!campos.length) return '';
-  const lista = listar(campos.map((c) => `${ARTIGO_DO_CAMPO[c]} ${NOME_DO_CAMPO[c]}`));
-  return `${lista.charAt(0).toUpperCase()}${lista.slice(1)} ainda ${campos.length === 1 ? 'é' : 'são'} do exemplo. Troque pelo que for seu em Mudar algo.`;
-}
-
-/** Frase do painel de confirmação: "Isto ainda tem partes do exemplo: organização e local." */
-export const fraseDaConfirmacao = (campos: readonly CampoDeExemplo[]): string =>
-  `Isto ainda tem partes do exemplo: ${listar(campos.map((c) => NOME_DO_CAMPO[c]))}.`;
-
-/** "Apagar" no passo 1: limpa título, organização, texto e pauta, e o local se ainda for o do exemplo. */
+/** "Apagar tudo" no passo 1: limpa título, organização, texto e pauta. O local (passo 2), o dia e a hora ficam. */
 export function apagarOPasso1(d: DadosDoFluxo): void {
-  if (camposDoExemplo(d).includes('local')) d.local = '';
   d.titulo = d.organizacao = d.texto = d.pauta = '';
 }
 
-/** Nome do botão que esvazia os campos do passo 1. */
-export const rotuloDeApagar = (origem: Origem): string => (origem === 'exemplo' ? 'Apagar o exemplo' : 'Apagar tudo');
+type CamposDoPasso1 = Pick<DadosDoFluxo, 'titulo' | 'organizacao' | 'texto' | 'pauta'>;
 
-/** Título, organização, texto e pauta já estavam vazios? Então apagar não tem o que desfazer. */
-export const passo1Vazio = (d: DadosDoFluxo): boolean =>
-  ![d.titulo, d.organizacao, d.texto, d.pauta].some((t) => t.trim() !== '') && !camposDoExemplo(d).includes('local');
+/** Título, organização, texto e pauta estão vazios (ou só espaços)? Então não há o que apagar. */
+export const passo1Vazio = (d: CamposDoPasso1): boolean => ![d.titulo, d.organizacao, d.texto, d.pauta].some((t) => t.trim() !== '');
 
-/** Aviso depois de apagar, com o prazo do "Desfazer" (10 s). Sem cópia guardada, não fala em Desfazer. */
-export const PRAZO_DO_DESFAZER_S = 10;
-export function avisoDeApagar(eraExemplo: boolean, comDesfazer: boolean): string {
-  const o = eraExemplo ? 'Exemplo apagado.' : 'Tudo apagado.';
-  return comDesfazer ? `${o} Para trazer de volta, toque em Desfazer em até ${PRAZO_DO_DESFAZER_S} segundos.` : o;
-}
-
-/** Nome do botão que desfaz o "Apagar" (D7). */
+export const ROTULO_APAGAR = 'Apagar tudo';
+/** Nome do botão que desfaz o "Apagar tudo" (D7). Fica até a pessoa escrever de novo ou sair do passo (sem relógio). */
 export const ROTULO_DESFAZER = 'Desfazer';
+
+/** Aviso falado depois de apagar. */
+export const AVISO_DE_APAGAR = 'Tudo apagado. Para trazer de volta, toque em Desfazer.';
+
+/**
+ * O botão da linha da dica, no passo 1: "Apagar tudo" só aparece com algum campo escrito; com a cópia guardada ele
+ * vira "Desfazer". Sem texto e sem cópia, some.
+ */
+export function botaoDeApagar(d: CamposDoPasso1, comCopia: boolean): { rotulo: string; escondido: boolean } {
+  return comCopia ? { rotulo: ROTULO_DESFAZER, escondido: false } : { rotulo: ROTULO_APAGAR, escondido: passo1Vazio(d) };
+}
 
 /** O passo 1 como estava antes de apagar. Fica só com quem chamou (memória da aba); nada vai para armazenamento. */
 export interface CopiaDoPasso1 {
@@ -384,7 +355,6 @@ export interface CopiaDoPasso1 {
   organizacao: string;
   texto: string;
   pauta: string;
-  local: string;
   origem: Origem;
 }
 
@@ -393,7 +363,6 @@ export const copiaDoPasso1 = (d: DadosDoFluxo): CopiaDoPasso1 => ({
   organizacao: d.organizacao,
   texto: d.texto,
   pauta: d.pauta,
-  local: d.local,
   origem: d.origem,
 });
 
@@ -403,7 +372,6 @@ export function devolverOPasso1(d: DadosDoFluxo, copia: CopiaDoPasso1): void {
   d.organizacao = copia.organizacao;
   d.texto = copia.texto;
   d.pauta = copia.pauta;
-  d.local = copia.local;
   d.origem = copia.origem;
 }
 
@@ -456,19 +424,6 @@ export function confirmarOrgao(d: DadosDoFluxo, passo: 1 | 2): void {
     const chave = chaveDoOrgao(d, c);
     if (!lista.includes(chave)) lista.push(chave);
   }
-}
-
-// ---------- lembrete do dia (D4) ----------
-
-/**
- * Reunião e evento com dia E hora ainda iguais aos do exemplo: "Confira o dia: sábado, 7 de novembro, às 19h."
- * Senão, vazio. `hoje` só decide se o ano aparece (quando()).
- */
-export function lembreteDoDia(d: DadosDoFluxo, hoje: Date = new Date()): string {
-  const ex = d.diaDoExemplo;
-  if (!temAgenda(d.tipo) || !ex || !ex.data || !ex.hora || d.data !== ex.data || d.hora !== ex.hora) return '';
-  const q = quando({ modelo: d.tipo, data: d.data, hora: d.hora }, hoje);
-  return q ? `Confira o dia: ${q}.` : '';
 }
 
 // ---------- dia que já passou (C-09) ----------
@@ -732,8 +687,7 @@ export function assinatura(d: DadosDoFluxo): string {
 }
 
 /** O link que já existia ainda descreve estes dados? */
-export const linkAindaVale = (d: DadosDoFluxo): boolean =>
-  !!d.link && d.assinaturaDoLink === assinatura(d) && !exemploNoLink(d);
+export const linkAindaVale = (d: DadosDoFluxo): boolean => !!d.link && d.assinaturaDoLink === assinatura(d);
 
 /** Tira asteriscos e sublinhados do texto digitado, para não quebrar o negrito do WhatsApp. */
 const semMarcas = (s: string) => s.replace(/[*_~`]/g, '').replace(/\s+/g, ' ').trim();

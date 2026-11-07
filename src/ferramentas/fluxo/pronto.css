@@ -302,13 +302,6 @@
 }
 
 /* ---------- Pronto ---------- */
-/* Aviso do exemplo mais compacto: o "Mandar no WhatsApp" cabe na primeira tela. */
-.fluxo-nota-curta {
-  margin-bottom: 0.75rem;
-  padding: 0.375rem 0.625rem;
-  font-size: 0.9375rem;
-}
-
 .fluxo-pronto .fluxo-mandar {
   margin-top: 0;
 }

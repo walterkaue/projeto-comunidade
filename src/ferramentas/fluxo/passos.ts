@@ -7,9 +7,8 @@ import { esc } from '../../comum/html';
 import { DEF_MODELOS } from '../cards/modelos';
 import {
   apagarOPasso1,
-  avisoDeApagar,
-  passo1Vazio,
-  PRAZO_DO_DESFAZER_S,
+  AVISO_DE_APAGAR,
+  botaoDeApagar,
   atalhosDoDia,
   AVISO_DIA_PASSADO,
   avisoDasLetrasDaPauta,
@@ -28,8 +27,6 @@ import {
   podePularOPasso2,
   precisaPerguntarDoOrgao,
   letrasQueFaltamNaPauta,
-  ROTULO_DESFAZER,
-  rotuloDeApagar,
   temAgenda,
   type CopiaDoPasso1,
   type DadosDoFluxo,
@@ -71,15 +68,15 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
-  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
-      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
+  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, exemplo: d.exemplo.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
+      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, exemplo: d.exemplo.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
           ? `<p class="fluxo-quadro" id="fluxo-aviso-do-link">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
-      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta (os assuntos da reunião)', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, linhas: 5, obrigatorio: true, semCorretor })}
+      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta (os assuntos da reunião)', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, exemplo: d.exemplo.pauta, linhas: 5, obrigatorio: true, semCorretor })}
       <p class="campo-dica fluxo-pauta-letras" id="fluxo-pauta-letras">${esc(avisoDasLetrasDaPauta(d.pauta))}</p>
       <p class="fluxo-so-leitor" id="fluxo-pauta-fala" role="status" aria-live="polite"></p>`
-          : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, maximo: LIMITES.texto, linhas: 3 })
+          : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, exemplo: d.exemplo.texto, maximo: LIMITES.texto, linhas: 3 })
       }`;
 }
 
@@ -106,13 +103,19 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
   const agenda = temAgenda(d.tipo);
   return `${campoDia(d)}
       ${agenda ? campoTexto({ id: 'fluxo-hora', rotulo: 'Hora', tipo: 'time', valor: d.hora, obrigatorio: true }) : ''}
-      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: DICA_DO_LOCAL, valor: d.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
+      ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: DICA_DO_LOCAL, valor: d.local, exemplo: d.exemplo.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
       ${podePularOPasso2(d.tipo) ? '<button type="button" class="botao botao-sec" id="fluxo-pular">Pular este passo</button>' : ''}`;
+}
+
+/** "Apagar tudo" na linha da dica: escondido enquanto não há texto no passo 1. */
+function htmlDoApagar(d: DadosDoFluxo): string {
+  const b = botaoDeApagar(d, false);
+  return `<button type="button" class="fluxo-apagar" id="fluxo-apagar"${b.escondido ? ' hidden' : ''}>${esc(b.rotulo)}</button>`;
 }
 
 function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => void {
   raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
-    ${topoDoPasso(d, passo, { aoLadoDaDica: passo === 1 ? `<button type="button" class="fluxo-apagar" id="fluxo-apagar">${esc(rotuloDeApagar(d.origem))}</button>` : '', miniatura: htmlDaMiniatura() })}
+    ${topoDoPasso(d, passo, { aoLadoDaDica: passo === 1 ? htmlDoApagar(d) : '', miniatura: htmlDaMiniatura() })}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
     </form>
@@ -155,25 +158,24 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   const medidas = medirFaixasFixas(raiz);
 
   const apagar = raiz.querySelector<HTMLButtonElement>('[id="fluxo-apagar"]');
-  // O que a pessoa tinha escrito antes de apagar: só nesta variável (memória da aba), por 10 s.
+  // O que a pessoa tinha escrito antes de apagar: só nesta variável (memória da aba). Fica até ela escrever de novo
+  // num campo do passo 1 ou sair do passo (sem relógio).
   let copia: CopiaDoPasso1 | undefined;
-  let tempoDoDesfazer: ReturnType<typeof setTimeout> | undefined;
-  /** Os 10 s do Desfazer; enquanto o foco está no próprio botão, o prazo não corre. */
-  function comecarPrazo(): void {
-    clearTimeout(tempoDoDesfazer);
-    tempoDoDesfazer = copia ? setTimeout(esquecerACopia, PRAZO_DO_DESFAZER_S * 1000) : undefined;
+  /** Põe no botão o nome e a vista que valem agora ("Apagar tudo", "Desfazer" ou escondido). */
+  function atualizarOBotao(): void {
+    if (!apagar) return;
+    const b = botaoDeApagar(d, !!copia);
+    apagar.textContent = b.rotulo;
+    apagar.hidden = b.escondido;
   }
   function esquecerACopia(): void {
-    clearTimeout(tempoDoDesfazer);
-    tempoDoDesfazer = undefined;
     copia = undefined;
-    if (apagar) apagar.textContent = rotuloDeApagar(d.origem);
   }
-  /** A pessoa mexeu num campo: o exemplo passa a ser dela (e o botão deixa de falar em "exemplo"). */
+  /** A pessoa mexeu num campo: os dados passam a ser dela (e o botão acompanha o texto do passo 1). */
   function mudou(): void {
     marcarMudanca(d);
     fecharOrgao(false);
-    if (apagar) apagar.textContent = copia ? ROTULO_DESFAZER : rotuloDeApagar(d.origem);
+    atualizarOBotao();
   }
 
   // ---------- pergunta do órgão público (D1) ----------
@@ -331,31 +333,20 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
         escreverOsCampos();
         fecharOrgao(false);
         limparTodosOsErros(form);
+        atualizarOBotao();
         mini.redesenhar();
         entrada('fluxo-titulo').focus();
         avisar('Voltou o que você tinha escrito.');
         return;
       }
-      const eraExemplo = d.origem === 'exemplo';
-      // Nada escrito: não há o que trazer de volta, então nem guarda cópia nem oferece "Desfazer".
-      const comDesfazer = !passo1Vazio(d);
-      copia = comDesfazer ? copiaDoPasso1(d) : undefined;
+      copia = copiaDoPasso1(d);
       apagarOPasso1(d);
       escreverOsCampos();
       mudou();
       limparTodosOsErros(form);
       mini.redesenhar();
       entrada('fluxo-titulo').focus();
-      comecarPrazo();
-      avisar(avisoDeApagar(eraExemplo, comDesfazer));
-    });
-    // Foco no botão "Desfazer": o prazo para; ao sair dele, recomeça os 10 s.
-    q('fluxo-apagar').addEventListener('focus', () => {
-      clearTimeout(tempoDoDesfazer);
-      tempoDoDesfazer = undefined;
-    });
-    q('fluxo-apagar').addEventListener('blur', () => {
-      if (copia) comecarPrazo();
+      avisar(AVISO_DE_APAGAR);
     });
   }
 
@@ -377,7 +368,6 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   q('fluxo-voltar').addEventListener('click', () => voltarDoPasso(d.tipo, passo));
 
   return () => {
-    clearTimeout(tempoDoDesfazer);
     clearTimeout(tempoDaFala);
     mini.limpar();
     medidas();

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { ataVazia, pontoVazio } from '../reuniao/ata';
-import { exemploDoFluxo } from './estado';
+import { cheio } from './dados-de-teste';
 import { ataComAPauta, haPontosComTexto } from './ponte';
 
-const d = exemploDoFluxo('reuniao', 0, new Date(2026, 10, 5));
+const d = cheio('reuniao', 0, new Date(2026, 10, 5));
 
 describe('ataComAPauta', () => {
   it('os pontos viram a pauta e os campos vazios vêm da reunião', () => {

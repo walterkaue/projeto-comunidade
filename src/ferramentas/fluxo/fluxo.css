@@ -56,7 +56,7 @@
   color: var(--tinta-suave);
 }
 
-/* Nota fixa (dados de um link, exemplo ainda não trocado): não some sozinha. */
+/* Nota fixa (dados de um link): não some sozinha. */
 .fluxo-nota {
   margin: 0 0 1rem;
   padding: 0.5rem 0.75rem;
@@ -113,6 +113,22 @@
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--borda);
   background: var(--papel);
+}
+
+/* Ao lado da prévia: o botão e, embaixo dele, a linha "(com exemplo no que falta)" (não aumenta a faixa). */
+.fluxo-mini-lado {
+  display: flex;
+  flex: 1 1 8rem;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.fluxo-mini-exemplo {
+  margin: 0;
+  color: var(--tinta-suave);
+  font-size: 0.875rem;
+  line-height: 1.25;
 }
 
 /* Altura em rem (acompanha o texto), com teto em px para o texto 200% não comer a tela. */
@@ -186,7 +202,7 @@
   font-weight: 700;
 }
 
-/* ---------- passo 1: a dica e "Apagar o exemplo" (link discreto) na mesma linha ---------- */
+/* ---------- passo 1: a dica e "Apagar tudo" (link discreto) na mesma linha ---------- */
 .fluxo-dica-linha {
   display: flex;
   flex-wrap: wrap;
@@ -320,7 +336,7 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
   }
 }
 
-/* Confirmação do Pronto: aparece logo abaixo do botão tocado quando ainda há partes do exemplo. */
+/* Painel de confirmação (órgão público nos passos e no Pronto; "sem o link" no Pronto). */
 .fluxo-confirma {
   display: grid;
   gap: 12px;

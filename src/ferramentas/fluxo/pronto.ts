@@ -1,5 +1,5 @@
-// Tela "Pronto" (#/fazer/<tipo>/pronto): um botão principal (imagem + texto no WhatsApp), logo abaixo do título e
-// do aviso do exemplo (cabe na primeira tela de 360 × 640), depois a prévia, as outras saídas
+// Tela "Pronto" (#/fazer/<tipo>/pronto): um botão principal (imagem + texto no WhatsApp), logo abaixo do título
+// (cabe na primeira tela de 360 × 640), depois a prévia, as outras saídas
 // (baixar, copiar, imprimir cartaz), "Mudar algo", "Fazer outro" e, na reunião, a ponte para a ata.
 // Nada daqui vai para link nem armazenamento; o único link com dados é o do evento (link.ts).
 
@@ -20,7 +20,6 @@ import {
   dicaDoMandar,
   enderecoDaPaginaDoEvento,
   frasePainel,
-  idsDaDescricao,
   MENSAGEM_DE_BAIXAR,
   MENSAGEM_SEM_INTERNET,
   MENSAGEM_SEM_LINK,
@@ -31,15 +30,10 @@ import {
   temMenuDeCompartilhar,
 } from './apoio';
 import {
-  avisoDoExemplo,
   fraseDoLinkNoPronto,
   camposDoCard,
-  camposDoExemplo,
   confirmarOrgaoNoPronto,
   convocacaoDoFluxo,
-  exemploNoLink,
-  fraseDaConfirmacao,
-  lembreteDoDia,
   perguntarDoOrgaoNoPronto,
   PERGUNTA_DO_ORGAO,
   temAgenda,
@@ -56,18 +50,11 @@ import { topoDoPronto } from './topo';
 export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const agenda = temAgenda(d.tipo);
   const nivel = nivelDoAparelho();
-  // O que ainda é do exemplo (qualquer origem): o aviso, a confirmação e a falta do link dependem só disto.
-  const doExemplo = camposDoExemplo(d);
-  const aviso = avisoDoExemplo(doExemplo);
-  const lembrete = lembreteDoDia(d);
 
   raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
     ${topoDoPronto(d)}
-    ${aviso ? `<p class="fluxo-nota fluxo-nota-curta" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
 
-    ${lembrete ? `<p class="fluxo-nota fluxo-nota-curta" id="fluxo-lembrete-dia">${esc(lembrete)}</p>` : ''}
-
-    <button type="button" class="botao fluxo-mandar" id="fluxo-mandar" aria-describedby="${esc(idsDaDescricao(!!aviso, ...(lembrete ? ['fluxo-lembrete-dia'] : []), 'fluxo-mandar-dica'))}">Mandar no WhatsApp</button>
+    <button type="button" class="botao fluxo-mandar" id="fluxo-mandar" aria-describedby="fluxo-mandar-dica">Mandar no WhatsApp</button>
     <p class="campo-dica" id="fluxo-mandar-dica">${esc(dicaDoMandar(d.formato, temMenuDeCompartilhar()))}</p>
     <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(fraseDoLinkNoPronto(d))}</p>
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
@@ -81,7 +68,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     <div class="fluxo-saidas">
       <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>
       <button type="button" class="botao botao-sec" id="fluxo-copiar-texto">Copiar só o texto</button>
-      <button type="button" class="botao botao-sec" id="fluxo-copiar-link"${aviso ? ' aria-describedby="fluxo-aviso-exemplo"' : ''} hidden>Copiar o link</button>
+      <button type="button" class="botao botao-sec" id="fluxo-copiar-link" hidden>Copiar o link</button>
       <button type="button" class="botao botao-sec" id="fluxo-imprimir">Imprimir cartaz para o mural</button>
       <p class="fluxo-nota-corte" id="fluxo-nota-corte" hidden></p>
       ${d.tipo === 'reuniao' ? '<p class="campo-dica" id="fluxo-aviso-qr" hidden>O QR do cartaz abre a pauta inteira.</p>' : ''}
@@ -424,13 +411,11 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
       }
     });
 
-  // ---------- confirmação: partes do exemplo ou mensagem sem o link ----------
+  // ---------- confirmação: mensagem sem o link ou pergunta do órgão público ----------
   // Na própria tela (sem window.confirm): o menu de compartilhar e a cópia precisam vir do toque da pessoa.
   const painel = q('fluxo-confirma');
   const seguir = q<HTMLButtonElement>('fluxo-confirma-seguir');
   const primeiro = q<HTMLButtonElement>('fluxo-confirma-mudar');
-  // Cada motivo é confirmado por si: confirmar o exemplo em "Baixar" não cala o aviso de que "Mandar" vai sem o link.
-  let confirmouExemplo = false;
   let confirmouSemLink = false;
   let quemAbriu: HTMLElement | undefined;
   let aoSeguir: (() => unknown) | undefined;
@@ -438,21 +423,19 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
   // Só "Mandar" e "Copiar só o texto" levam o texto sem o link; baixar e imprimir não perguntam por ele.
   let valeSemLink = false;
-  /** Evento ou reunião sem link por qualquer motivo que não seja a organização do exemplo (essa já tem a sua frase). */
-  const semLinkAgora = (): boolean => valeSemLink && agenda && !!resultado && !resultado.link && !exemploNoLink(d);
+  /** Evento ou reunião sem link por qualquer motivo (rede, texto grande, evento removido). */
+  const semLinkAgora = (): boolean => valeSemLink && agenda && !!resultado && !resultado.link;
   /** Dados de link com órgão público ainda não conferido (os passos 1 e 2 foram pulados). */
   const orgaoAgora = (): boolean => perguntarDoOrgaoNoPronto(d);
-  const exemploPendente = (): typeof doExemplo => (confirmouExemplo ? [] : doExemplo);
   const semLinkPendente = (): boolean => semLinkAgora() && !confirmouSemLink;
 
   /** Escreve a frase e o primeiro botão do painel com o que vale agora. Falso = não há nada a perguntar. */
   function preencherPainel(): boolean {
     const sem = semLinkPendente();
     const orgao = orgaoAgora();
-    const exemplo = exemploPendente();
-    if (!sem && !orgao && !exemplo.length) return false;
-    paraTentar = soFaltaARede(!!resultado?.semRede, sem, exemplo.length, orgao);
-    q('fluxo-confirma-texto').textContent = frasePainel(sem, exemplo.length ? fraseDaConfirmacao(exemplo) : '', orgao ? PERGUNTA_DO_ORGAO : '');
+    if (!sem && !orgao) return false;
+    paraTentar = soFaltaARede(!!resultado?.semRede, sem, orgao);
+    q('fluxo-confirma-texto').textContent = frasePainel(sem, orgao ? PERGUNTA_DO_ORGAO : '');
     primeiro.textContent = paraTentar ? 'Tentar de novo' : 'Mudar algo';
     return true;
   }
@@ -476,14 +459,14 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     quemAbriu?.focus();
   });
 
-  /** O primeiro toque, com partes do exemplo ou sem o link, só abre o painel logo abaixo do botão. Depois de confirmar, não pergunta mais. */
+  /** O primeiro toque, sem o link ou com a pergunta do órgão pendente, só abre o painel logo abaixo do botão. Depois de confirmar, não pergunta mais. */
   function comConfirmacao(botao: HTMLElement, verbo: string, acao: () => unknown, semLink = false): () => Promise<void> {
     return async () => {
       // Link ainda sendo preparado: espera, para saber se a mensagem vai com ele.
       if (agenda && !resultado) await linkPronto;
       if (!vivo) return;
       valeSemLink = semLink;
-      if (!precisaConfirmar(exemploPendente(), false, semLinkPendente(), orgaoAgora())) {
+      if (!precisaConfirmar(semLinkPendente(), orgaoAgora())) {
         void acao();
         return;
       }
@@ -504,7 +487,6 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   }
   seguir.addEventListener('click', () => {
     const acao = aoSeguir;
-    confirmouExemplo = true;
     if (semLinkAgora()) confirmouSemLink = true;
     // Quem seguiu mesmo assim respondeu à pergunta do órgão pelos dois passos que foram pulados.
     if (orgaoAgora()) confirmarOrgaoNoPronto(d);
