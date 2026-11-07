@@ -239,3 +239,43 @@ O ícone "pessoas" (lista de presença da ata) é o mesmo da porta da reunião.
 - As imagens geradas (card, cartaz, as 6 paletas) ficam como estão.
 - Nome definitivo e logo: a marca de cinco pontos é provisória, como o nome.
 - Ilustrações e fotos: nenhuma.
+
+## 10. Classes no código
+
+> Escrito pela Sessão 1 (07/11/2026), para as Sessões 2 e 3. Estilos em `src/comum/tema.css` (botões) e `src/comum/componentes.css` (o resto). Cada classe desta tabela é conferida em `src/comum/tema.test.ts`: se sumir do CSS, o teste falha.
+
+**Cor da porta.** Ponha `data-porta="reuniao"` (ou `evento`, `aviso`, `resultado`, `agradecimento`) no elemento de fora da tela (ex.: a `<section>` do passo). Tudo dentro dela passa a usar `--cor` e `--cor-clara` da porta, e o foco (`--foco`) também. Fora de uma porta, `--cor` é a tinta e `--cor-clara` é a `--atencao`. As cores de cada porta também existem soltas, para a marca de cinco cores: `--cor-reuniao`, `--clara-reuniao` e assim por diante. Nomes antigos que ainda funcionam, como apelidos, e saem quando as telas trocarem: `--destaque` (= `--cor`), `--sobre-destaque` (= `--sobre-cor`), `--porta-fundo`, `--porta-texto` e `--porta-desc` (fundo, texto e texto suave da porta da reunião). Outros tokens novos: `--raio-botao` (14 px), `--raio-aviso` (14 px), `--raio-cartao` (20 px).
+
+**Ícones.** `icone(nome, { tamanho?, traco?, classe? })` em `src/comum/icones.ts` devolve o `<svg>` (24 × 24 por padrão, traço 2, `stroke="currentColor"`, `aria-hidden="true"`, `focusable="false"`, classe `icone`). A cor vem do texto em volta (`color`). Nomes: `reuniao`, `evento`, `aviso`, `resultado`, `agradecimento` (as portas), `pessoas` (= reunião) e `calendario` (= evento), e os da seção 6: `info`, `atencao`, `erro`, `ata`, `chevron`, `direita`, `esquerda`, `abrir`, `check`, `relogio`, `local`, `enviar`, `baixar`, `copiar`, `link`, `imprimir`, `lapis`, `mais`, `celular`, `conversa`, `compartilhar`, `denunciar`, `predio`, `cadeado`, `livro`, `lupa`. O tipo `NomeDoIcone` lista todos. O ícone é sempre enfeite: o texto ao lado é que informa.
+
+**Formulário** (`src/comum/formulario.ts`). `campoTexto` e `campoAreaDeTexto` aceitam `exemplo: '...'`, que vira `placeholder="Ex.: ..."` (na área de texto, só a primeira linha leva "Ex.:"). Campo sem `obrigatorio: true` ganha "(opcional)" no rótulo; o obrigatório leva só `aria-required`. `mostrarErro` põe o ícone de erro antes de "Erro: <motivo>" (o `textContent` continua "Erro: <motivo>").
+
+| Classe | Onde | Para que serve |
+|---|---|---|
+| `botao` | `<button>`, `<a>` | Botão principal: fundo `--cor`, texto `--sobre-cor`, 52 px, cantos de 14 px. Base de todos os botões. |
+| `botao-sec` | com `botao` | Secundário: contorno de 2 px na tinta, fundo transparente ("Voltar", "Mudar algo", "Seguir assim"). |
+| `botao-ter` | com `botao` | Terciário: fundo `--superficie`, contorno `--borda-campo`, ícone na `--cor` à esquerda e texto à esquerda (saídas do Pronto, página do evento). |
+| `botao-alto` | com `botao` | Botão de 60 px ("Mandar no WhatsApp"). |
+| `link-acao` | `<a>`, `<button>` | Link de ação: sublinhado, negrito, na `--cor`, alvo de 48 px ("Apagar tudo", "Desfazer"). |
+| `link-tinta` | com `link-acao` | O mesmo link, na tinta ("Fazer outro"). |
+| `icone` | `<svg>` | Posta por `icone()`; não encolhe dentro de flex. |
+| `cartao` | bloco | Cartão: fundo `--superficie`, borda `--borda`, cantos de 20 px, `--sombra` (avisos da ata). |
+| `aviso-info` | bloco | Aviso de informação: fundo `--cor-clara`, sem borda, cantos de 14 px. Dentro: `icone('info', { classe: 'aviso-icone' })` e `.aviso-corpo`. Primeira frase em `<strong>`. |
+| `aviso-atencao` | bloco | Aviso de atenção: fundo `--atencao` (areia), sem borda. Dentro: `icone('atencao', { classe: 'aviso-icone' })` e `.aviso-corpo`. Frase principal em `<strong>`. |
+| `aviso-icone` | `<svg>` do aviso | Ícone do aviso: na `--cor` (informação) ou na tinta (atenção). |
+| `aviso-corpo` | dentro do aviso | O texto do aviso (um ou mais `<p>`). |
+| `icone-quadro` | `<span>` com o ícone | Quadrado de ícone cheio: fundo `--cor`, ícone `--sobre-cor`, 46 px. |
+| `icone-quadro-claro` | com `icone-quadro` | Quadrado claro: fundo `--cor-clara`, ícone `--cor`. |
+| `icone-quadro-p` / `-g` / `-gg` | com `icone-quadro` | Tamanhos 30, 52 e 62 px (no de 30, use o ícone com `tamanho: 18`). |
+| `pilulas` | bloco | Fileira de pílulas que quebra linha. |
+| `pilula` | `<button type="button" aria-pressed>` | Atalho do dia: 48 px, pílula com contorno; com `aria-pressed="true"`, cheia na `--cor`. |
+| `pilula-check` | `<svg>` dentro da pílula | `icone('check', { tamanho: 18, classe: 'pilula-check' })`: só aparece na escolhida. |
+| `painel` | `<dialog>` | Folha que sobe de baixo, aberta com `showModal()`, fundo escurecido atrás. Esc dispara `cancel`: trate como a escolha segura ("Mudar o texto"). Sem animação com "reduzir movimento". |
+| `painel-acoes` | dentro do painel | Os botões empilhados (principal e secundário). |
+| `campo-opcional` | posta por `formulario.ts` | "(opcional)" em `--tinta-suave`. (`campo-obrig` tem o mesmo estilo até o fluxo trocar.) |
+| `campo-erro-icone` | posta por `mostrarErro` | Ícone de erro antes de "Erro: …". |
+| `aviso-vivo` | posta por `aviso.ts` | O aviso que some: pílula de tinta com texto creme e ícone "i". Nada a fazer nas telas. |
+
+O campo (`campo`, `campo-rotulo`, `campo-dica`, `campo-entrada`, `campo-erro`) mantém os nomes de antes; muda só a cara: 52 px, fonte de 17 px, exemplo em `--exemplo`, foco de 3 px na `--cor`, erro com borda de 4 px. Componentes que ficam com as Sessões 2 e 3, cada uma no CSS da sua tela: porta do início, marca e faixa de cinco cores, topo do passo, linha da prévia, barra fixa de baixo, opções de formato e bolinhas de cor.
+
+**Alto contraste (forced-colors):** avisos, quadrados de ícone, cartão e painel ganham borda `CanvasText`; a pílula escolhida fica em `Highlight`; o botão principal mantém o fundo (regra de `tema.css`).

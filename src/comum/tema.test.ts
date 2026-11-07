@@ -194,3 +194,99 @@ describe('tema.css', () => {
     expect(css).toMatch(/\.rodape ul \{[^}]*gap: 12px 1rem;/);
   });
 });
+
+// ---------- componentes.css: as classes de docs/visual.md, seção 10 ----------
+
+const componentes = readFileSync(new URL('./componentes.css', import.meta.url), 'utf-8');
+const visual = readFileSync(new URL('../../docs/visual.md', import.meta.url), 'utf-8');
+const todoCss = css + componentes;
+
+/** Corpo da primeira regra cujo seletor (sozinho ou numa lista) é `seletor`. */
+function corpoDe(texto: string, seletor: string): string {
+  const semComentario = texto.replace(/\/\*[\s\S]*?\*\//g, '');
+  const re = new RegExp(`(^|[},\\s])${seletor.replace(/[[\]'().*:]/g, '\\$&')}\\s*[,{]`, 'm');
+  const m = re.exec(semComentario);
+  if (!m) throw new Error(`regra ${seletor} não achada`);
+  return bloco(semComentario, m.index).dentro;
+}
+
+describe('componentes.css', () => {
+  const secao10 = visual.slice(visual.indexOf('## 10. Classes no código'));
+  const classes = [...secao10.matchAll(/^\| `([\w-]+)`/gm)].map((m) => m[1]!);
+
+  it('a seção 10 de docs/visual.md lista as classes', () => {
+    expect(classes.length).toBeGreaterThan(15);
+  });
+  for (const c of classes) {
+    it(`classe .${c} existe no CSS`, () => {
+      expect(todoCss).toMatch(new RegExp(`\\.${c}(?![\\w-])`));
+    });
+  }
+
+  it('botões: principal na --cor, secundário em contorno de tinta, terciário de cartão com ícone na --cor', () => {
+    const b = corpoDe(css, '.botao');
+    expect(b).toMatch(/background: var\(--cor\)/);
+    expect(b).toMatch(/color: var\(--sobre-cor\)/);
+    expect(b).toMatch(/min-height: var\(--toque\)/);
+    expect(corpoDe(css, '.botao-sec')).toMatch(/border-color: var\(--tinta\)/);
+    const ter = corpoDe(componentes, '.botao-ter');
+    expect(ter).toMatch(/background: var\(--superficie\)/);
+    expect(ter).toMatch(/border-color: var\(--borda-campo\)/);
+    expect(corpoDe(componentes, '.botao-ter .icone')).toMatch(/color: var\(--cor\)/);
+    expect(corpoDe(componentes, '.botao-alto')).toMatch(/min-height: 60px/);
+  });
+
+  it('alvos de toque: link de ação e pílula com 48 px ou mais', () => {
+    expect(corpoDe(componentes, '.link-acao')).toMatch(/min-height: 48px/);
+    expect(corpoDe(componentes, '.link-acao')).toMatch(/text-decoration: underline/);
+    expect(corpoDe(componentes, '.pilula')).toMatch(/min-height: 48px/);
+  });
+
+  it('avisos sem borda, com fundo de cor; informação na --cor-clara, atenção na --atencao', () => {
+    const comum = corpoDe(componentes, '.aviso-info');
+    expect(comum).not.toMatch(/border:/);
+    expect(componentes).toMatch(/\.aviso-info \{\s*background: var\(--cor-clara\);/);
+    expect(componentes).toMatch(/\.aviso-atencao \{\s*background: var\(--atencao\);/);
+  });
+
+  it('pílula escolhida: cheia na --cor e com o ✓ (nunca só a cor)', () => {
+    expect(corpoDe(componentes, ".pilula[aria-pressed='true']")).toMatch(/background: var\(--cor\)/);
+    expect(componentes).toMatch(/\.pilula \.pilula-check \{\s*display: none;/);
+    expect(componentes).toMatch(/\.pilula\[aria-pressed='true'\] \.pilula-check \{\s*display: inline-block;/);
+  });
+
+  it('campo: exemplo em --exemplo sem transparência, foco na --cor, erro com borda de 4 px', () => {
+    const ph = corpoDe(componentes, '.campo-entrada::placeholder');
+    expect(ph).toMatch(/color: var\(--exemplo\)/);
+    expect(ph).toMatch(/opacity: 1/);
+    const foco = corpoDe(componentes, '.campo-entrada:focus');
+    expect(foco).toMatch(/outline: 3px solid var\(--cor\)/);
+    expect(foco).toMatch(/border-color: var\(--cor\)/);
+    expect(corpoDe(componentes, ".campo-entrada[aria-invalid='true']")).toMatch(/border-width: 4px/);
+    expect(corpoDe(componentes, '.campo-entrada')).toMatch(/min-height: var\(--toque\)/);
+  });
+
+  it('painel: <dialog> de baixo, com fundo escurecido, e animação só sem "reduzir movimento"', () => {
+    expect(corpoDe(componentes, '.painel')).toMatch(/margin: auto auto 0/);
+    expect(componentes).toMatch(/\.painel::backdrop \{\s*background: rgba/);
+    const i = componentes.indexOf('@media (prefers-reduced-motion: no-preference)');
+    expect(i).toBeGreaterThan(-1);
+    const fora = componentes.slice(0, i) + componentes.slice(bloco(componentes, i).fim);
+    expect(fora).not.toMatch(/animation:/);
+  });
+
+  it('alto contraste: avisos, quadrados de ícone e painel com borda CanvasText', () => {
+    const blocos = [...componentes.matchAll(/@media \(forced-colors: active\)/g)].map((m) => bloco(componentes, m.index!).dentro);
+    const juntos = blocos.join('\n');
+    for (const c of ['.aviso-info', '.aviso-atencao', '.icone-quadro', '.painel']) expect(juntos).toContain(c);
+    expect(juntos).toContain('border: 2px solid CanvasText');
+    expect(juntos).toMatch(/\.pilula\[aria-pressed='true'\] \{[^}]*background: Highlight/);
+  });
+
+  it('"reduzir movimento" tira toda animação e transição (tema.css)', () => {
+    const i = css.indexOf('@media (prefers-reduced-motion: reduce)');
+    const b = bloco(css, i).dentro;
+    expect(b).toContain('animation: none !important');
+    expect(b).toContain('transition: none !important');
+  });
+});

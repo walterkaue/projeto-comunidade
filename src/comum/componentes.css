@@ -5,6 +5,8 @@
 /* O aviso fica fixo no rodapé por alguns segundos: a rolagem até o foco deixa espaço para ele não cobrir o botão. */
 html {
   scroll-padding-bottom: 5rem;
+  /* Ícone "i" de src/comum/icones.ts, para usar em CSS (máscara). */
+  --icone-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v6M12 7.5v.5'/%3E%3C/svg%3E");
 }
 
 .aviso-vivo {
@@ -16,17 +18,38 @@ html {
   z-index: 60;
   max-width: 480px;
   margin: 0 auto;
-  padding: 12px 16px;
-  border-radius: var(--raio);
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  /* Pílula de tinta com texto creme e o ícone "i" à esquerda (docs/visual.md, seção 5). */
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 1.5rem;
+  background: var(--tinta);
+  color: var(--papel);
+  box-shadow: var(--sombra);
   font-size: 1rem;
   line-height: 1.4;
-  text-align: center;
+  text-align: left;
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
   transition: opacity 0.2s, transform 0.2s;
+}
+
+/* O ícone é desenho de enfeite (pseudo-elemento: não entra no texto da região viva). */
+.aviso-vivo::before {
+  content: '';
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  background: currentColor;
+  -webkit-mask: var(--icone-info) center / contain no-repeat;
+  mask: var(--icone-info) center / contain no-repeat;
+}
+
+.aviso-vivo:empty::before {
+  display: none;
 }
 
 .aviso-vivo-visivel {
@@ -68,6 +91,11 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
 @media (forced-colors: active) {
   .aviso-vivo:not(.aviso-vivo-leitor) {
     border: 2px solid CanvasText;
+  }
+
+  .aviso-vivo::before {
+    forced-color-adjust: none;
+    background: CanvasText;
   }
 }
 
@@ -128,10 +156,13 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
 
 .campo-rotulo {
   padding: 0;
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.3;
 }
 
+/* "(opcional)" só nos campos que não são obrigatórios (formulario.ts). .campo-obrig fica até o fluxo trocar. */
+.campo-opcional,
 .campo-obrig {
   font-weight: 400;
   color: var(--tinta-suave);
@@ -184,8 +215,14 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   color: var(--tinta);
   font: inherit;
   /* 16 px ou mais: o iOS não dá zoom ao focar. */
-  font-size: max(16px, 1rem);
+  font-size: max(16px, 1.0625rem);
   line-height: 1.35;
+}
+
+/* Exemplo em cinza dentro do campo ("Ex.: …"): some quando a pessoa escreve. 4,5:1 ou mais (tema.test.ts). */
+.campo-entrada::placeholder {
+  color: var(--exemplo);
+  opacity: 1;
 }
 
 .campo-area {
@@ -193,9 +230,12 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   resize: vertical;
 }
 
-.campo-entrada:focus-visible,
+/* Foco: borda e contorno de 3 px na --cor da porta (fora dela, a tinta). :focus, não só :focus-visible: no campo de
+   texto os dois coincidem, e o toque também mostra onde se está escrevendo. */
+.campo-entrada:focus,
 .campo-radio input:focus-visible {
-  outline: 3px solid var(--foco);
+  border-color: var(--cor);
+  outline: 3px solid var(--cor);
   outline-offset: 2px;
 }
 
@@ -207,11 +247,20 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   outline-color: var(--erro);
 }
 
+/* Erro: ícone + "Erro: <motivo>" em negrito (mostrarErro). Nunca só a cor. */
 .campo-erro {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   margin: 0;
   color: var(--erro);
   font-weight: 700;
   line-height: 1.4;
+}
+
+.campo-erro-icone {
+  flex: none;
+  margin-top: 0.1em;
 }
 
 .campo-erro[hidden] {
@@ -230,7 +279,7 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   width: 24px;
   height: 24px;
   margin: 0;
-  accent-color: var(--destaque);
+  accent-color: var(--cor);
 }
 
 /* Caixa de marcar com alvo de 48 px (o radio fica como está). */
@@ -246,4 +295,278 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   flex: 1;
   min-height: var(--toque);
   line-height: 1.3;
+}
+
+/* ======================================================================================================
+   Nova cara (docs/visual.md, seção 5). A lista das classes, com o uso de cada uma, está em docs/visual.md,
+   seção 10. Cores só por token: --cor e --cor-clara mudam com o data-porta da tela.
+   ====================================================================================================== */
+
+/* ---------- ícone (src/comum/icones.ts) ---------- */
+.icone {
+  flex: none;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* ---------- botões: terciário, alto e link de ação ---------- */
+/* Terciário: fundo de cartão, contorno de campo, ícone na --cor à esquerda e texto à esquerda. Use com .botao. */
+.botao-ter {
+  justify-content: flex-start;
+  border-color: var(--borda-campo);
+  background: var(--superficie);
+  color: var(--tinta);
+  text-align: left;
+}
+
+.botao-ter .icone {
+  color: var(--cor);
+}
+
+/* "Mandar no WhatsApp": 60 px. Use com .botao. */
+.botao-alto {
+  min-height: 60px;
+}
+
+/* Link de ação ("Apagar tudo", "Desfazer"): sublinhado, negrito, na --cor, alvo de 48 px. Serve em <a> e <button>. */
+.link-acao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--cor);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Na tinta ("Fazer outro"). */
+.link-tinta {
+  color: var(--tinta);
+}
+
+/* ---------- cartão ---------- */
+.cartao {
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-cartao);
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: var(--sombra);
+}
+
+/* ---------- avisos (informação e atenção) ---------- */
+/* Aviso tem cara de aviso: ícone e fundo de cor, sem borda de campo. Dentro: ícone (classe .aviso-icone) e um
+   bloco .aviso-corpo com o texto; a primeira frase vai em <strong>. */
+.aviso-info,
+.aviso-atencao {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: var(--raio-aviso);
+  color: var(--tinta);
+  font-size: 1rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.aviso-info {
+  background: var(--cor-clara);
+}
+
+.aviso-atencao {
+  background: var(--atencao);
+}
+
+.aviso-icone {
+  margin-top: 1px;
+}
+
+.aviso-info .aviso-icone {
+  color: var(--cor);
+}
+
+.aviso-atencao .aviso-icone {
+  color: var(--tinta);
+}
+
+.aviso-corpo {
+  min-width: 0;
+}
+
+.aviso-corpo > p {
+  margin: 0;
+}
+
+.aviso-corpo > p + p {
+  margin-top: 6px;
+}
+
+/* ---------- quadrado de ícone ---------- */
+/* Cheio: fundo --cor, ícone --sobre-cor. Claro (.icone-quadro-claro): fundo --cor-clara, ícone --cor.
+   Tamanho: 46 px; -p 30 px, -g 52 px, -gg 62 px. O ícone dentro é de 24 px (no -p, use tamanho 18). */
+.icone-quadro {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--cor);
+  color: var(--sobre-cor);
+}
+
+.icone-quadro-claro {
+  background: var(--cor-clara);
+  color: var(--cor);
+}
+
+.icone-quadro-p {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+}
+
+.icone-quadro-g {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+}
+
+.icone-quadro-gg {
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+}
+
+/* ---------- pílulas de atalho (Hoje, Amanhã, Próximo sábado) ---------- */
+/* <div class="pilulas"> com <button type="button" class="pilula" aria-pressed="false|true">. O ✓ é um ícone
+   check com a classe .pilula-check, que só aparece na escolhida (a escolha nunca é só a cor). */
+.pilulas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.pilula {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 2px solid var(--borda-campo);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.pilula[aria-pressed='true'] {
+  border-color: var(--cor);
+  background: var(--cor);
+  color: var(--sobre-cor);
+}
+
+.pilula .pilula-check {
+  display: none;
+}
+
+.pilula[aria-pressed='true'] .pilula-check {
+  display: inline-block;
+}
+
+/* ---------- painel que sobe de baixo (<dialog class="painel">, aberto com showModal()) ---------- */
+/* showModal prende o foco e Esc fecha (o evento "cancel": trate como a escolha segura, ex.: "Mudar o texto").
+   Dentro: o aviso (.aviso-atencao) e os botões em .painel-acoes, empilhados. */
+.painel {
+  width: 100%;
+  max-width: 480px;
+  max-height: 100%;
+  margin: auto auto 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+  border: 0;
+  border-radius: 20px 20px 0 0;
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: var(--sombra-barra);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.painel::backdrop {
+  background: rgba(26, 21, 18, 0.6);
+}
+
+.painel-acoes {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.painel-acoes .botao {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .painel[open] {
+    animation: painel-sobe 0.22s ease-out;
+  }
+
+  .painel[open]::backdrop {
+    animation: painel-escurece 0.22s ease-out;
+  }
+}
+
+@keyframes painel-sobe {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes painel-escurece {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- alto contraste (forced-colors) ---------- */
+/* O fundo de cor some: avisos, quadrados de ícone, pílulas e o painel ganham borda; a pílula escolhida
+   mantém fundo (e o ✓). O botão principal mantém fundo pela regra de tema.css. */
+@media (forced-colors: active) {
+  .aviso-info,
+  .aviso-atencao,
+  .icone-quadro,
+  .cartao,
+  .painel {
+    border: 2px solid CanvasText;
+  }
+
+  .pilula[aria-pressed='true'] {
+    forced-color-adjust: none;
+    border-color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .link-acao {
+    color: LinkText;
+  }
 }

@@ -166,8 +166,9 @@ body {
 }
 
 h1 {
-  font-size: 1.75rem;
-  line-height: 1.2;
+  font-size: 1.875rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
   margin: 0 0 0.75rem;
 }
 
@@ -185,6 +186,8 @@ a {
 }
 
 /* ---------- botões ---------- */
+/* Principal: fundo na --cor (a da porta; fora dela, a tinta). Secundário (.botao-sec): contorno de tinta.
+   Terciário (.botao-ter) e link de ação (.link-acao) ficam em componentes.css, com a lista em docs/visual.md, seção 10. */
 
 .botao {
   display: flex;
@@ -195,11 +198,12 @@ a {
   min-height: var(--toque);
   margin: 0.75rem 0 0;
   padding: 0.75rem 1rem;
-  border: 2px solid var(--destaque);
-  border-radius: var(--raio);
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  border: 2px solid var(--cor);
+  border-radius: var(--raio-botao);
+  background: var(--cor);
+  color: var(--sobre-cor);
   font: inherit;
+  font-size: 1.0625rem;
   font-weight: 700;
   text-align: center;
   text-decoration: none;
@@ -213,6 +217,7 @@ a {
 }
 
 .botao-sec {
+  border-color: var(--tinta);
   background: transparent;
   color: var(--tinta);
 }
@@ -370,14 +375,14 @@ a {
 
 /* Contraste forçado (Windows): o botão principal mantém fundo e foco visíveis. */
 @media (forced-colors: active) {
-  .botao:not(.botao-sec):not(.botao-grande) {
+  .botao:not(.botao-sec):not(.botao-grande):not(.botao-ter) {
     forced-color-adjust: none;
     background: ButtonText;
     color: ButtonFace;
     border-color: ButtonText;
   }
 
-  .botao:not(.botao-sec):not(.botao-grande):focus-visible {
+  .botao:not(.botao-sec):not(.botao-grande):not(.botao-ter):focus-visible {
     outline-color: Highlight;
   }
 }

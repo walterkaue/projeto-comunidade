@@ -330,3 +330,31 @@ describe('componentes.css', () => {
     expect(bloco(c, '.campo-radio input')).toMatch(/width:\s*24px/);
   });
 });
+
+// Aparência do aviso que some (docs/visual.md, seção 5): pílula de tinta com texto creme e ícone à esquerda.
+describe('aparência do aviso que some (componentes.css)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const cssAviso = readFileSync(new URL('./componentes.css', import.meta.url), 'utf-8');
+  const regra = (sel: string): string => {
+    const i = cssAviso.indexOf(`${sel} {`);
+    return i < 0 ? '' : cssAviso.slice(i, cssAviso.indexOf('}', i));
+  };
+  it('fundo de tinta, texto creme e sombra', () => {
+    const r = regra('.aviso-vivo');
+    expect(r).toContain('background: var(--tinta)');
+    expect(r).toContain('color: var(--papel)');
+    expect(r).toContain('box-shadow: var(--sombra)');
+  });
+  it('ícone à esquerda por pseudo-elemento (o texto da região viva não muda)', () => {
+    const r = regra('.aviso-vivo::before');
+    expect(r).toContain("content: ''");
+    expect(r).toMatch(/mask: var\(--icone-info\)/);
+    expect(cssAviso).toMatch(/--icone-info: url\("data:image\/svg\+xml,/);
+  });
+  it('alto contraste: borda e ícone em CanvasText', () => {
+    const i = cssAviso.indexOf('@media (forced-colors: active)');
+    const b = cssAviso.slice(i, cssAviso.indexOf('@media', i + 10));
+    expect(b).toContain('border: 2px solid CanvasText');
+    expect(b).toContain('background: CanvasText');
+  });
+});
