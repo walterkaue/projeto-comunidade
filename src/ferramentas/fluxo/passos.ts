@@ -4,26 +4,34 @@
 import { avisar } from '../../comum/aviso';
 import { campoAreaDeTexto, campoTexto, limparErro, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
+import { icone } from '../../comum/icones';
 import { DEF_MODELOS } from '../cards/modelos';
 import {
   apagarOPasso1,
   AVISO_DE_APAGAR,
   botaoDeApagar,
+  atalhoEscolhido,
   atalhosDoDia,
   AVISO_DIA_PASSADO,
+  AVISO_DO_LINK_RESTO,
+  AVISO_DO_LINK_TITULO,
   avisoDasLetrasDaPauta,
   camposComOrgao,
   confirmarOrgao,
   copiaDoPasso1,
   dataBr,
   devolverOPasso1,
+  diaDoCalendario,
   diaJaPassou,
-  diaPorExtenso,
+  DICA_DA_ORGANIZACAO,
+  DICA_DA_PAUTA,
+  DICA_DO_LOCAL,
+  diaPorExtensoCurto,
   errosDoPasso,
   LIMITES,
   lerDataBr,
   marcarMudanca,
-  PERGUNTA_DO_ORGAO,
+  perguntaDoOrgaoEmPartes,
   podePularOPasso2,
   precisaPerguntarDoOrgao,
   letrasQueFaltamNaPauta,
@@ -56,52 +64,61 @@ export function montarPasso(raiz: HTMLElement, d: DadosDoFluxo, passo: PassoNume
 
 // ---------- passos 1 e 2 ----------
 
-/**
- * Reunião: título, local e pauta vão no link do convite. Fica num quadro logo acima da pauta (o título cabe na
- * primeira tela) e também é lido junto com a pauta (aria-describedby), para quem pula de campo em campo.
- */
-const AVISO_DO_LINK_DA_REUNIAO =
-  'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.';
-const DICA_DO_LOCAL = 'Escreva o endereço como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
-
 function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
   return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, exemplo: d.exemplo.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
-      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: 'Quem está chamando. Escreva o nome da organização, não de pessoas. Nome de criança ou adolescente nunca.', valor: d.organizacao, exemplo: d.exemplo.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
+      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: DICA_DA_ORGANIZACAO, valor: d.organizacao, exemplo: d.exemplo.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
-          ? `<p class="fluxo-quadro" id="fluxo-aviso-do-link">${esc(AVISO_DO_LINK_DA_REUNIAO)}</p>
-      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta (os assuntos da reunião)', dica: 'Um assunto por linha. Sem nome de pessoa.', valor: d.pauta, exemplo: d.exemplo.pauta, linhas: 5, obrigatorio: true, semCorretor })}
+          ? `<div class="aviso-info fluxo-aviso-do-link" id="fluxo-aviso-do-link">${icone('info', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p><strong>${esc(AVISO_DO_LINK_TITULO)}</strong> ${esc(AVISO_DO_LINK_RESTO)}</p></div></div>
+      ${campoAreaDeTexto({ id: 'fluxo-pauta', rotulo: 'Pauta (os assuntos da reunião)', dica: DICA_DA_PAUTA, valor: d.pauta, exemplo: d.exemplo.pauta, linhas: 5, obrigatorio: true, semCorretor })}
       <p class="campo-dica fluxo-pauta-letras" id="fluxo-pauta-letras">${esc(avisoDasLetrasDaPauta(d.pauta))}</p>
       <p class="fluxo-so-leitor" id="fluxo-pauta-fala" role="status" aria-live="polite"></p>`
           : campoAreaDeTexto({ id: 'fluxo-texto', rotulo: 'Texto curto', dica: m.dicaTexto, valor: d.texto, exemplo: d.exemplo.texto, maximo: LIMITES.texto, linhas: 3 })
       }`;
 }
 
-function campoDia(d: DadosDoFluxo): string {
-  const obrig = temAgenda(d.tipo);
+/** O navegador sabe escolher um dia no calendário (`<input type="date">`)? Raro que não: cai no campo de texto. */
+function temCampoDeData(): boolean {
+  try {
+    const t = document.createElement('input');
+    t.type = 'date';
+    return t.type === 'date';
+  } catch {
+    return false;
+  }
+}
+
+function campoDia(d: DadosDoFluxo, nativo: boolean): string {
+  const agenda = temAgenda(d.tipo);
   const atalhos = atalhosDoDia()
-    .map((a) => `<button type="button" class="botao botao-sec fluxo-atalho" data-dia="${esc(a.data)}">${esc(a.rotulo)}</button>`)
+    .map(
+      (a) =>
+        `<button type="button" class="pilula fluxo-atalho" data-dia="${esc(a.data)}" aria-pressed="${atalhoEscolhido(a, d.data)}">${icone('check', { tamanho: 18, classe: 'pilula-check' })}${esc(a.rotulo)}</button>`,
+    )
     .join('');
-  // O texto do dia por extenso acompanha a digitação, mas só a região ao lado (fluxo-data-fala) é lida em voz alta,
-  // e só quando a pessoa termina de escrever ou toca num atalho.
+  // O dia por extenso acompanha a escolha, mas só a região ao lado (fluxo-data-fala) é lida em voz alta,
+  // e só quando a pessoa termina de escolher ou toca num atalho.
+  const entradaDoDia = nativo
+    ? `<input class="campo-entrada" type="date" min="2000-01-01" max="2099-12-31" id="fluxo-data" name="fluxo-data" value="${esc(diaDoCalendario(d.data))}"`
+    : `<input class="campo-entrada" type="text" inputmode="numeric" autocomplete="off" id="fluxo-data" name="fluxo-data" value="${esc(dataBr(d.data))}"`;
   return `<div class="campo">
-        <label class="campo-rotulo" for="fluxo-data">Dia${obrig ? ' <span class="campo-obrig">(obrigatório)</span>' : ''}</label>
-        <p class="campo-dica" id="fluxo-data-dica">Ex.: 14/11/2026</p>
-        <input class="campo-entrada" type="text" inputmode="numeric" autocomplete="off" id="fluxo-data" name="fluxo-data" value="${esc(dataBr(d.data))}"${obrig ? ' aria-required="true"' : ''} aria-describedby="fluxo-data-dica fluxo-data-extenso fluxo-data-passado fluxo-data-erro">
-        <div class="fluxo-atalhos" role="group" aria-label="Atalhos para o dia">${atalhos}</div>
-        <p class="fluxo-extenso" id="fluxo-data-extenso">${esc(diaPorExtenso(d.data))}</p>
+        <label class="campo-rotulo" for="fluxo-data">Dia${agenda ? '' : ' <span class="campo-opcional">(opcional)</span>'}</label>
+        <div class="pilulas" role="group" aria-label="Atalhos do dia">${atalhos}</div>
+        ${nativo ? '' : '<p class="campo-dica" id="fluxo-data-dica">Ex.: 14/11/2026</p>'}
+        ${entradaDoDia}${agenda ? ' aria-required="true"' : ''} aria-describedby="${nativo ? '' : 'fluxo-data-dica '}fluxo-data-extenso fluxo-data-passado fluxo-data-erro">
+        <p class="fluxo-extenso" id="fluxo-data-extenso">${esc(diaPorExtensoCurto(d.data))}</p>
         <p class="campo-dica fluxo-dia-passado" id="fluxo-data-passado">${esc(diaJaPassou(d.data) ? AVISO_DIA_PASSADO : '')}</p>
         <p class="fluxo-so-leitor" id="fluxo-data-fala" role="status"></p>
         <p class="campo-erro" id="fluxo-data-erro" hidden></p>
       </div>`;
 }
 
-function camposDoPasso2Html(d: DadosDoFluxo): string {
+function camposDoPasso2Html(d: DadosDoFluxo, nativo: boolean): string {
   const agenda = temAgenda(d.tipo);
-  return `${campoDia(d)}
+  return `${campoDia(d, nativo)}
       ${agenda ? campoTexto({ id: 'fluxo-hora', rotulo: 'Hora', tipo: 'time', valor: d.hora, obrigatorio: true }) : ''}
       ${agenda ? campoTexto({ id: 'fluxo-local', rotulo: 'Local', dica: DICA_DO_LOCAL, valor: d.local, exemplo: d.exemplo.local, maximo: LIMITES.local, obrigatorio: true, autocomplete: 'off', semCorretor: d.tipo === 'reuniao' }) : ''}
       ${podePularOPasso2(d.tipo) ? '<button type="button" class="botao botao-sec" id="fluxo-pular">Pular este passo</button>' : ''}`;
@@ -110,20 +127,24 @@ function camposDoPasso2Html(d: DadosDoFluxo): string {
 /** "Apagar tudo" na linha da dica: escondido enquanto não há texto no passo 1. */
 function htmlDoApagar(d: DadosDoFluxo): string {
   const b = botaoDeApagar(d, false);
-  return `<button type="button" class="fluxo-apagar" id="fluxo-apagar"${b.escondido ? ' hidden' : ''}>${esc(b.rotulo)}</button>`;
+  return `<button type="button" class="link-acao fluxo-apagar" id="fluxo-apagar"${b.escondido ? ' hidden' : ''}>${esc(b.rotulo)}</button>`;
 }
 
 function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => void {
-  raiz.innerHTML = `<main class="tela fluxo"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
+  const nativo = passo === 2 && temCampoDeData();
+  const { pergunta, resto } = perguntaDoOrgaoEmPartes();
+  raiz.innerHTML = `<main class="tela fluxo" data-porta="${esc(d.tipo)}"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
     ${topoDoPasso(d, passo, { aoLadoDaDica: passo === 1 ? htmlDoApagar(d) : '', miniatura: htmlDaMiniatura() })}
     <form class="fluxo-form" id="fluxo-form" novalidate>
-      ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d)}
+      ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d, nativo)}
     </form>
-    <div class="fluxo-confirma" id="fluxo-orgao" role="group" aria-labelledby="fluxo-orgao-texto" tabindex="-1" hidden>
-      <p id="fluxo-orgao-texto">${esc(PERGUNTA_DO_ORGAO)}</p>
-      <button type="button" class="botao" id="fluxo-orgao-mudar">Mudar</button>
-      <button type="button" class="botao botao-sec" id="fluxo-orgao-seguir">Seguir</button>
-    </div>
+    <dialog class="painel" id="fluxo-orgao" aria-labelledby="fluxo-orgao-pergunta">
+      <div class="aviso-atencao">${icone('predio', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p id="fluxo-orgao-texto"><strong id="fluxo-orgao-pergunta">${esc(pergunta)}</strong> ${esc(resto)}</p></div></div>
+      <div class="painel-acoes">
+        <button type="button" class="botao" id="fluxo-orgao-mudar" autofocus>Mudar o texto</button>
+        <button type="button" class="botao botao-sec" id="fluxo-orgao-seguir">Seguir assim</button>
+      </div>
+    </dialog>
     ${barra()}
   </main>`;
 
@@ -174,37 +195,41 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   /** A pessoa mexeu num campo: os dados passam a ser dela (e o botão acompanha o texto do passo 1). */
   function mudou(): void {
     marcarMudanca(d);
-    fecharOrgao(false);
     atualizarOBotao();
   }
 
   // ---------- pergunta do órgão público (D1) ----------
-  const painelOrgao = q('fluxo-orgao');
+  const painelOrgao = q<HTMLDialogElement>('fluxo-orgao');
   const continuar = q<HTMLButtonElement>('fluxo-continuar');
-  function fecharOrgao(devolverFoco: boolean): void {
-    if (painelOrgao.hidden) return;
-    painelOrgao.hidden = true;
-    if (devolverFoco) continuar.focus();
+  const orgaoAberto = (): boolean => painelOrgao.hasAttribute('open');
+  function fecharOrgao(): void {
+    if (!orgaoAberto()) return;
+    if (typeof painelOrgao.close === 'function') painelOrgao.close();
+    else painelOrgao.removeAttribute('open');
   }
   function abrirOrgao(): void {
-    painelOrgao.hidden = false;
-    painelOrgao.scrollIntoView({ block: 'start' });
-    // O foco vai para o grupo: o leitor lê a pergunta (aria-labelledby) e o Tab leva aos botões.
-    painelOrgao.focus({ preventScroll: true });
+    if (typeof painelOrgao.showModal === 'function') painelOrgao.showModal();
+    else painelOrgao.setAttribute('open', '');
+    // O "Mudar o texto" tem autofocus: o showModal já põe o foco nele. Sem showModal, põe aqui.
+    if (!painelOrgao.contains(document.activeElement)) q('fluxo-orgao-mudar').focus();
   }
-  q('fluxo-orgao-mudar').addEventListener('click', () => {
+  /** "Mudar o texto" (também o Esc): fecha e leva o foco ao primeiro campo que cita órgão. */
+  function mudarOTexto(): void {
     const primeiro = camposComOrgao(d, passo)[0];
-    fecharOrgao(false);
-    (primeiro ? raiz.querySelector<HTMLElement>(`[id="fluxo-${primeiro}"]`) : null)?.focus();
-  });
+    fecharOrgao();
+    const campo = primeiro ? raiz.querySelector<HTMLElement>(`[id="fluxo-${primeiro}"]`) : null;
+    (campo ?? continuar).focus();
+  }
+  q('fluxo-orgao-mudar').addEventListener('click', mudarOTexto);
   q('fluxo-orgao-seguir').addEventListener('click', () => {
     confirmarOrgao(d, passo);
+    fecharOrgao();
     irAoPasso(d.tipo, passo === 1 ? 2 : 3);
   });
-  painelOrgao.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
+  // Esc = a escolha segura. Tocar no fundo escurecido não fecha: é uma confirmação.
+  painelOrgao.addEventListener('cancel', (e) => {
     e.preventDefault();
-    fecharOrgao(true);
+    mudarOTexto();
   });
 
   // ---------- letras da pauta (A-02/B-19) ----------
@@ -241,28 +266,41 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   }
 
   let diaInvalido = false;
+  /** Os atalhos acompanham o dia escrito: o que tem o mesmo dia fica escolhido (aria-pressed), venha o dia de onde vier. */
+  function atualizarAtalhos(): void {
+    raiz.querySelectorAll<HTMLButtonElement>('.fluxo-atalho').forEach((b) =>
+      b.setAttribute('aria-pressed', String(atalhoEscolhido({ data: b.dataset.dia ?? '' }, d.data))),
+    );
+  }
   function lerDia(): void {
-    const r = lerDataBr(entrada('fluxo-data').value);
     const extenso = q('fluxo-data-extenso');
-    if (r === null) {
-      diaInvalido = true;
-      extenso.textContent = '';
-      mostrarDiaPassado();
-      return;
+    if (nativo) {
+      d.data = diaDoCalendario(entrada('fluxo-data').value);
+      diaInvalido = false;
+    } else {
+      const r = lerDataBr(entrada('fluxo-data').value);
+      if (r === null) {
+        diaInvalido = true;
+        extenso.textContent = '';
+        mostrarDiaPassado();
+        atualizarAtalhos();
+        return;
+      }
+      diaInvalido = false;
+      d.data = r;
     }
-    diaInvalido = false;
-    d.data = r;
-    extenso.textContent = r ? diaPorExtenso(r) : '';
+    extenso.textContent = d.data ? diaPorExtensoCurto(d.data) : '';
     mostrarDiaPassado();
+    atualizarAtalhos();
   }
   /** O dia já passou? Só avisa, não impede de seguir. */
   function mostrarDiaPassado(): void {
     q('fluxo-data-passado').textContent = !diaInvalido && diaJaPassou(d.data) ? AVISO_DIA_PASSADO : '';
   }
-  /** Fala o dia por extenso (só ao terminar de escrever ou num atalho, nunca a cada letra). */
+  /** Fala o dia por extenso (só ao terminar de escolher ou num atalho, nunca a cada letra). */
   function falarODia(): void {
     q('fluxo-data-fala').textContent =
-      !diaInvalido && d.data ? `${diaPorExtenso(d.data)}${diaJaPassou(d.data) ? `. ${AVISO_DIA_PASSADO}` : ''}` : '';
+      !diaInvalido && d.data ? `${diaPorExtensoCurto(d.data)}${diaJaPassou(d.data) ? `. ${AVISO_DIA_PASSADO}` : ''}` : '';
   }
 
   form.addEventListener('input', (e) => {
@@ -302,20 +340,21 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
     mini.redesenhar();
   });
 
-  // Dia escrito certo volta no jeito de sempre (14/11/2026).
+  // Campo de texto (sem calendário): o dia escrito certo volta no jeito de sempre (14/11/2026).
   form.addEventListener('change', (e) => {
     if ((e.target as HTMLElement).id !== 'fluxo-data') return;
     lerDia();
-    if (!diaInvalido && d.data) entrada('fluxo-data').value = dataBr(d.data);
+    if (!nativo && !diaInvalido && d.data) entrada('fluxo-data').value = dataBr(d.data);
     falarODia();
   });
 
   raiz.querySelectorAll<HTMLButtonElement>('.fluxo-atalho').forEach((b) =>
     b.addEventListener('click', () => {
       d.data = b.dataset.dia ?? '';
-      entrada('fluxo-data').value = dataBr(d.data);
+      entrada('fluxo-data').value = nativo ? d.data : dataBr(d.data);
       diaInvalido = false;
-      q('fluxo-data-extenso').textContent = diaPorExtenso(d.data);
+      q('fluxo-data-extenso').textContent = diaPorExtensoCurto(d.data);
+      atualizarAtalhos();
       mostrarDiaPassado();
       falarODia();
       mudou();
@@ -331,7 +370,6 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
         devolverOPasso1(d, copia);
         esquecerACopia();
         escreverOsCampos();
-        fecharOrgao(false);
         limparTodosOsErros(form);
         atualizarOBotao();
         mini.redesenhar();

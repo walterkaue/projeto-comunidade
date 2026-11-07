@@ -1,5 +1,7 @@
 /* Fluxo único: passos 1 a 3 e tela Pronto. Celular primeiro (360 px); toque, nunca hover.
-   Usa os tokens de src/comum/tema.css (claro e escuro). Nomes começam com "fluxo-". */
+   Usa os tokens de src/comum/tema.css (claro e escuro) e a cor da porta (--cor, --cor-clara) que o data-porta da
+   <main> põe. Nomes começam com "fluxo-". Componentes prontos (botao, aviso-info, pilula, painel, link-acao,
+   icone-quadro) ficam em src/comum. */
 
 .fluxo {
   min-width: 0;
@@ -24,31 +26,105 @@
   border: 0;
 }
 
-.fluxo-verbo {
-  display: block;
-  margin: 0 0 0.25rem;
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-  font-weight: 700;
+/* ---------- topo do passo ---------- */
+/* No código: o bloco do título e, depois dele, a linha da prévia. O envoltório some do desenho (display: contents)
+   para a linha da prévia poder ficar fixa na tela inteira; nos passos 1 e 2 a tela vira uma coluna e a linha da
+   prévia sobe (order) para o alto. */
+.fluxo-topo {
+  display: contents;
 }
 
-.fluxo-pronto-titulo {
-  display: block;
+.fluxo:has(.fluxo-mini) {
+  display: flex;
+  flex-direction: column;
+}
+
+.fluxo-topo-corpo {
+  margin: 0 -1rem 1rem;
+  padding: 0.75rem 1rem 1.25rem;
+  border-radius: 0 0 24px 24px;
+  background: var(--cor-clara);
+}
+
+/* Sem a linha da prévia (passo 3 e Pronto), o bloco sobe até a borda de cima. */
+.fluxo:not(:has(.fluxo-mini)) .fluxo-topo-corpo {
+  margin-top: -1.5rem;
+  padding-top: 1.25rem;
 }
 
 .fluxo h1 {
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
-.fluxo-passo,
-.fluxo-nome {
-  display: block;
+/* Nome da porta (16 px, negrito, na --cor) com o quadradinho do ícone. */
+.fluxo-verbo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 0.5rem;
+  color: var(--cor);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
+.fluxo-verbo .icone-quadro {
+  flex: none;
+}
+
+/* "Passo N de 3" em texto e as três barrinhas (enfeite). */
 .fluxo-passo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  color: var(--tinta-suave);
   font-size: 1rem;
   font-weight: 400;
-  color: var(--tinta-suave);
+  letter-spacing: 0;
+  line-height: 1.3;
+}
+
+.fluxo-barrinhas {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.fluxo-barrinha {
+  width: 28px;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--superficie);
+}
+
+.fluxo-barrinha-cheia {
+  background: var(--cor);
+}
+
+.fluxo-nome {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.fluxo-pronto-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 0.25rem;
+}
+
+/* ✓ num círculo cheio na --cor (Pronto). */
+.fluxo-check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cor);
+  color: var(--sobre-cor);
 }
 
 .fluxo-dica {
@@ -56,15 +132,9 @@
   color: var(--tinta-suave);
 }
 
-/* Nota fixa (dados de um link): não some sozinha. */
+/* Nota fixa (dados de um link): aviso de informação, não some sozinha. */
 .fluxo-nota {
   margin: 0 0 1rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--borda-campo);
-  border-radius: var(--raio);
-  background: var(--superficie);
-  color: var(--tinta);
-  font-weight: 700;
 }
 
 .fluxo-form {
@@ -87,65 +157,80 @@
   padding-bottom: 0;
 }
 
-/* ---------- miniatura fixa no topo (passos 1 e 2) ---------- */
-/* No código a miniatura vem depois do título (quem desliza a partir do topo ouve o título primeiro); aqui ela volta
-   para o topo da tela com order. O diálogo fechado não ocupa lugar. */
-.fluxo:has(> .fluxo-mini) {
-  display: flex;
-  flex-direction: column;
+/* Exemplo comprido num campo de uma linha: reticências, sem estourar a largura (o texto do exemplo não é cortado). */
+.fluxo-form input.campo-entrada {
+  min-width: 0;
+  text-overflow: ellipsis;
 }
 
-.fluxo:has(> .fluxo-mini) > .fluxo-mini {
-  order: -1;
+.fluxo-form input[type='date'],
+.fluxo-form input[type='time'] {
+  text-align: start;
 }
 
+/* ---------- linha da prévia (passos 1 e 2): fixa no topo ---------- */
 .fluxo-mini {
   position: sticky;
   top: 0;
   z-index: 5;
+  order: -1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  min-height: 7rem;
-  margin: -1.5rem -1rem 1rem;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--borda);
-  background: var(--papel);
+  gap: 10px;
+  min-height: 4.5rem;
+  margin: -1.5rem -1rem 0;
+  padding: 0.375rem 1rem;
+  background: var(--cor-clara);
 }
 
-/* Ao lado da prévia: o botão e, embaixo dele, a linha "(com exemplo no que falta)" (não aumenta a faixa). */
+/* Altura de 54 px, com a largura que o formato pedir (nunca mais de 40% da linha). */
+.fluxo-mini-canvas {
+  display: block;
+  flex: none;
+  height: 54px;
+  width: auto;
+  max-width: 40%;
+  object-fit: contain;
+  border: 1px solid var(--borda-campo);
+}
+
+/* O texto fica no meio: "Assim vai ficar a imagem" e, embaixo, "(com exemplo no que falta)". */
 .fluxo-mini-lado {
-  display: flex;
-  flex: 1 1 8rem;
-  flex-direction: column;
-  gap: 0.25rem;
+  flex: 1 1 0;
   min-width: 0;
 }
 
+.fluxo-mini-texto,
 .fluxo-mini-exemplo {
   margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+}
+
+.fluxo-mini-texto {
+  color: var(--tinta);
+  font-weight: 700;
+}
+
+.fluxo-mini-exemplo {
   color: var(--tinta-suave);
-  font-size: 0.875rem;
-  line-height: 1.25;
 }
 
-/* Altura em rem (acompanha o texto), com teto em px para o texto 200% não comer a tela. */
-.fluxo-mini-canvas {
-  display: block;
-  height: min(6rem, 96px);
-  width: auto;
-  max-width: 60%;
-  object-fit: contain;
-  border: 1px solid var(--borda-campo);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+.fluxo-mini-exemplo[hidden] {
+  display: none;
 }
 
+/* "Ver maior": 48 px, contorno --borda-campo, fundo --superficie. */
 .fluxo-mini .fluxo-ver {
+  flex: none;
   width: auto;
+  min-height: 48px;
   margin: 0;
-  padding-inline: 1.25rem;
+  padding: 0 14px;
+  border-color: var(--borda-campo);
+  background: var(--superficie);
+  color: var(--tinta);
+  font-size: 1rem;
 }
 
 .fluxo-dialogo {
@@ -178,31 +263,21 @@
 }
 
 /* ---------- passo 2 ---------- */
-.fluxo-atalhos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.fluxo-atalhos {
-  margin: 0.5rem 0;
-}
-
-.fluxo-form .fluxo-atalho {
-  width: auto;
-  flex: 1 1 auto;
-  margin: 0;
-  padding-inline: 1rem;
+.fluxo .pilulas {
+  margin: 0.25rem 0 0.5rem;
 }
 
 .fluxo-extenso {
-  min-height: 1.5em;
-  margin: 0;
-  color: var(--tinta-suave);
+  margin: 0.25rem 0 0;
+  color: var(--cor);
   font-weight: 700;
 }
 
-/* ---------- passo 1: a dica e "Apagar tudo" (link discreto) na mesma linha ---------- */
+.fluxo-extenso:empty {
+  display: none;
+}
+
+/* ---------- passo 1: a dica e "Apagar tudo" (link de ação) na mesma linha ---------- */
 .fluxo-dica-linha {
   display: flex;
   flex-wrap: wrap;
@@ -222,37 +297,10 @@
   flex: none;
 }
 
-/* Aviso curto num quadro, logo acima do campo a que se refere (o aviso do link da reunião, acima da pauta). */
-.fluxo-quadro {
+/* Quadro do link da reunião (aviso de informação), logo acima da pauta. */
+.fluxo-aviso-do-link {
   margin: 0.25rem 0 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--borda-campo);
-  border-left-width: 4px;
-  border-radius: var(--raio);
-  background: var(--superficie);
-  color: var(--tinta);
   font-size: 0.9375rem;
-}
-
-.fluxo-apagar {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--tinta);
-  font: inherit;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.fluxo-apagar:focus-visible {
-  outline: 3px solid var(--foco);
-  outline-offset: 2px;
 }
 
 /* ---------- barra fixa embaixo ---------- */
@@ -265,27 +313,33 @@
   gap: 12px;
   margin: 1rem -1rem 0;
   padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--borda);
   background: var(--papel);
+  box-shadow: var(--sombra-barra);
 }
 
 .fluxo-barra .botao {
-  flex: 1 1 8rem;
   width: auto;
-  min-width: 0;
   margin: 0;
-  overflow-wrap: anywhere;
+}
+
+/* "Voltar" 2/5 e o botão principal 3/5; com letra muito grande, o segundo desce para outra linha. */
+.fluxo-barra-voltar {
+  flex: 2 1 calc(40% - 7px);
+}
+
+.fluxo-barra-seguir {
+  flex: 3 1 calc(60% - 7px);
 }
 
 /* Faixas fixas: o foco nunca fica escondido embaixo delas (WCAG 2.4.11). previa.ts mede as alturas de verdade
    (--altura-mini e --altura-barra); os valores depois da vírgula valem se a medida não vier. */
 html:has(.fluxo-mini) {
-  scroll-padding-top: calc(var(--altura-mini, 7rem) + 0.75rem);
+  scroll-padding-top: calc(var(--altura-mini, 4.5rem) + 0.75rem);
 }
 
 html:has(.fluxo-barra) {
   /* sem o recuo da borda do aparelho: o aviso (.aviso-vivo) soma esse recuo à parte */
-  --altura-barra-fixa: var(--altura-barra, calc(52px + 1.5rem + 1px));
+  --altura-barra-fixa: var(--altura-barra, calc(52px + 1.5rem));
   scroll-padding-bottom: calc(var(--altura-barra-fixa) + 0.75rem + env(safe-area-inset-bottom, 0px));
 }
 
@@ -336,7 +390,7 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
   }
 }
 
-/* Painel de confirmação (órgão público nos passos e no Pronto; "sem o link" no Pronto). */
+/* Painel de confirmação do Pronto ("sem o link"). Os passos usam o <dialog class="painel">. */
 .fluxo-confirma {
   display: grid;
   gap: 12px;
@@ -383,4 +437,36 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
 
 .fluxo-pauta-letras:empty {
   display: none;
+}
+
+/* ---------- alto contraste (forced-colors) ---------- */
+/* O fundo de cor some: o topo ganha borda, as barrinhas e o círculo do ✓ não somem, a barra ganha linha. */
+@media (forced-colors: active) {
+  .fluxo-topo-corpo,
+  .fluxo-mini {
+    border: 2px solid CanvasText;
+  }
+
+  .fluxo-mini {
+    border-bottom: 0;
+  }
+
+  .fluxo-barrinha {
+    border: 1px solid CanvasText;
+    background: Canvas;
+  }
+
+  .fluxo-barrinha-cheia {
+    background: CanvasText;
+  }
+
+  .fluxo-check {
+    border: 2px solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .fluxo-barra {
+    border-top: 2px solid CanvasText;
+  }
 }
