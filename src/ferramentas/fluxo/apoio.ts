@@ -16,7 +16,7 @@ export function paletaDoFluxo(d: Pick<DadosDoFluxo, 'paletaId' | 'corLivre'>): P
   return paletaPorId(d.paletaId);
 }
 
-export const ALTURA_DA_MINIATURA = 96;
+export const ALTURA_DA_MINIATURA = 54;
 
 /** Escala que deixa o card com `altura` px de CSS (vezes a densidade, para ficar nítido). */
 export function escalaDaMiniatura(formato: Formato, altura = ALTURA_DA_MINIATURA, densidade = 2): number {
@@ -127,3 +127,9 @@ export function criarAgendador(espera: number, acao: () => void): Agendador {
     },
   };
 }
+
+/** Começo do nome da prévia dos passos 1 e 2 quando ela usa o exemplo em algum campo vazio. */
+export const PREVIA_COM_EXEMPLO = 'Prévia com exemplo nos campos vazios.';
+
+/** Nome (aria-label) da prévia: com exemplo no que falta (usaExemplo), avisa antes de descrever, para não parecer dado da pessoa. */
+export const nomeDaPrevia = (descricao: string, usaExemplo: boolean): string => (usaExemplo ? `${PREVIA_COM_EXEMPLO} ${descricao}` : descricao);

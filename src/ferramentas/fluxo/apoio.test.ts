@@ -6,6 +6,8 @@ import {
   criarAgendador,
   enderecoDaPaginaDoEvento,
   escalaDaMiniatura,
+  nomeDaPrevia,
+  PREVIA_COM_EXEMPLO,
   esperaDoRedesenho,
   dicaDoMandar,
   frasePainel,
@@ -40,8 +42,8 @@ describe('paletaDoFluxo', () => {
 
 describe('miniatura', () => {
   it('a escala deixa o card com a altura pedida (vezes a densidade)', () => {
-    expect(escalaDaMiniatura('conversa') * 1080).toBeCloseTo(192);
-    expect(escalaDaMiniatura('status') * 1920).toBeCloseTo(192);
+    expect(escalaDaMiniatura('conversa') * 1080).toBeCloseTo(108);
+    expect(escalaDaMiniatura('status') * 1920).toBeCloseTo(108);
     expect(escalaDaMiniatura('cartaz', 50, 1) * 1527).toBeCloseTo(50);
   });
   it('espera 450 ms, ou 900 ms em aparelho leve', () => {
@@ -200,5 +202,12 @@ describe('confirmação sem o link (C-01)', () => {
     expect(soFaltaARede(true, true, true)).toBe(false);
     expect(soFaltaARede(false, true, false)).toBe(false);
     expect(soFaltaARede(true, false, false)).toBe(false);
+  });
+});
+
+describe('nome da prévia com exemplo', () => {
+  it('avisa antes da descrição só quando falta algo', () => {
+    expect(nomeDaPrevia('Imagem de teste.', true)).toBe(`${PREVIA_COM_EXEMPLO} Imagem de teste.`);
+    expect(nomeDaPrevia('Imagem de teste.', false)).toBe('Imagem de teste.');
   });
 });
