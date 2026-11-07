@@ -23,7 +23,22 @@
 
 /* Faixa de aviso da página (aviso de atenção): sempre no topo, sem como fechar. */
 .evento-faixa {
-  margin: 0.75rem 0 1.25rem;
+  margin: 0 0 1.25rem;
+  /* Com letra grande, o ícone sobe para cima do texto e a frase ganha a largura toda (B-02: cabe mais na tela). */
+  flex-wrap: wrap;
+  row-gap: 0.25rem;
+}
+
+.evento-faixa .aviso-corpo {
+  flex: 1 1 12rem;
+}
+
+/* Faixa de cinco cores colada no topo e nas bordas da tela, como no início (a .tela tem padding em volta). */
+.evento > .faixa-cores {
+  margin-top: -1.5rem;
+  margin-bottom: 0.75rem;
+  margin-left: calc(-1 * max(1rem, env(safe-area-inset-left)));
+  margin-right: calc(-1 * max(1rem, env(safe-area-inset-right)));
 }
 
 .evento-faixa .aviso-corpo > p {
@@ -34,6 +49,8 @@
   display: inline-flex;
   align-items: center;
   min-height: var(--toque);
+  /* Alinha o texto do link com o da faixa (o .link-acao tem 4 px de folga dos lados). */
+  margin-left: -4px;
 }
 
 /* "Convite" acima do título: quadradinho de calendário e a palavra, 16 px negrito na cor da página. */
@@ -139,5 +156,5 @@
 
 /* Telas sem a faixa do evento (removido, carregando, problema): o título não encosta na faixa de cores. */
 .evento > .faixa-cores + h1 {
-  margin-top: 1.25rem;
+  margin-top: 1.5rem;
 }

@@ -45,8 +45,7 @@
   margin: 0 0 1rem;
 }
 
-.ini-portas,
-.ini .rodape ul {
+.ini-portas {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -54,8 +53,9 @@
 
 .ini-portas {
   display: grid;
-  /* Duas colunas mesmo em 360 px; com texto muito ampliado ou 320 px, cai para uma. */
-  grid-template-columns: repeat(auto-fit, minmax(max(9.5rem, 40%), 1fr));
+  /* Duas colunas mesmo em 360 px; com texto muito ampliado ou 320 px, cai para uma.
+     O min(100%, …) impede a coluna de passar da tela com texto a 200% em 320 px. */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, max(9.5rem, 40%)), 1fr));
   gap: 0.75rem;
 }
 

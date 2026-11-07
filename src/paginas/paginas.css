@@ -2,6 +2,7 @@
 
 .pagina h2 {
   font-size: 1.25rem;
+  overflow-wrap: anywhere;
   line-height: 1.3;
   margin: 1.75rem 0 0.5rem;
 }

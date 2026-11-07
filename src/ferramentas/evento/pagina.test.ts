@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { NOME } from '../../comum/marca';
 import { quandoNaPagina } from './agenda';
 import { FAIXA_FORTE, faixaInicio, htmlDaMensagem, htmlDaPagina, htmlDoRemovido, partirQuando, SUFIXO_DO_HORARIO } from './pagina';
-import { textosDoRemovido } from './removido';
+import { AVISO_DE_GOLPE, textosDoRemovido } from './removido';
 import type { Evento } from './validar';
 
 const e: Evento = {
@@ -117,7 +117,10 @@ describe('tela de link removido: marcação', () => {
       const h = htmlDoRemovido(t);
       const aviso = /<div class="aviso-atencao[^"]*">[\s\S]*?<\/div>\s*<\/div>/.exec(h)?.[0] ?? '';
       expect(aviso).toMatch(/<svg class="icone aviso-icone"[^>]*aria-hidden="true"/);
-      expect(aviso).toContain('<p><strong>Ele não está mais disponível.</strong></p>');
+      // Negrito na frase principal: o aviso de golpe quando há (protege quem recebeu o link); senão, a primeira.
+      const forte = motivo.tipo === 'regra' ? AVISO_DE_GOLPE : 'Ele não está mais disponível.';
+      expect(aviso).toContain(`<p><strong>${forte}</strong></p>`);
+      expect(aviso.match(/<strong>/g)).toHaveLength(1);
       const ps = [...aviso.matchAll(/<p>(.*?)<\/p>/g)].map((m) => texto(m[1]!));
       expect(ps).toHaveLength(t.paragrafos.length);
       ps.forEach((p, i) => expect(p.replaceAll('&#39;', "'").replaceAll('&amp;', '&')).toBe(t.paragrafos[i]));
@@ -125,4 +128,13 @@ describe('tela de link removido: marcação', () => {
       expect(h.match(/botao botao-sec/g)).toHaveLength(2);
     });
   }
+});
+
+describe('htmlDaPagina escapa os próprios parâmetros', () => {
+  it('o rótulo do botão e o link da denúncia entram escapados', () => {
+    const h = htmlDaPagina(e, 'dados', '#/denunciar/x"><b>', 'Copiar <i>o</i> link');
+    expect(h).not.toContain('<b>');
+    expect(h).not.toContain('<i>');
+    expect(h).toContain('Copiar &lt;i&gt;o&lt;/i&gt; link');
+  });
 });

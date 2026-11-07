@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { campoTexto } from '../../comum/formulario';
 import { ORGANIZACOES, VOLTA_DO_RODIZIO } from '../cards/exemplos';
-import { cortarLimpo, exemploDeOrganizacao, MAXIMO_DO_EXEMPLO } from './exemploOrg';
+import { cortarLimpo, exemploDeOrganizacao, MAXIMO_DO_EXEMPLO, NOMES_CURTOS, nomesSemCurto } from './exemploOrg';
 
 const pasta = dirname(fileURLToPath(import.meta.url));
 const codigo = readFileSync(join(pasta, 'index.ts'), 'utf8');
@@ -109,9 +109,21 @@ describe('exemplo da organização', () => {
       const e = exemploDeOrganizacao(i);
       expect(e.length, e).toBeLessThanOrEqual(MAXIMO_DO_EXEMPLO);
       expect(e.length, e).toBeGreaterThan(5);
-      expect(ORGANIZACOES.some((o) => o.startsWith(e)), e).toBe(true);
+      expect(Object.values(NOMES_CURTOS), e).toContain(e);
       expect(e).not.toMatch(/\s(de|do|da|dos|das|e)$/i);
     }
+  });
+
+  it('todo nome do catálogo tem nome curto escrito à mão, de até 28 letras', () => {
+    expect(nomesSemCurto()).toEqual([]);
+    for (const curto of Object.values(NOMES_CURTOS)) expect(curto.length, curto).toBeLessThanOrEqual(MAXIMO_DO_EXEMPLO);
+    expect(Object.keys(NOMES_CURTOS).sort()).toEqual([...ORGANIZACOES].sort());
+  });
+
+  it('os três grupos religiosos têm o mesmo tratamento: só o nome inventado, nenhum cortado no meio', () => {
+    expect(NOMES_CURTOS['Grupo de Oração Flor do Pomar']).toBe('Grupo Flor do Pomar');
+    expect(NOMES_CURTOS['Casa de Matriz Africana Pé de Jaca Dourado']).toBe('Casa Pé de Jaca Dourado');
+    expect(NOMES_CURTOS['Centro Espírita Lume do Vale Cheiroso']).toBe('Centro Lume do Vale');
   });
 
   it('corta nas palavras inteiras', () => {
@@ -123,6 +135,11 @@ describe('exemplo da organização', () => {
 });
 
 describe('CSS', () => {
+  it('"A ata" aparece com maiúscula na tela (o texto do h1 continua "a ata")', () => {
+    expect(css).toMatch(/\.ata-titulo-h1::first-letter\s*\{\s*text-transform:\s*uppercase/);
+    expect(css).toMatch(/\.ata-titulo-h1\s*\{\s*display:\s*block/);
+  });
+
   it('sem nomes antigos', () => {
     expect(css).not.toMatch(/--destaque|--sobre-destaque|--porta-fundo|--porta-texto|--porta-desc/);
   });

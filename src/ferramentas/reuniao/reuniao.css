@@ -7,7 +7,10 @@
 
 /* Topo da tela: bloco na cor clara da porta (Petróleo), cantos de baixo de 24 px, sangrando até a borda da tela. */
 .reuniao-topo {
-  margin: -1.5rem -1rem 1.25rem;
+  margin: -1.5rem 0 1.25rem;
+  /* Encosta nas bordas da tela mesmo com entalhe (o padding da .tela é max(1rem, safe-area)). */
+  margin-left: calc(-1 * max(1rem, env(safe-area-inset-left)));
+  margin-right: calc(-1 * max(1rem, env(safe-area-inset-right)));
   padding: 1.25rem 1rem 1.25rem;
   background: var(--cor-clara);
   color: var(--tinta);
@@ -132,4 +135,14 @@
   .ata-ponto, .ata-folha tr, .ata-trecho { break-inside: avoid; }
   .ata-ponto h4 { break-after: avoid; }
   .ata-aviso { color: #000; }
+}
+
+/* Campo Data (type="date") a 200% em 320 px: o controle nativo tem largura mínima própria e passava da tela.
+   cópia provisória: pedido em docs/pedidos-comum.md (o certo é em .campo, src/comum/componentes.css). */
+.reuniao-tela .campo {
+  grid-template-columns: minmax(0, 1fr);
+}
+.reuniao-tela .campo-entrada {
+  min-width: 0;
+  max-width: 100%;
 }

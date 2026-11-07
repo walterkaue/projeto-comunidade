@@ -113,29 +113,45 @@ test('denúncia a partir da página do evento: a revisão mostra o link e a desc
   await conferirTela(recebida, 'denúncia: revisão');
 });
 
-// B-02 e cara nova: a faixa do evento (aviso de atenção) aparece inteira ao abrir em 360 x 640, com texto a 100% e a 200%.
+// B-02 e cara nova: a página do evento abre no topo, com a faixa de cinco cores colada no alto e, logo abaixo,
+// a faixa do evento (aviso de atenção). A 100%, a faixa aparece inteira em 360 x 640. A 200%, ela não cabe
+// numa tela de 640 px (são mais de 170 letras), então o que se confere é que a página abre no topo, a faixa
+// começa à vista e é a primeira coisa, e não há rolagem lateral.
 for (const escala of [100, 200] as const) {
-  test(`faixa do evento inteira à vista ao abrir em 360 x 640, texto a ${escala}%`, async ({ page }) => {
+  test(`faixa do evento ao abrir em 360 x 640, texto a ${escala}%`, async ({ page }) => {
     const { link } = await criarEvento(page);
     const recebida = await page.context().newPage();
     await recebida.setViewportSize({ width: 360, height: 640 });
     if (escala === 200) {
       await recebida.addInitScript(() => {
-        document.documentElement.style.setProperty('font-size', '200%');
+        const aplicar = () => document.documentElement.style.setProperty('font-size', '200%');
+        if (document.documentElement) aplicar();
+        else document.addEventListener('DOMContentLoaded', aplicar);
       });
     }
     await recebida.goto(link);
     await expect(titulo(recebida)).not.toHaveText('Abrindo o evento…');
+    if (escala === 200) {
+      expect(await recebida.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe('32px');
+    }
     await expect(recebida.locator('main.evento')).toHaveAttribute('data-porta', 'evento');
+    expect(await recebida.evaluate(() => window.scrollY)).toBe(0);
+
+    const cores = await recebida.locator('main.evento > .faixa-cores').boundingBox();
+    expect(cores).toMatchObject({ x: 0, y: 0, width: 360 });
+
     const faixa = recebida.locator('aside.evento-faixa');
     await expect(faixa).toHaveClass(/aviso-atencao/);
     const c = await faixa.boundingBox();
     expect(c).not.toBeNull();
-    expect(c!.y).toBeGreaterThanOrEqual(0);
-    expect(c!.y + c!.height).toBeLessThanOrEqual(640);
+    expect(c!.y).toBeGreaterThanOrEqual(cores!.height);
+    expect(c!.y).toBeLessThan(40);
     const den = await faixa.getByRole('link', { name: 'Denunciar', exact: true }).boundingBox();
     expect(den!.height).toBeGreaterThanOrEqual(47.5);
-    expect(den!.y + den!.height).toBeLessThanOrEqual(640);
+    if (escala === 100) {
+      expect(c!.y + c!.height).toBeLessThanOrEqual(640);
+      expect(den!.y + den!.height).toBeLessThanOrEqual(640);
+    }
     expect(await recebida.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 }

@@ -14,7 +14,7 @@ import { abrirEvento } from './abrir';
 import { gerarIcs, hrefExterno, jaPassou, linkDoGoogleAgenda, linkDoMapa, nomeDoArquivoIcs, quandoNaPagina } from './agenda';
 import { MENSAGEM_DO_PROBLEMA } from './formato';
 import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
-import { textosDoRemovido, type TextosDoRemovido } from './removido';
+import { AVISO_DE_GOLPE, textosDoRemovido, type TextosDoRemovido } from './removido';
 import { semIndexar } from './semindexar';
 import type { Evento } from './validar';
 
@@ -61,7 +61,9 @@ function telaDeMensagem(raiz: HTMLElement, titulo: string, texto: string, foco: 
 
 /** HTML da tela de link removido: o motivo num aviso de atenção, como pedir revisão e o caminho para as Regras de uso. */
 export function htmlDoRemovido(t: TextosDoRemovido): string {
-  const paragrafos = t.paragrafos.map((p, i) => `<p>${i === 0 ? `<strong>${esc(p)}</strong>` : esc(p)}</p>`).join('');
+  // Negrito na frase principal: o aviso de golpe, quando há (protege quem recebeu o link); senão, a primeira.
+  const forte = t.paragrafos.includes(AVISO_DE_GOLPE) ? AVISO_DE_GOLPE : t.paragrafos[0];
+  const paragrafos = t.paragrafos.map((p) => `<p>${p === forte ? `<strong>${esc(p)}</strong>` : esc(p)}</p>`).join('');
   return `<main class="tela evento" data-porta="evento">
     ${FAIXA_DE_CORES}
     <h1 tabindex="-1">${esc(t.titulo)}</h1>
@@ -81,8 +83,10 @@ function telaDeRemovido(raiz: HTMLElement, motivo: MotivoDaRemocao): void {
   raiz.querySelector<HTMLElement>('h1')?.focus({ preventScroll: true });
 }
 
-/** HTML da página do evento (os dados do evento entram depois, por textContent). `denuncia` já vem com esc. */
-export function htmlDaPagina(e: Evento, dados: string, denuncia: string, rotuloCompartilhar: string): string {
+/** HTML da página do evento (os dados do evento entram depois, por textContent). Escapa os próprios parâmetros. */
+export function htmlDaPagina(e: Evento, dados: string, linkDaDenuncia: string, rotuloCompartilhar: string): string {
+  // Link interno (#/denunciar/…), montado por linkDeDenuncia: só esc (urlSegura só aceita endereço completo).
+  const denuncia = esc(linkDaDenuncia);
   return `<main class="tela evento" data-porta="evento">
     ${FAIXA_DE_CORES}
     <aside class="evento-faixa aviso-atencao" aria-label="Aviso sobre este conteúdo">
@@ -113,7 +117,7 @@ export function htmlDaPagina(e: Evento, dados: string, denuncia: string, rotuloC
 
     <section class="evento-secao" aria-labelledby="ev-h-link">
       <h2 id="ev-h-link">Compartilhar</h2>
-      <button class="botao" type="button" data-compartilhar>${rotuloCompartilhar}</button>
+      <button class="botao" type="button" data-compartilhar>${esc(rotuloCompartilhar)}</button>
       <button class="botao botao-ter" type="button" data-qr aria-expanded="false" aria-controls="ev-qr-area">${icone('link', { tamanho: 22 })}QR do link</button>
       <div class="evento-qr-area" id="ev-qr-area" data-qr-area hidden></div>
     </section>
@@ -132,9 +136,8 @@ function pagina(raiz: HTMLElement, e: Evento, dados: string, vivo: () => boolean
   // Sempre o endereço limpo do site + "#/evento/<dados>", na forma que ehLinkDoEvento aceita, mesmo que a pessoa
   // tenha aberto "#evento/<dados>" (sem a barra): senão o card e a denúncia perderiam o link.
   const link = `${enderecoDoSite()}${linkPara('evento', dados)}`;
-  const denuncia = esc(linkDeDenuncia(link));
 
-  raiz.innerHTML = htmlDaPagina(e, dados, denuncia, 'share' in navigator ? 'Compartilhar este link' : 'Copiar o link');
+  raiz.innerHTML = htmlDaPagina(e, dados, linkDeDenuncia(link), 'share' in navigator ? 'Compartilhar este link' : 'Copiar o link');
 
   const $ = <T extends HTMLElement>(sel: string): T => {
     const el = raiz.querySelector<T>(sel);
