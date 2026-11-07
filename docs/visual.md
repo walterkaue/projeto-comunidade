@@ -244,7 +244,7 @@ O ícone "pessoas" (lista de presença da ata) é o mesmo da porta da reunião.
 
 > Escrito pela Sessão 1 (07/11/2026), para as Sessões 2 e 3. Estilos em `src/comum/tema.css` (botões) e `src/comum/componentes.css` (o resto). Cada classe desta tabela é conferida em `src/comum/tema.test.ts`: se sumir do CSS, o teste falha.
 
-**Cor da porta.** Ponha `data-porta="reuniao"` (ou `evento`, `aviso`, `resultado`, `agradecimento`) no elemento de fora da tela (ex.: a `<section>` do passo). Tudo dentro dela passa a usar `--cor` e `--cor-clara` da porta, e o foco (`--foco`) também. Fora de uma porta, `--cor` é a tinta e `--cor-clara` é a `--atencao`. As cores de cada porta também existem soltas, para a marca de cinco cores: `--cor-reuniao`, `--clara-reuniao` e assim por diante. Nomes antigos que ainda funcionam, como apelidos, e saem quando as telas trocarem: `--destaque` (= `--cor`), `--sobre-destaque` (= `--sobre-cor`), `--porta-fundo`, `--porta-texto` e `--porta-desc` (fundo, texto e texto suave da porta da reunião). Outros tokens novos: `--raio-botao` (14 px), `--raio-aviso` (14 px), `--raio-cartao` (20 px).
+**Cor da porta.** Ponha `data-porta="reuniao"` (ou `evento`, `aviso`, `resultado`, `agradecimento`) no elemento de fora da tela (ex.: a `<section>` do passo). Tudo dentro dela passa a usar `--cor` e `--cor-clara` da porta, e o foco (`--foco`) também. Tudo o que usa `--cor` ou `--foco` (barra fixa de baixo, `<dialog class="painel">`) precisa ficar **dentro** do elemento com `data-porta`; o aviso que some e a folha de saída ficam no `body` e usam só tinta e papel. Fora de uma porta, `--cor` é a tinta e `--cor-clara` é a `--atencao`. As cores de cada porta também existem soltas, para a marca de cinco cores: `--cor-reuniao`, `--clara-reuniao` e assim por diante. Nomes antigos que ainda funcionam, como apelidos, e saem quando as telas trocarem: `--destaque` (= `--cor`), `--sobre-destaque` (= `--sobre-cor`), `--porta-fundo`, `--porta-texto` e `--porta-desc` (fundo, texto e texto suave da porta da reunião). Outros tokens novos: `--raio-botao` (14 px), `--raio-aviso` (14 px), `--raio-cartao` (20 px).
 
 **Ícones.** `icone(nome, { tamanho?, traco?, classe? })` em `src/comum/icones.ts` devolve o `<svg>` (24 × 24 por padrão, traço 2, `stroke="currentColor"`, `aria-hidden="true"`, `focusable="false"`, classe `icone`). A cor vem do texto em volta (`color`). Nomes: `reuniao`, `evento`, `aviso`, `resultado`, `agradecimento` (as portas), `pessoas` (= reunião) e `calendario` (= evento), e os da seção 6: `info`, `atencao`, `erro`, `ata`, `chevron`, `direita`, `esquerda`, `abrir`, `check`, `relogio`, `local`, `enviar`, `baixar`, `copiar`, `link`, `imprimir`, `lapis`, `mais`, `celular`, `conversa`, `compartilhar`, `denunciar`, `predio`, `cadeado`, `livro`, `lupa`. O tipo `NomeDoIcone` lista todos. O ícone é sempre enfeite: o texto ao lado é que informa.
 
@@ -266,7 +266,9 @@ O ícone "pessoas" (lista de presença da ata) é o mesmo da porta da reunião.
 | `aviso-corpo` | dentro do aviso | O texto do aviso (um ou mais `<p>`). |
 | `icone-quadro` | `<span>` com o ícone | Quadrado de ícone cheio: fundo `--cor`, ícone `--sobre-cor`, 46 px. |
 | `icone-quadro-claro` | com `icone-quadro` | Quadrado claro: fundo `--cor-clara`, ícone `--cor`. |
-| `icone-quadro-p` / `-g` / `-gg` | com `icone-quadro` | Tamanhos 30, 52 e 62 px (no de 30, use o ícone com `tamanho: 18`). |
+| `icone-quadro-p` | com `icone-quadro` | Quadrado de 30 px (use o ícone com `tamanho: 18`). |
+| `icone-quadro-g` | com `icone-quadro` | Quadrado de 52 px. |
+| `icone-quadro-gg` | com `icone-quadro` | Quadrado de 62 px. |
 | `pilulas` | bloco | Fileira de pílulas que quebra linha. |
 | `pilula` | `<button type="button" aria-pressed>` | Atalho do dia: 48 px, pílula com contorno; com `aria-pressed="true"`, cheia na `--cor`. |
 | `pilula-check` | `<svg>` dentro da pílula | `icone('check', { tamanho: 18, classe: 'pilula-check' })`: só aparece na escolhida. |

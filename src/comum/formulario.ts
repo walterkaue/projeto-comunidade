@@ -17,8 +17,6 @@ interface Base {
   valor?: string;
   obrigatorio?: boolean;
   autocomplete?: string;
-  /** Exemplo mostrado como placeholder ("Ex.: ..."). Só nos campos de texto; nunca substitui o rótulo. */
-  exemplo?: string;
   /**
    * Desliga o corretor ortográfico do navegador. O corretor "avançado" do Chrome e o do Edge mandam o texto
    * digitado para o Google ou a Microsoft: use em campo com dado que não pode sair do aparelho (ata, presença).
@@ -30,11 +28,15 @@ interface Base {
 export const ATRIBUTOS_SEM_CORRETOR = ' spellcheck="false" autocorrect="off"';
 
 export interface CampoTexto extends Base {
+  /** Exemplo mostrado como placeholder ("Ex.: ..."); nunca substitui o rótulo. */
+  exemplo?: string;
   maximo?: number;
   tipo?: TipoDeCampo;
 }
 
 export interface CampoAreaDeTexto extends Base {
+  /** Exemplo mostrado como placeholder ("Ex.: ..."); nunca substitui o rótulo. */
+  exemplo?: string;
   maximo?: number;
   linhas?: number;
 }

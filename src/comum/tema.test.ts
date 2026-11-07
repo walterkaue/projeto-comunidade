@@ -203,7 +203,8 @@ describe('tema.css', () => {
 
 const componentes = readFileSync(new URL('./componentes.css', import.meta.url), 'utf-8');
 const visual = readFileSync(new URL('../../docs/visual.md', import.meta.url), 'utf-8');
-const todoCss = css + componentes;
+/** Sem comentários: classe citada só em comentário não conta como existente. */
+const todoCss = (css + componentes).replace(/\/\*[\s\S]*?\*\//g, '');
 
 /** Corpo da primeira regra cujo seletor (sozinho ou numa lista) é `seletor`. */
 function corpoDe(texto: string, seletor: string): string {
@@ -307,5 +308,22 @@ describe('public/offline.html usa as cores do tema', () => {
   it('theme-color claro e escuro iguais ao papel', () => {
     expect(offline).toContain(`content="${hex(claro, '--papel')}" media="(prefers-color-scheme: light)"`);
     expect(offline).toContain(`content="${hex(escuro, '--papel')}" media="(prefers-color-scheme: dark)"`);
+  });
+});
+
+describe('componentes.css: detalhes que dependem de ordem ou de cópia', () => {
+  it('o erro do campo vem depois do foco (mesma especificidade: o erro precisa vencer)', () => {
+    const foco = componentes.indexOf('.campo-entrada:focus,');
+    const erro = componentes.indexOf(".campo-entrada[aria-invalid='true']");
+    expect(foco).toBeGreaterThan(-1);
+    expect(erro).toBeGreaterThan(foco);
+  });
+  it('o ícone "i" do aviso que some é o mesmo de icones.ts', async () => {
+    const { CAMINHOS } = await import('./icones');
+    const m = /--icone-info: url\("data:image\/svg\+xml,([^"]+)"\)/.exec(componentes);
+    expect(m).not.toBeNull();
+    const svg = decodeURIComponent(m![1]!).replace(/'/g, '"');
+    const dentro = svg.slice(svg.indexOf('>') + 1, svg.lastIndexOf('</svg>'));
+    expect(dentro).toBe(CAMINHOS.info);
   });
 });
