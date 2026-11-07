@@ -380,6 +380,12 @@ export function devolverOPasso1(d: DadosDoFluxo, copia: CopiaDoPasso1): void {
 export const PERGUNTA_DO_ORGAO =
   'Este convite fala em nome de um órgão público? O site não é para comunicado oficial, e fingir ser órgão público é contra as regras.';
 
+/** A pergunta (em negrito no painel) e o resto do texto, palavra por palavra como em PERGUNTA_DO_ORGAO. */
+export function perguntaDoOrgaoEmPartes(): { pergunta: string; resto: string } {
+  const i = PERGUNTA_DO_ORGAO.indexOf('?') + 1;
+  return { pergunta: PERGUNTA_DO_ORGAO.slice(0, i), resto: PERGUNTA_DO_ORGAO.slice(i).trim() };
+}
+
 /** O texto de cada campo que o passo confere (a pauta vira os itens, um por linha). */
 function textoDoCampo(d: DadosDoFluxo, campo: CampoDoFluxo): string {
   if (campo === 'pauta') return itensDaPauta(d.pauta).join('\n');
@@ -561,6 +567,34 @@ export function diaPorExtenso(iso: string): string {
   const [a, m, d] = iso.split('-').map(Number) as [number, number, number];
   return `${DIAS[new Date(Date.UTC(a, m - 1, d)).getUTCDay()]}, ${br}`;
 }
+
+const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+/**
+ * "2026-11-14" → "sábado, 14 de novembro" (embaixo do campo de data). O ano só aparece se não for o ano de `hoje`
+ * ("sábado, 14 de novembro de 2027"). Inválida volta vazia.
+ */
+export function diaPorExtensoCurto(iso: string, hoje: Date = new Date()): string {
+  if (!dataBr(iso)) return '';
+  const [a, m, d] = iso.split('-').map(Number) as [number, number, number];
+  const dia = DIAS[new Date(Date.UTC(a, m - 1, d)).getUTCDay()];
+  return `${dia}, ${d} de ${MESES[m - 1]}${a === hoje.getFullYear() ? '' : ` de ${a}`}`;
+}
+
+/** O atalho está escolhido? É quando o dia escrito (ou escolhido no calendário) é o dele; sem dia, nenhum. */
+export const atalhoEscolhido = (atalho: { data: string }, dia: string): boolean => dia !== '' && atalho.data === dia;
+
+/** Como o campo de dia guarda o que veio de `<input type="date">`: só um dia que existe (AAAA-MM-DD); o resto vira vazio. */
+export const diaDoCalendario = (valor: string): string => (dataBr(valor) ? valor : '');
+
+// ---------- textos dos passos 1 e 2 ----------
+
+export const DICA_DA_ORGANIZACAO = 'O nome da organização, não de pessoas. Nome de criança ou adolescente nunca.';
+export const DICA_DA_PAUTA = 'Um assunto por linha. Sem nome de pessoa.';
+export const DICA_DO_LOCAL = 'Como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.';
+/** Quadro do link da reunião: a frase em negrito e o resto. */
+export const AVISO_DO_LINK_TITULO = 'Título, local e pauta vão no link.';
+export const AVISO_DO_LINK_RESTO = 'Quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.';
 
 // ---------- validação por passo ----------
 

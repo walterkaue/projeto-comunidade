@@ -28,7 +28,16 @@ import {
   dadosDoCardPreparado,
   dadosDoEvento,
   dataBr,
+  atalhoEscolhido,
+  diaDoCalendario,
   diaPorExtenso,
+  diaPorExtensoCurto,
+  perguntaDoOrgaoEmPartes,
+  DICA_DA_ORGANIZACAO,
+  DICA_DA_PAUTA,
+  DICA_DO_LOCAL,
+  AVISO_DO_LINK_TITULO,
+  AVISO_DO_LINK_RESTO,
   enderecoDoPasso,
   errosDoPasso,
   eventoDoFluxo,
@@ -172,6 +181,44 @@ describe('datas no formato brasileiro', () => {
       { rotulo: 'Próximo sábado', data: '2026-11-07' },
     ]);
     expect(atalhosDoDia(SABADO)[2]!.data).toBe('2026-11-14');
+  });
+
+  it('dia por extenso embaixo do calendário: sem ano no ano de hoje, com ano nos outros', () => {
+    expect(diaPorExtensoCurto('2026-11-14', QUINTA)).toBe('sábado, 14 de novembro');
+    expect(diaPorExtensoCurto('2026-11-01', QUINTA)).toBe('domingo, 1 de novembro');
+    expect(diaPorExtensoCurto('2027-01-04', QUINTA)).toBe('segunda-feira, 4 de janeiro de 2027');
+    expect(diaPorExtensoCurto('2026-02-30', QUINTA)).toBe('');
+    expect(diaPorExtensoCurto('', QUINTA)).toBe('');
+  });
+
+  it('o atalho fica escolhido quando o dia escrito é o dele, venha de onde vier', () => {
+    const [hoje, amanha, sabado] = atalhosDoDia(QUINTA);
+    expect(atalhoEscolhido(hoje!, '2026-11-05')).toBe(true);
+    expect(atalhoEscolhido(amanha!, '2026-11-05')).toBe(false);
+    expect(atalhoEscolhido(sabado!, '2026-11-07')).toBe(true);
+    expect(atalhosDoDia(QUINTA).map((a) => atalhoEscolhido(a, ''))).toEqual([false, false, false]);
+    expect(atalhosDoDia(QUINTA).map((a) => atalhoEscolhido(a, '2026-12-25'))).toEqual([false, false, false]);
+  });
+
+  it('o calendário só entrega dia que existe', () => {
+    expect(diaDoCalendario('2026-11-14')).toBe('2026-11-14');
+    expect(diaDoCalendario('')).toBe('');
+    expect(diaDoCalendario('20261-11-14')).toBe('');
+    expect(diaDoCalendario('2026-02-30')).toBe('');
+  });
+
+  it('painel de órgão público: a pergunta em negrito e o resto juntam o texto de sempre, palavra por palavra', () => {
+    const { pergunta, resto } = perguntaDoOrgaoEmPartes();
+    expect(pergunta).toBe('Este convite fala em nome de um órgão público?');
+    expect(`${pergunta} ${resto}`).toBe(PERGUNTA_DO_ORGAO);
+  });
+
+  it('textos dos passos 1 e 2: a frase de criança e adolescente não muda', () => {
+    expect(DICA_DA_ORGANIZACAO).toBe('O nome da organização, não de pessoas. Nome de criança ou adolescente nunca.');
+    expect(DICA_DA_PAUTA).toBe('Um assunto por linha. Sem nome de pessoa.');
+    expect(DICA_DO_LOCAL).toBe('Como se fosse procurar no mapa. Se for numa casa, não ponha o nome de quem mora.');
+    expect(AVISO_DO_LINK_TITULO).toBe('Título, local e pauta vão no link.');
+    expect(AVISO_DO_LINK_RESTO).toBe('Quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.');
   });
 });
 

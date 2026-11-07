@@ -6,7 +6,7 @@ import { nivelDoAparelho } from '../../comum/nivel';
 import { desenharCard, FAMILIA, tamanhoDoCanvas } from '../cards/desenho';
 import { escalaDoFormato, type Formato } from '../cards/modelos';
 import { camposDoCard, comExemplo, faltaAlgo, type DadosDoFluxo } from './estado';
-import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, paletaDoFluxo } from './apoio';
+import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, nomeDaPrevia, paletaDoFluxo } from './apoio';
 import { logoAtual } from './memoria';
 import { abreTeclado, rolagemParaOCampo, tecladoAberto } from './teclado';
 
@@ -64,14 +64,22 @@ export const BOTAO_VER_MAIOR = '<button type="button" class="botao botao-sec flu
 /** Linha da miniatura enquanto ela usa o exemplo em algum campo vazio (faltaAlgo). */
 export const TEXTO_COM_EXEMPLO = '(com exemplo no que falta)';
 
-/** HTML da faixa fixa do topo e do diálogo "Ver a prévia maior". Textos fixos, nada digitado. */
+/** "Ver maior" da linha da prévia (passos 1 e 2): abre o mesmo diálogo; o nome para o leitor de tela continua inteiro. */
+export const BOTAO_VER_MAIOR_MINI =
+  '<button type="button" class="botao botao-sec fluxo-ver" id="fluxo-ver-maior" aria-label="Ver maior a prévia">Ver maior</button>';
+
+/** Texto da linha da prévia. */
+export const TEXTO_DA_PREVIA = 'Assim vai ficar a imagem';
+
+/** HTML da linha da prévia (fixa no topo) e do diálogo "Ver a prévia maior". Textos fixos, nada digitado. */
 export function htmlDaMiniatura(): string {
   return `<div class="fluxo-mini">
       <canvas id="fluxo-mini-canvas" class="fluxo-mini-canvas" role="img" aria-label="Prévia da imagem"></canvas>
       <div class="fluxo-mini-lado">
-        ${BOTAO_VER_MAIOR}
+        <p class="fluxo-mini-texto">${TEXTO_DA_PREVIA}</p>
         <p class="fluxo-mini-exemplo" id="fluxo-mini-exemplo" hidden>${TEXTO_COM_EXEMPLO}</p>
       </div>
+      ${BOTAO_VER_MAIOR_MINI}
     </div>
     ${htmlDoDialogo()}`;
 }
@@ -135,7 +143,7 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
     const d = comExemplo(obter());
     try {
       const r = await desenharCardEm(canvas, d, d.formato, escalaDaMiniatura(d.formato), '', () => meu === token);
-      if (r) canvas.setAttribute('aria-label', descricaoDaImagem(d, d.formato));
+      if (r) canvas.setAttribute('aria-label', nomeDaPrevia(descricaoDaImagem(d, d.formato), faltaAlgo(obter())));
     } catch {
       // a miniatura é só uma ajuda: sem ela, o resto da tela segue
     }
@@ -145,7 +153,7 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
   const fecharDialogo = ligarDialogo(raiz, (grande) => {
     const d = comExemplo(obter());
     desenharCardEm(grande, d, d.formato, escalaDoFormato(d.formato, nivel), '')
-      .then(() => grande.setAttribute('aria-label', descricaoDaImagem(d, d.formato)))
+      .then(() => grande.setAttribute('aria-label', nomeDaPrevia(descricaoDaImagem(d, d.formato), faltaAlgo(obter()))))
       .catch(() => undefined);
   });
 
