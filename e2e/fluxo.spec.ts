@@ -119,7 +119,7 @@ test('reunião com organização: aviso, link, QR e ponte para a ata', async ({ 
   const reuniao = PORTAS[0];
   await abrirPorta(page, reuniao);
 
-  await expect(page.getByText('Título, local e pauta vão no link do convite')).toBeVisible();
+  await expect(page.getByText('Título, local e pauta vão no link.')).toBeVisible();
   await preencherPasso1(page, reuniao);
   const pauta = DADOS.pauta.split('\n');
 
@@ -240,21 +240,23 @@ test('C-01: sem link, só Mandar e Copiar o texto perguntam; Baixar não; falta 
 
 // ---------- D1: título que fala em nome de órgão público ----------
 
-test('D1: órgão público no título abre a pergunta; "Seguir" avança e o mesmo texto não pergunta de novo', async ({ page }) => {
+test('D1: órgão público no título abre o painel modal; "Seguir assim" avança e o mesmo texto não pergunta de novo', async ({ page }) => {
   const evento = PORTAS[1];
   await abrirPorta(page, evento);
   await page.locator('#fluxo-titulo').fill('Defesa Civil: evacuação');
   await page.getByRole('button', { name: 'Continuar' }).click();
 
-  const orgao = page.locator('#fluxo-orgao');
+  const orgao = page.locator('dialog#fluxo-orgao');
   await expect(orgao).toBeVisible();
+  expect(await orgao.evaluate((el: HTMLDialogElement) => el.matches(':modal'))).toBe(true);
+  await expect(orgao).toHaveAccessibleName('Este convite fala em nome de um órgão público?');
   await expect(titulo(page)).toContainText('Passo 1 de 3');
-  await expect(orgao).toBeFocused();
+  await expect(orgao.getByRole('button', { name: 'Mudar o texto' })).toBeFocused();
   await page.keyboard.press('Tab');
-  await expect(orgao.getByRole('button', { name: 'Mudar' })).toBeFocused();
-  await conferirTela(page, 'passo 1: pergunta do órgão público');
+  await expect(orgao.getByRole('button', { name: 'Seguir assim' })).toBeFocused();
+  await conferirTela(page, 'passo 1: painel do órgão público');
 
-  await orgao.getByRole('button', { name: 'Seguir' }).click();
+  await orgao.getByRole('button', { name: 'Seguir assim' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
 
   await page.getByRole('button', { name: 'Voltar' }).click();
@@ -262,10 +264,27 @@ test('D1: órgão público no título abre a pergunta; "Seguir" avança e o mesm
   await expect(page.locator('#fluxo-titulo')).toHaveValue('Defesa Civil: evacuação');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
-  await expect(page.locator('#fluxo-orgao')).toBeHidden();
+  await expect(page.locator('dialog#fluxo-orgao')).toBeHidden();
 });
 
-test('D1: com letra a 200%, depois de abrir a pergunta do órgão, o começo dela está à vista e o foco está no grupo', async ({ page }) => {
+test('D1: Esc no painel do órgão é "Mudar o texto": fecha e o foco volta ao campo; tocar no fundo não fecha', async ({ page }) => {
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  await page.locator('#fluxo-titulo').fill('Defesa Civil: evacuação');
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  const orgao = page.locator('dialog#fluxo-orgao');
+  await expect(orgao).toBeVisible();
+
+  await page.mouse.click(180, 20);
+  await expect(orgao).toBeVisible();
+
+  await page.keyboard.press('Escape');
+  await expect(orgao).toBeHidden();
+  await expect(page.locator('#fluxo-titulo')).toBeFocused();
+  await expect(titulo(page)).toContainText('Passo 1 de 3');
+});
+
+test('D1: com letra a 200%, o painel do órgão mostra a pergunta inteira ao alcance', async ({ page }) => {
   await page.addInitScript(() => {
     const aplicar = () => document.documentElement.style.setProperty('font-size', '200%');
     if (document.documentElement) aplicar();
@@ -275,34 +294,59 @@ test('D1: com letra a 200%, depois de abrir a pergunta do órgão, o começo del
   await abrirPorta(page, evento);
   await page.locator('#fluxo-titulo').fill('Defesa Civil: evacuação');
   await page.getByRole('button', { name: 'Continuar' }).click();
-
-  const orgao = page.locator('#fluxo-orgao');
+  const orgao = page.locator('dialog#fluxo-orgao');
   await expect(orgao).toBeVisible();
-  await expect(orgao).toBeFocused();
-  await page.waitForTimeout(150);
-  const noAlto = await page.evaluate(() => {
-    const texto = document.querySelector('#fluxo-orgao-texto')!;
-    const r = texto.getBoundingClientRect();
-    // O ponto no começo da pergunta tem de cair na própria pergunta (nenhuma faixa fixa por cima).
-    const naFrente = document.elementFromPoint(r.left + 8, Math.max(0, r.top) + 4);
-    return { top: r.top, altura: window.innerHeight, dela: naFrente === texto || !!texto.contains(naFrente) };
+  await expect(orgao.getByRole('button', { name: 'Mudar o texto' })).toBeFocused();
+  await page.waitForTimeout(400); // a folha sobe com uma animação curta
+  const caixa = await orgao.evaluate((el) => {
+    const r = el.getBoundingClientRect();
+    return { top: r.top, bottom: r.bottom, altura: window.innerHeight, rolavel: el.scrollHeight > el.clientHeight };
   });
-  expect(noAlto.top, 'a pergunta começa dentro da tela').toBeGreaterThanOrEqual(0);
-  expect(noAlto.top, 'a pergunta começa dentro da tela').toBeLessThan(noAlto.altura * 0.5);
-  expect(noAlto.dela, 'nada cobre o começo da pergunta').toBe(true);
-
-  // Esc fecha e devolve o foco.
+  expect(caixa.top).toBeGreaterThanOrEqual(0);
+  expect(caixa.bottom).toBeLessThanOrEqual(caixa.altura + 1);
   await page.keyboard.press('Escape');
   await expect(orgao).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Continuar' })).toBeFocused();
 });
 
-test('passo 1: o Tab passa por "Ver a prévia maior" e "Apagar tudo" antes do Título, mas a leitura começa no h1', async ({ page }) => {
+// ---------- passo 2: atalhos do dia e calendário ----------
+
+test('passo 2: os atalhos ficam acima do campo Dia e tocar num deles preenche o dia e marca aria-pressed', async ({ page }) => {
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  await preencherPasso1(page, evento);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+
+  const grupo = page.getByRole('group', { name: 'Atalhos do dia' });
+  const dia = page.locator('#fluxo-data');
+  await expect(dia).toHaveAttribute('type', 'date');
+  await expect(dia).toHaveValue('');
+  const fimDoGrupo = (await grupo.boundingBox())!;
+  const campo = (await dia.boundingBox())!;
+  expect(fimDoGrupo.y + fimDoGrupo.height, 'o grupo termina antes do topo do campo').toBeLessThanOrEqual(campo.y);
+
+  const amanha = grupo.getByRole('button', { name: 'Amanhã' });
+  await expect(amanha).toHaveAttribute('aria-pressed', 'false');
+  await amanha.click();
+  await expect(amanha).toHaveAttribute('aria-pressed', 'true');
+  await expect(grupo.getByRole('button', { name: 'Hoje' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(dia).toHaveValue(/^\d{4}-\d{2}-\d{2}$/);
+  await expect(page.locator('#fluxo-data-extenso')).not.toHaveText('');
+
+  // Escolher no calendário o dia de outro atalho: ele passa a ficar marcado.
+  const hoje = await grupo.getByRole('button', { name: 'Hoje' }).getAttribute('data-dia');
+  await dia.fill(hoje!);
+  await expect(grupo.getByRole('button', { name: 'Hoje' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(amanha).toHaveAttribute('aria-pressed', 'false');
+  await conferirTela(page, 'passo 2: atalhos do dia');
+});
+
+test('passo 1: o Tab passa por "Ver maior a prévia" e "Apagar tudo" antes do Título, mas a leitura começa no h1', async ({ page }) => {
   await abrirPorta(page, PORTAS[2]);
   await page.locator('#fluxo-titulo').fill(DADOS.titulo);
   await page.locator('h1').focus();
   await page.keyboard.press('Tab');
-  await expect(page.getByRole('button', { name: 'Ver a prévia maior' })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Ver maior a prévia' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Apagar tudo' })).toBeFocused();
   await page.keyboard.press('Tab');

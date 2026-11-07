@@ -14,6 +14,8 @@ export const DADOS = {
   texto: 'Traga uma cadeira e um prato',
   pauta: 'Contas do ano\nCalendário de visitas',
   dia: '14/11/2026',
+  /** O mesmo dia no campo de calendário (type="date" guarda AAAA-MM-DD). */
+  diaIso: '2026-11-14',
   hora: '18:30',
   local: 'Salão da associação, Rua dos Ipês, 12',
 } as const;
@@ -33,10 +35,17 @@ export async function preencherPasso1(page: Page, porta: Pick<Porta, 'tipo'>, qu
   else if (quais.texto !== false) await page.locator('#fluxo-texto').fill(DADOS.texto);
 }
 
+/** Escreve o dia: no campo de calendário vai AAAA-MM-DD; no campo de texto de reserva, dd/mm/aaaa. */
+export async function preencherDia(page: Page): Promise<void> {
+  const campo = page.locator('#fluxo-data');
+  const calendario = (await campo.getAttribute('type')) === 'date';
+  await campo.fill(calendario ? DADOS.diaIso : DADOS.dia);
+}
+
 /** Passo 2: dia, hora e local (só reunião e evento; aviso, conquista e agradecimento não precisam de nada). */
 export async function preencherPasso2(page: Page, porta: Pick<Porta, 'agenda'>): Promise<void> {
   if (!porta.agenda) return;
-  await page.locator('#fluxo-data').fill(DADOS.dia);
+  await preencherDia(page);
   await page.locator('#fluxo-hora').fill(DADOS.hora);
   await page.locator('#fluxo-local').fill(DADOS.local);
 }
@@ -51,7 +60,7 @@ export async function preencherObrigatoriosVazios(page: Page, porta: Pick<Porta,
     await seVazio('#fluxo-titulo', DADOS.titulo);
     if (porta.tipo === 'reuniao') await seVazio('#fluxo-pauta', DADOS.pauta);
   } else if (porta.agenda) {
-    await seVazio('#fluxo-data', DADOS.dia);
+    await seVazio('#fluxo-data', DADOS.diaIso);
     await seVazio('#fluxo-hora', DADOS.hora);
     await seVazio('#fluxo-local', DADOS.local);
   }
