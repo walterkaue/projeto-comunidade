@@ -1,23 +1,59 @@
-/* Tema base. Celular primeiro (360 px), toque, nunca hover. Paleta provisória e neutra: grafite e papel,
-   sem cor associada a partido. Todos os pares de texto e fundo passam de 4,5:1 (WCAG AA). */
+/* Tema base: nova cara "Caderno" (docs/visual.md, seções 2 e 3). Celular primeiro (360 px), toque, nunca hover.
+   Base creme e quente; no escuro, marrom bem escuro. Cada porta tem a sua cor (--cor e --cor-clara, pelo atributo
+   data-porta na tela); fora de uma porta, --cor é a tinta. Nenhuma cor é "a cor do site".
+   Os pares de contraste de docs/visual.md, seção 3, são conferidos em tema.test.ts, lendo este arquivo. */
 
 :root {
-  --papel: #fbfaf7;
+  --papel: #fbf6ee;
   --superficie: #ffffff;
-  --tinta: #1d232a;
-  --tinta-suave: #4a5460;
-  --borda: #c9ccd1;
-  /* Borda de campo e de componente: 3:1 ou mais sobre o fundo (WCAG 1.4.11). */
-  --borda-campo: #767b83;
-  --destaque: #1d232a;
-  --sobre-destaque: #ffffff;
-  /* Porta em destaque do início: fundo escuro nos dois temas (testado em src/paginas/inicio.test.ts). */
-  --porta-fundo: #1d232a;
-  --porta-texto: #fbfaf7;
-  --porta-desc: #d5d9de;
-  --foco: #0b57d0;
+  --tinta: #2a211b;
+  --tinta-suave: #5c4f45;
+  /* Exemplo dentro do campo (::placeholder): 4,5:1 ou mais sobre o campo. */
+  --exemplo: #6b5e53;
+  /* Linhas e separadores: enfeite, sem contraste mínimo. */
+  --borda: #e8ddcd;
+  /* Borda de campo, botão terciário e bolinha de cor: 3:1 ou mais sobre o fundo (WCAG 1.4.11). */
+  --borda-campo: #8c7d70;
+  /* Fundo do aviso de atenção (faixa do evento, painel, link removido, "em revisão jurídica"). */
+  --atencao: #efe5d5;
   --erro: #a8241b;
+  /* Texto e ícone sobre a cor da porta (botão principal, quadrado de ícone cheio). */
+  --sobre-cor: #ffffff;
+  --sombra: 0 1px 2px rgba(74, 52, 30, 0.1), 0 3px 10px rgba(74, 52, 30, 0.07);
+  --sombra-barra: 0 -2px 12px rgba(74, 52, 30, 0.1);
+
+  /* Cores das portas (Petróleo, Musgo, Barro, Ocre, Amora). Use --cor e --cor-clara nas telas; estas ficam
+     para a marca de cinco cores e para o atributo data-porta, logo abaixo. */
+  --cor-reuniao: #1d5a72;
+  --clara-reuniao: #e2eef2;
+  --cor-evento: #3d6a2c;
+  --clara-evento: #e6efdc;
+  --cor-aviso: #9a4326;
+  --clara-aviso: #f7e5dc;
+  --cor-resultado: #7f5f0c;
+  --clara-resultado: #f5ecd2;
+  --cor-agradecimento: #8a3760;
+  --clara-agradecimento: #f4e2eb;
+
+  /* Fora de uma porta (início, páginas institucionais): a cor é a tinta e o fundo claro é o de atenção. */
+  --cor: var(--tinta);
+  --cor-clara: var(--atencao);
+  /* Foco: a --cor dentro de uma porta, a tinta fora (contorno de 3 px, afastado 2 px). */
+  --foco: var(--tinta);
+
+  /* Nomes antigos, apelidos dos novos até as telas trocarem (docs/proximos-passos.md: saem depois).
+     As três --porta-* ficam em hexadecimal porque src/paginas/inicio.test.ts lê o valor: são a --cor-clara,
+     a --tinta e a --tinta-suave da reunião. */
+  --destaque: var(--cor);
+  --sobre-destaque: var(--sobre-cor);
+  --porta-fundo: #e2eef2;
+  --porta-texto: #2a211b;
+  --porta-desc: #5c4f45;
+
   --raio: 12px;
+  --raio-botao: 14px;
+  --raio-aviso: 14px;
+  --raio-cartao: 20px;
   --toque: 52px;
   --fonte: 'Atkinson Hyperlegible', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light dark;
@@ -25,20 +61,66 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --papel: #14181d;
-    --superficie: #1d232a;
-    --tinta: #f1f2f4;
-    --tinta-suave: #b8bec6;
-    --borda: #48515c;
-    --borda-campo: #8a929c;
-    --destaque: #f1f2f4;
-    --sobre-destaque: #14181d;
-    --porta-fundo: #2b343e;
-    --porta-texto: #f1f2f4;
-    --porta-desc: #d0d5db;
-    --foco: #8ab4f8;
+    --papel: #1a1512;
+    --superficie: #26201b;
+    --tinta: #f6efe6;
+    --tinta-suave: #cbbdad;
+    --exemplo: #a99a8a;
+    --borda: #3d332b;
+    --borda-campo: #9a8b7c;
+    --atencao: #352b23;
     --erro: #ff8a80;
+    --sobre-cor: #1a1512;
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sombra-barra: 0 -2px 12px rgba(0, 0, 0, 0.45);
+
+    --cor-reuniao: #7fc3dc;
+    --clara-reuniao: #18323c;
+    --cor-evento: #9fcf83;
+    --clara-evento: #22321a;
+    --cor-aviso: #f2a487;
+    --clara-aviso: #3d2219;
+    --cor-resultado: #e2c063;
+    --clara-resultado: #352a10;
+    --cor-agradecimento: #eba0c5;
+    --clara-agradecimento: #3a1e2c;
+
+    --porta-fundo: #18323c;
+    --porta-texto: #f6efe6;
+    --porta-desc: #cbbdad;
   }
+}
+
+/* A tela marca a porta com data-porta; tudo dentro dela (passos, Pronto, ata, página do evento) usa a cor dela. */
+[data-porta='reuniao'] {
+  --cor: var(--cor-reuniao);
+  --cor-clara: var(--clara-reuniao);
+}
+
+[data-porta='evento'] {
+  --cor: var(--cor-evento);
+  --cor-clara: var(--clara-evento);
+}
+
+[data-porta='aviso'] {
+  --cor: var(--cor-aviso);
+  --cor-clara: var(--clara-aviso);
+}
+
+[data-porta='resultado'] {
+  --cor: var(--cor-resultado);
+  --cor-clara: var(--clara-resultado);
+}
+
+[data-porta='agradecimento'] {
+  --cor: var(--cor-agradecimento);
+  --cor-clara: var(--clara-agradecimento);
+}
+
+/* Variável que usa outra é calculada onde é declarada: dentro da porta, de novo, para pegar a cor dela. */
+[data-porta] {
+  --foco: var(--cor);
+  --destaque: var(--cor);
 }
 
 *,
