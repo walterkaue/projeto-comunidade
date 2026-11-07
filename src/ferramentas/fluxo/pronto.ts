@@ -7,6 +7,7 @@ import './pronto.css';
 import { avisar } from '../../comum/aviso';
 import { baixarImagem, canvasParaArquivo, compartilhar } from '../../comum/compartilhar';
 import { esc } from '../../comum/html';
+import { icone } from '../../comum/icones';
 import { nivelDoAparelho } from '../../comum/nivel';
 import { linkPara } from '../../comum/rotas';
 import { escalaDoFormato } from '../cards/modelos';
@@ -51,10 +52,10 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const agenda = temAgenda(d.tipo);
   const nivel = nivelDoAparelho();
 
-  raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
+  raiz.innerHTML = `<main class="tela fluxo fluxo-pronto" data-porta="${d.tipo}">
     ${topoDoPronto(d)}
 
-    <button type="button" class="botao fluxo-mandar" id="fluxo-mandar" aria-describedby="fluxo-mandar-dica">Mandar no WhatsApp</button>
+    <button type="button" class="botao botao-alto fluxo-mandar" id="fluxo-mandar" aria-describedby="fluxo-mandar-dica">${icone('enviar')}Mandar no WhatsApp</button>
     <p class="campo-dica" id="fluxo-mandar-dica">${esc(dicaDoMandar(d.formato, temMenuDeCompartilhar()))}</p>
     <p class="campo-dica" id="fluxo-aviso-link" hidden>${esc(fraseDoLinkNoPronto(d))}</p>
     <p class="fluxo-estado fluxo-estado-neutro" id="fluxo-link-estado" role="status">${agenda ? 'Preparando o link…' : ''}</p>
@@ -65,37 +66,42 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
 
     <div class="fluxo-moldura"><canvas id="fluxo-canvas" role="img" aria-label="Prévia da imagem"></canvas></div>
 
+    <h2 class="fluxo-outros">Outros jeitos de usar</h2>
     <div class="fluxo-saidas">
-      <button type="button" class="botao botao-sec" id="fluxo-baixar">Baixar a imagem</button>
-      <button type="button" class="botao botao-sec" id="fluxo-copiar-texto">Copiar só o texto</button>
-      <button type="button" class="botao botao-sec" id="fluxo-copiar-link" hidden>Copiar o link</button>
-      <button type="button" class="botao botao-sec" id="fluxo-imprimir">Imprimir cartaz para o mural</button>
+      <button type="button" class="botao botao-ter" id="fluxo-baixar">${icone('baixar')}<span>Baixar a imagem</span></button>
+      <button type="button" class="botao botao-ter" id="fluxo-copiar-texto">${icone('copiar')}<span>Copiar só o texto</span></button>
+      <button type="button" class="botao botao-ter" id="fluxo-copiar-link" hidden>${icone('link')}<span>Copiar o link</span></button>
+      <button type="button" class="botao botao-ter" id="fluxo-imprimir">${icone('imprimir')}<span>Imprimir cartaz para o mural</span></button>
       <p class="fluxo-nota-corte" id="fluxo-nota-corte" hidden></p>
       ${d.tipo === 'reuniao' ? '<p class="campo-dica" id="fluxo-aviso-qr" hidden>O QR do cartaz abre a pauta inteira.</p>' : ''}
-      <a class="botao botao-sec" id="fluxo-pagina" href="#/" hidden>Ver a página do evento</a>
+      <a class="botao botao-ter" id="fluxo-pagina" href="#/" hidden>${icone('calendario')}<span>Ver a página do evento</span></a>
     </div>
 
-    <div class="fluxo-confirma" id="fluxo-confirma" role="group" aria-labelledby="fluxo-confirma-texto" tabindex="-1" hidden>
-      <p id="fluxo-confirma-texto"></p>
-      <button type="button" class="botao" id="fluxo-confirma-mudar">Mudar algo</button>
-      <button type="button" class="botao botao-sec" id="fluxo-confirma-seguir"></button>
+    <div class="fluxo-confirma aviso-atencao" id="fluxo-confirma" role="group" aria-labelledby="fluxo-confirma-texto" tabindex="-1" hidden>
+      ${icone('atencao', { classe: 'aviso-icone' })}
+      <div class="aviso-corpo">
+        <p id="fluxo-confirma-texto"></p>
+        <button type="button" class="botao" id="fluxo-confirma-mudar">Mudar algo</button>
+        <button type="button" class="botao botao-sec" id="fluxo-confirma-seguir"></button>
+      </div>
     </div>
 
+    <div class="fluxo-linha" aria-hidden="true"></div>
     <div class="fluxo-acoes">
-      <button type="button" class="botao botao-sec" id="fluxo-mudar">Mudar algo</button>
+      <button type="button" class="botao botao-sec" id="fluxo-mudar">${icone('lapis')}<span>Mudar algo</span></button>
     </div>
     ${
       d.tipo === 'reuniao'
         ? `<section class="fluxo-ata" aria-labelledby="fluxo-ata-titulo">
-      <h2 id="fluxo-ata-titulo">E depois da reunião?</h2>
-      <button type="button" class="botao botao-sec" id="fluxo-ata">Fazer a ata</button>
-      <p class="campo-dica">A ata já começa com a pauta. Ela fica só neste aparelho.</p>
+      <h2 id="fluxo-ata-titulo">${icone('ata')}<span>E depois da reunião?</span></h2>
+      <p>A ata já abre com a pauta.</p>
+      <button type="button" class="botao botao-sec" id="fluxo-ata"><span>Fazer a ata</span>${icone('direita')}</button>
     </section>`
         : ''
     }
     <div class="fluxo-fazer-outro">
       <p class="campo-dica" id="fluxo-outro-dica">${esc(AVISO_FAZER_OUTRO)}</p>
-      <button type="button" id="fluxo-outro" aria-describedby="fluxo-outro-dica">Fazer outro</button>
+      <button type="button" class="link-acao link-tinta" id="fluxo-outro" aria-describedby="fluxo-outro-dica">Fazer outro</button>
     </div>
   </main>`;
 
@@ -542,7 +548,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     rascunho.convocacao = convocacaoDoFluxo(d, link);
     rascunho.ata = ataComAPauta(rascunho.ata, d);
     location.hash = linkPara('ata');
-    avisar('A ata já começa com a pauta.');
+    avisar('A ata já abre com a pauta.');
   });
 
   preparar();

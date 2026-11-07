@@ -1,46 +1,64 @@
-/* Passo 3 e tela Pronto: prévia, formato, cor, "Mais opções", saídas, ata, "Fazer outro" e a impressão do cartaz.
-   O que é comum a todos os passos (topo, miniatura, diálogo, barra, dica, nota) fica em fluxo.css. */
+/* Passo 3 e tela Pronto, na nova cara (docs/visual.md). Cores só por token: --cor, --cor-clara e --foco vêm do
+   data-porta da <main> de cada tela. O que é comum a todos os passos (topo, miniatura, diálogo, barra, dica, nota)
+   fica em fluxo.css. */
 
 /* ---------- passo 3 ---------- */
-/* Prévia menor ao lado do "Ver a prévia maior": em 360 × 640, "Onde vai mandar?" e a cor cabem acima da barra.
-   A altura sobra do que vem em volta (cerca de 31,5rem), nunca passa de 40% da tela nem fica abaixo de 7rem. */
-.fluxo-moldura.fluxo-moldura-passo3 {
-  align-items: center;
-  justify-content: space-between;
+/* Prévia à esquerda (até 40% da tela) e, à direita, "Onde vai mandar?". Com letra grande, a segunda coluna cai
+   para baixo da prévia (flex-wrap). */
+.fluxo-p3-linha {
+  display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 12px;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
+  margin: 0 0 12px;
 }
 
-.fluxo-moldura.fluxo-moldura-passo3 canvas {
-  max-width: 60%;
-  max-height: min(40dvh, max(7rem, 100dvh - 31.5rem));
+.fluxo-p3-previa {
+  position: relative;
+  flex: none;
+  max-width: 100%;
+  line-height: 0;
 }
 
-.fluxo-moldura.fluxo-moldura-passo3 .fluxo-ver {
-  flex: 1 1 7rem;
+.fluxo-p3-previa canvas {
+  display: block;
   width: auto;
+  height: auto;
+  max-width: calc((100vw - 2rem) * 0.4);
+  max-height: min(40dvh, 13.25rem);
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra);
+}
+
+/* Lupa redonda de 48 px no canto de baixo da prévia (abre "Como está ficando"). */
+.fluxo-lupa {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid var(--borda-campo);
+  border-radius: 50%;
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: var(--sombra);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.fluxo-p3-formato {
+  flex: 1 1 9rem;
+  min-width: 0;
   margin: 0;
 }
 
-.fluxo-moldura {
-  display: flex;
-  justify-content: center;
-  margin: 0 0 1rem;
-  padding: 0.75rem;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie);
-}
-
-.fluxo-moldura canvas {
-  display: block;
-  max-width: 100%;
-  max-height: 60dvh;
-  width: auto;
-  height: auto;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+.fluxo-p3-formato legend,
+#fluxo-cor legend {
+  margin-bottom: 8px;
 }
 
 .fluxo-estado {
@@ -62,8 +80,8 @@
   color: var(--tinta-suave);
 }
 
-/* Os radios de formato e de cor ficam escondidos de forma acessível (continuam no teclado e no leitor de tela);
-   o label é o botão que se vê. */
+/* Os radios de formato e de cor cobrem a opção inteira, invisíveis (continuam no teclado e no leitor de tela);
+   o label é o que se vê. */
 .fluxo-seg-item,
 .fluxo-bola-item {
   position: relative;
@@ -72,7 +90,7 @@
 
 .fluxo-seg-item input,
 .fluxo-bola-item input {
-  /* cobre o botão inteiro: leitor de tela, acesso por voz e toque acham um alvo do tamanho certo */
+  /* cobre a opção inteira: leitor de tela, acesso por voz e toque acham um alvo do tamanho certo */
   position: absolute;
   inset: 0;
   z-index: 1;
@@ -82,40 +100,48 @@
   opacity: 0;
 }
 
-/* Formato: três botões numa linha em 360 px; com texto grande, um embaixo do outro. */
+/* Formato: três opções empilhadas, 54 px cada, 12 px entre elas (C-21). */
 .fluxo-seg {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
   gap: 12px;
 }
 
 .fluxo-seg-item label {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
   box-sizing: border-box;
-  min-height: 52px;
-  padding: 0 4px;
+  min-height: 54px;
+  padding: 0 12px;
   border: 2px solid var(--borda-campo);
-  border-radius: var(--raio);
+  border-radius: var(--raio-botao);
   background: var(--superficie);
   color: var(--tinta);
+  font-size: 1.0625rem;
   font-weight: 700;
   line-height: 1.2;
-  text-align: center;
   overflow-wrap: anywhere;
 }
 
-/* Escolhido: contorno grosso, fundo cheio e o sinal ✓ (não depende só da cor). */
-.fluxo-seg-item input:checked + label {
-  border-color: var(--tinta);
-  background: var(--tinta);
-  color: var(--papel);
+.fluxo-seg-icone {
+  color: var(--cor);
 }
 
-.fluxo-seg-item input:checked + label .fluxo-seg-nome::before {
-  content: '\2713\00a0';
-  content: '\2713\00a0' / ''; /* só visual: o radio já diz "selecionado" */
+/* O ✓ só aparece na escolhida. */
+.fluxo-seg-check {
+  display: none;
+  margin-left: auto;
+  color: var(--cor);
+}
+
+/* Escolhida: fundo claro, borda na cor da porta e ✓ (não depende só da cor). */
+.fluxo-seg-item input:checked + label {
+  border-color: var(--cor);
+  background: var(--cor-clara);
+}
+
+.fluxo-seg-item input:checked + label .fluxo-seg-check {
+  display: block;
 }
 
 .fluxo-seg-item input:focus-visible + label,
@@ -125,18 +151,20 @@
 }
 
 .fluxo-formato-expl {
-  margin: 0.5rem 0 0;
+  margin: 0 0 1rem;
   color: var(--tinta-suave);
   font-size: 0.9375rem;
+  line-height: 1.4;
 }
 
-/* Cor: seis alvos de 48 px lado a lado até em 320 px (6 x 48 = 288 px); cada um tem a bolinha (40 px) e o nome curto
-   embaixo. Com letra grande, o alvo cresce com o texto e as bolinhas quebram em duas fileiras. */
+/* Cor: seis alvos lado a lado até em 320 px (6 x 48 = 288 px). Cada um tem a bolinha (42 px; 40 px em 320) e o
+   nome curto embaixo (14 px). Com letra grande, os alvos crescem e as bolinhas quebram em duas fileiras. */
 .fluxo-bolas {
+  --bola: min(42px, calc((100vw - 2rem) / 6 - 8px));
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 0;
-  padding: 4px 0 2px;
+  gap: 8px 0;
+  padding: 0;
 }
 
 .fluxo-bola-item {
@@ -144,28 +172,27 @@
   flex: 1 0 max(48px, 2.6rem);
   flex-direction: column;
   align-items: center;
-  min-width: 0;
   min-height: 48px;
+  padding-top: 7px; /* lugar para o anel da escolhida (afastado 3 px, de 3 px) */
 }
 
 .fluxo-bola-item label {
   position: relative;
   display: block;
   box-sizing: border-box;
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
-  margin: 4px 0 2px;
+  width: var(--bola);
+  height: var(--bola);
+  min-height: 0;
+  margin: 0 0 4px;
   border-radius: 50%;
 }
 
 .fluxo-bola-nome {
-  max-width: 100%;
   color: var(--tinta-suave);
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   line-height: 1.15;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .fluxo-bola-item input:checked ~ .fluxo-bola-nome {
@@ -178,23 +205,16 @@
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  border: 3px solid var(--borda-campo);
+  border: 2px solid var(--borda-campo);
   border-radius: 50%;
   forced-color-adjust: none; /* alto contraste do sistema: as cores da paleta continuam à vista */
 }
 
-/* Escolhida: anel grosso de tinta por fora e um selo com ✓ no centro (contraste em cor clara e escura). */
-.fluxo-bola-item input:checked + label {
-  outline: 3px solid var(--tinta);
-  outline-offset: 1px;
-}
-
-.fluxo-bola-item input:checked + label::after {
-  content: '\2713';
-  content: '\2713' / '';
+/* ✓ dentro da bolinha escolhida: selo de tinta com borda de papel (lê em qualquer cor de paleta). */
+.fluxo-bola-check {
   position: absolute;
   inset: 50% auto auto 50%;
-  display: grid;
+  display: none;
   place-items: center;
   width: 24px;
   height: 24px;
@@ -202,51 +222,38 @@
   border-radius: 50%;
   background: var(--tinta);
   color: var(--papel);
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1;
   transform: translate(-50%, -50%);
 }
 
-/* Escolhida e com foco de teclado: o anel de foco vai POR FORA do anel de tinta (A-07). Vence a regra da escolhida. */
+.fluxo-bola-item input:checked + label .fluxo-bola-check {
+  display: grid;
+}
+
+/* Escolhida: anel de 3 px na cor da porta, afastado 3 px da bolinha. */
+.fluxo-bola-item input:checked + label {
+  outline: 3px solid var(--cor);
+  outline-offset: 3px;
+}
+
+/* Escolhida e com foco de teclado: o anel de foco vai POR FORA do anel da cor, com 2 px de ar entre os dois (A-07). */
 .fluxo-bola-item input:checked:focus-visible + label {
-  outline: 3px solid var(--tinta);
-  outline-offset: 1px;
+  outline: 3px solid var(--cor);
+  outline-offset: 3px;
 }
 
 .fluxo-bola-item input:checked:focus-visible + label::before {
   content: '';
   position: absolute;
-  inset: -7px;
+  inset: -11px;
   border: 3px solid var(--foco);
   border-radius: 50%;
   pointer-events: none;
 }
 
-.fluxo-fazer-outro button {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--tinta);
-  font: inherit;
-  text-align: left;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-.fluxo-fazer-outro button:focus-visible {
-  outline: 3px solid var(--foco);
-  outline-offset: 2px;
-}
-
+/* ---------- "Mais opções" ---------- */
 .fluxo-mais {
   margin: 0 0 1rem;
-  border: 1px solid var(--borda);
+  border: 2px solid var(--borda-campo);
   border-radius: var(--raio);
   background: var(--superficie);
 }
@@ -257,7 +264,7 @@
   justify-content: space-between;
   gap: 12px;
   min-height: 52px;
-  padding: 0 1rem;
+  padding: 6px 1rem;
   font-weight: 700;
   list-style: none;
   cursor: pointer;
@@ -267,19 +274,18 @@
   display: none;
 }
 
-/* Sinal visível de que abre e fecha: + fechado, − aberto (cor do texto: contraste alto). */
-.fluxo-mais summary::after {
-  content: '+';
-  content: '+' / ''; /* só visual: o resumo já diz se está aberto ou fechado */
-  flex: none;
-  color: var(--tinta);
-  font-size: 1.5rem;
-  line-height: 1;
+.fluxo-mais-resumo {
+  color: var(--tinta-suave);
+  font-weight: 400;
 }
 
-.fluxo-mais[open] summary::after {
-  content: '\2212';
-  content: '\2212' / '';
+/* A seta de abrir gira quando abre (sinal de que abre e fecha). */
+.fluxo-mais-seta {
+  color: var(--tinta);
+}
+
+.fluxo-mais[open] .fluxo-mais-seta {
+  transform: rotate(180deg);
 }
 
 .fluxo-mais-corpo {
@@ -303,50 +309,169 @@
 
 /* ---------- Pronto ---------- */
 .fluxo-pronto .fluxo-mandar {
+  min-height: 60px; /* vence o .fluxo .botao (52 px) de fluxo.css */
   margin-top: 0;
 }
 
-.fluxo-pronto .fluxo-moldura {
-  margin-top: 1rem;
-}
-
-.fluxo-saidas,
-.fluxo-acoes {
-  display: grid;
-  gap: 0;
-}
-
-.fluxo-saidas {
+.fluxo-pronto .fluxo-mandar + .campo-dica {
   margin-top: 0.5rem;
+}
+
+.fluxo-pronto .fluxo-estado-neutro:not(:empty) {
+  margin-top: 0.5rem;
+}
+
+/* Prévia centralizada, só com a sombra. */
+.fluxo-moldura {
+  display: flex;
+  justify-content: center;
+  margin: 1.25rem 0 1.5rem;
+}
+
+.fluxo-moldura canvas {
+  display: block;
+  max-width: 100%;
+  max-height: 60dvh;
+  width: auto;
+  height: auto;
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra);
+}
+
+.fluxo-outros {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+/* Saídas: botões terciários (ícone na cor da porta, texto à esquerda). */
+.fluxo-saidas {
+  display: grid;
+  gap: 10px;
 }
 
 .fluxo-saidas [hidden] {
   display: none;
 }
 
-.fluxo-acoes {
-  margin-top: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+.fluxo-saidas .botao {
+  margin: 0;
+}
+
+/* Nota sobre o corte do cartaz e nota do QR: iguais a uma dica de campo. */
+.fluxo-nota-corte {
+  margin: 0;
+  color: var(--tinta-suave);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
+.fluxo-saidas .campo-dica {
+  margin: 0;
+}
+
+/* A pergunta do Pronto (sem o link, órgão público) tem a cara do aviso de atenção; a lógica é a de sempre. */
+.fluxo-pronto .fluxo-confirma {
+  display: flex;
   gap: 12px;
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 0;
+  background: var(--atencao);
 }
 
-.fluxo-acoes .botao {
-  width: 100%;
+.fluxo-pronto .fluxo-confirma .aviso-corpo {
+  display: grid;
+  flex: 1;
+  gap: 10px;
 }
 
-.fluxo-ata {
-  margin-top: 1.75rem;
-  padding-top: 0.5rem;
+.fluxo-pronto .fluxo-confirma .botao {
+  margin: 0;
+}
+
+.fluxo-linha {
+  margin: 1.5rem 0 1.25rem;
   border-top: 1px solid var(--borda);
 }
 
-.fluxo-ata h2 {
-  margin: 1rem 0 0;
-  font-size: 1.25rem;
+.fluxo-acoes .botao {
+  margin: 0;
 }
 
-.fluxo-ata .campo-dica {
-  margin-top: 0.5rem;
+/* Reunião: quadro claro com a ponte para a ata. */
+.fluxo-ata {
+  margin-top: 1.5rem;
+  padding: 16px;
+  border-radius: var(--raio-cartao);
+  background: var(--cor-clara);
+}
+
+.fluxo-ata h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.fluxo-ata h2 .icone {
+  color: var(--cor);
+}
+
+.fluxo-ata p {
+  margin: 6px 0 0;
+}
+
+.fluxo-ata .botao {
+  justify-content: space-between;
+  border-color: var(--cor);
+  background: var(--superficie);
+  color: var(--tinta);
+}
+
+.fluxo-ata .botao .icone {
+  color: var(--cor);
+}
+
+/* "Fazer outro": no fim, centralizado, longe de "Mudar algo", com a dica acima. */
+.fluxo-fazer-outro {
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.fluxo-fazer-outro .campo-dica {
+  margin: 0 0 0.25rem;
+}
+
+/* ---------- alto contraste (forced-colors) ---------- */
+@media (forced-colors: active) {
+  .fluxo-seg-item input:checked:not(:focus-visible) + label {
+    outline: 3px solid Highlight;
+    outline-offset: 0;
+  }
+
+  .fluxo-bola-item input:checked:not(:focus-visible) + label {
+    outline-color: Highlight;
+  }
+
+  .fluxo-bola-check {
+    forced-color-adjust: none;
+    border-color: Canvas;
+    background: CanvasText;
+    color: Canvas;
+  }
+
+  .fluxo-ata {
+    border: 2px solid CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fluxo-mais-seta {
+    transition: none;
+  }
 }
 
 /* ---------- impressão: só o cartaz (a folha A4 é posta por pronto.ts na hora de imprimir) ---------- */
@@ -381,28 +506,4 @@
     height: 297mm;
     object-fit: contain;
   }
-}
-
-/* Pronto: o estado do link fica logo abaixo do "Mandar no WhatsApp", com um respiro. */
-.fluxo-pronto .fluxo-estado-neutro:not(:empty) {
-  margin-top: 0.5rem;
-}
-
-/* Pronto: "Fazer outro" fica no fim, longe de "Mudar algo", com a dica acima. */
-.fluxo-fazer-outro {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--borda);
-}
-
-.fluxo-fazer-outro .campo-dica {
-  margin: 0 0 0.25rem;
-}
-
-/* Pronto: nota sobre o corte do cartaz. Igual a uma dica de campo. */
-.fluxo-nota-corte {
-  margin: 0.5rem 0 0;
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-  line-height: 1.4;
 }
