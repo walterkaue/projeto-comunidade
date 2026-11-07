@@ -110,7 +110,7 @@ for (const porta of [PORTAS[0], PORTAS[1]]) {
     await expect(recebida.getByText('Quem chama', { exact: false })).toHaveCount(0);
     await expect(recebida.getByText('Não deu para abrir este evento')).toHaveCount(0);
     await expect(recebida.getByText(DADOS.local, { exact: false }).first()).toBeVisible();
-    if (porta.tipo === 'reuniao') await expect(recebida.getByText('Contas do ano')).toBeVisible();
+    if (porta.tipo === 'reuniao') await expect(recebida.getByText('Prestação de contas da festa')).toBeVisible();
     await conferirTela(recebida, `${porta.tipo}: página do evento sem organização`);
     await recebida.close();
   });

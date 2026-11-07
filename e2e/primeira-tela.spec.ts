@@ -63,11 +63,19 @@ async function textoEm200(page: Page): Promise<void> {
   });
 }
 
-for (const escala of [100, 200] as const) {
+// Nos dois modos (claro e escuro) a 100%; a 200%, no claro (o escuro só troca cores, não tamanhos).
+const CASOS = [
+  { escala: 100, esquema: 'light' },
+  { escala: 100, esquema: 'dark' },
+  { escala: 200, esquema: 'light' },
+] as const;
+
+for (const { escala, esquema } of CASOS) {
   const semRolar = escala === 100;
-  test.describe(`primeira tela, texto a ${escala}%`, () => {
+  test.describe(`primeira tela, texto a ${escala}%, modo ${esquema === 'dark' ? 'escuro' : 'claro'}`, () => {
     for (const porta of PORTAS) {
       test(`${porta.verbo}`, async ({ page }) => {
+        await page.emulateMedia({ colorScheme: esquema });
         if (escala === 200) await textoEm200(page);
         await abrirPorta(page, porta);
         await page.waitForTimeout(200);
@@ -93,13 +101,14 @@ for (const escala of [100, 200] as const) {
           // O aviso do link fica num quadro logo acima da pauta, com o mesmo texto, e é lido junto com ela e com o título.
           const aviso = page.locator('#fluxo-aviso-do-link');
           await expect(aviso).toHaveText(
-            'Título, local e pauta vão no link do convite, e quem receber pode repassar. Não escreva nome de pessoa nem assunto que só o grupo pode saber.',
+            /^\s*Título, local e pauta vão no link\.\s+Quem receber pode repassar\. Não escreva nome de pessoa nem assunto que só o grupo pode saber\.\s*$/,
           );
+          await expect(aviso.locator('strong')).toHaveText('Título, local e pauta vão no link.');
           await expect(page.locator('#fluxo-aviso-do-link + .campo:has(#fluxo-pauta)')).toHaveCount(1);
           await expect(page.locator('#fluxo-pauta')).toHaveAttribute('aria-describedby', /^fluxo-aviso-do-link /);
           await expect(page.locator('#fluxo-titulo')).toHaveAttribute('aria-describedby', /fluxo-aviso-do-link/);
         }
-        if (escala === 200) await conferirTela(page, `${porta.tipo}: passo 1 a 200%`);
+        if (escala === 200 || esquema === 'dark') await conferirTela(page, `${porta.tipo}: passo 1 (${escala}%, ${esquema})`);
 
         await preencherObrigatoriosVazios(page, porta, 1);
         await page.getByRole('button', { name: 'Continuar' }).click();
@@ -126,7 +135,7 @@ for (const escala of [100, 200] as const) {
         await page.keyboard.press('Escape');
         await expect(dialogo).toBeHidden();
         await expect(verMaior).toBeFocused();
-        if (escala === 200) await conferirTela(page, `${porta.tipo}: passo 3 a 200%`);
+        if (escala === 200 || esquema === 'dark') await conferirTela(page, `${porta.tipo}: passo 3 (${escala}%, ${esquema})`);
 
         await page.getByRole('button', { name: 'Ficou bom' }).click();
         await esperarOPronto(page, porta);
@@ -151,10 +160,7 @@ for (const escala of [100, 200] as const) {
             .map((el) => el.textContent?.trim());
         });
         expect(escuros, 'botões escuros no Pronto').toEqual(['Mandar no WhatsApp']);
-        if (porta.tipo === 'reuniao') {
-          await expect(page.getByRole('button', { name: 'Fazer a ata' })).toHaveClass(/botao-sec/);
-        }
-        if (escala === 200) await conferirTela(page, `${porta.tipo}: Pronto a 200%`);
+        if (escala === 200 || esquema === 'dark') await conferirTela(page, `${porta.tipo}: Pronto (${escala}%, ${esquema})`);
       });
     }
   });

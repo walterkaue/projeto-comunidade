@@ -68,7 +68,7 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
   const m = DEF_MODELOS[d.tipo];
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
-  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', dica: m.dicaTitulo, valor: d.titulo, exemplo: d.exemplo.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
+  return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', valor: d.titulo, exemplo: d.exemplo.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
       ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: DICA_DA_ORGANIZACAO, valor: d.organizacao, exemplo: d.exemplo.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'

@@ -10,7 +10,7 @@
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px;
-  margin: 0 0 12px;
+  margin: 0 0 8px;
 }
 
 .fluxo-p3-previa {
@@ -58,7 +58,7 @@
 
 .fluxo-p3-formato legend,
 #fluxo-cor legend {
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .fluxo-estado {
@@ -151,7 +151,7 @@
 }
 
 .fluxo-formato-expl {
-  margin: 0 0 1rem;
+  margin: 0 0 0.5rem;
   color: var(--tinta-suave);
   font-size: 0.9375rem;
   line-height: 1.4;

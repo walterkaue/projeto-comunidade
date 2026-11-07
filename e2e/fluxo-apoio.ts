@@ -7,12 +7,12 @@ import type { Porta } from './apoio';
 /** Organização fictícia e neutra. */
 export const ORGANIZACAO_DE_TESTE = 'Associação de Moradores Jardim das Acácias';
 
-/** O que a "pessoa" escreve nos testes. Nada aqui é igual a um exemplo do rodízio. */
+/** O que a "pessoa" escreve nos testes. Nada aqui é igual a um exemplo do rodízio, nem a um item de pauta dele. */
 export const DADOS = {
   titulo: 'Mutirão da horta nova',
   organizacao: ORGANIZACAO_DE_TESTE,
   texto: 'Traga uma cadeira e um prato',
-  pauta: 'Contas do ano\nCalendário de visitas',
+  pauta: 'Prestação de contas da festa\nCalendário de visitas',
   dia: '14/11/2026',
   /** O mesmo dia no campo de calendário (type="date" guarda AAAA-MM-DD). */
   diaIso: '2026-11-14',
