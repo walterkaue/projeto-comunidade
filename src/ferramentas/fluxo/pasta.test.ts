@@ -44,7 +44,7 @@ describe('nada de rede nem endereço de outro site', () => {
 describe('texto digitado não entra no HTML sem esc', () => {
   it('as telas não põem os campos do fluxo crus num template', () => {
     // Os campos digitados só entram via formulario.ts (que usa esc) ou textContent.
-    for (const f of ['passos.ts', 'pronto.ts', 'previa.ts', 'index.ts']) {
+    for (const f of ['passos.ts', 'passo3.ts', 'topo.ts', 'pronto.ts', 'previa.ts', 'index.ts']) {
       expect(semComentarios(f), f).not.toMatch(/\$\{d\.(titulo|organizacao|texto|pauta|local)\}/);
     }
   });

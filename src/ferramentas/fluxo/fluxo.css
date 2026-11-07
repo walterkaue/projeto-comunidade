@@ -186,228 +186,6 @@
   font-weight: 700;
 }
 
-/* ---------- passo 3 ---------- */
-/* Prévia menor ao lado do "Ver a prévia maior": em 360 × 640, "Onde vai mandar?" e a cor cabem acima da barra.
-   A altura sobra do que vem em volta (cerca de 31,5rem), nunca passa de 40% da tela nem fica abaixo de 7rem. */
-.fluxo-moldura.fluxo-moldura-passo3 {
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 0.5rem;
-  padding: 0.5rem;
-}
-
-.fluxo-moldura.fluxo-moldura-passo3 canvas {
-  max-width: 60%;
-  max-height: min(40dvh, max(7rem, 100dvh - 31.5rem));
-}
-
-.fluxo-moldura.fluxo-moldura-passo3 .fluxo-ver {
-  flex: 1 1 7rem;
-  width: auto;
-  margin: 0;
-}
-
-.fluxo-moldura {
-  display: flex;
-  justify-content: center;
-  margin: 0 0 1rem;
-  padding: 0.75rem;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie);
-}
-
-.fluxo-moldura canvas {
-  display: block;
-  max-width: 100%;
-  max-height: 60dvh;
-  width: auto;
-  height: auto;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
-}
-
-.fluxo-estado {
-  margin: 0 0 0.5rem;
-  color: var(--erro);
-  font-weight: 700;
-}
-
-/* Região de estado vazia fica na página sem altura (nunca display: none: o leitor de tela perde o aviso). */
-.fluxo-estado:empty {
-  height: 0;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-}
-
-.fluxo-estado-neutro {
-  color: var(--tinta-suave);
-}
-
-/* Os radios de formato e de cor ficam escondidos de forma acessível (continuam no teclado e no leitor de tela);
-   o label é o botão que se vê. */
-.fluxo-seg-item,
-.fluxo-bola-item {
-  position: relative;
-  min-width: 0;
-}
-
-.fluxo-seg-item input,
-.fluxo-bola-item input {
-  /* cobre o botão inteiro: leitor de tela, acesso por voz e toque acham um alvo do tamanho certo */
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-}
-
-/* Formato: três botões numa linha em 360 px; com texto grande, um embaixo do outro. */
-.fluxo-seg {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr));
-  gap: 12px;
-}
-
-.fluxo-seg-item label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  min-height: 52px;
-  padding: 0 4px;
-  border: 2px solid var(--borda-campo);
-  border-radius: var(--raio);
-  background: var(--superficie);
-  color: var(--tinta);
-  font-weight: 700;
-  line-height: 1.2;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-/* Escolhido: contorno grosso, fundo cheio e o sinal ✓ (não depende só da cor). */
-.fluxo-seg-item input:checked + label {
-  border-color: var(--tinta);
-  background: var(--tinta);
-  color: var(--papel);
-}
-
-.fluxo-seg-item input:checked + label .fluxo-seg-nome::before {
-  content: '\2713\00a0';
-  content: '\2713\00a0' / ''; /* só visual: o radio já diz "selecionado" */
-}
-
-.fluxo-seg-item input:focus-visible + label,
-.fluxo-bola-item input:focus-visible + label {
-  outline: 3px solid var(--foco);
-  outline-offset: 3px;
-}
-
-.fluxo-formato-expl {
-  margin: 0.5rem 0 0;
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-}
-
-/* Cor: seis alvos de 48 px lado a lado até em 320 px (6 x 48 = 288 px); cada um tem a bolinha (40 px) e o nome curto
-   embaixo. Com letra grande, o alvo cresce com o texto e as bolinhas quebram em duas fileiras. */
-.fluxo-bolas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 0;
-  padding: 4px 0 2px;
-}
-
-.fluxo-bola-item {
-  display: flex;
-  flex: 1 0 max(48px, 2.6rem);
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-  min-height: 48px;
-}
-
-.fluxo-bola-item label {
-  position: relative;
-  display: block;
-  box-sizing: border-box;
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
-  margin: 4px 0 2px;
-  border-radius: 50%;
-}
-
-.fluxo-bola-nome {
-  max-width: 100%;
-  color: var(--tinta-suave);
-  font-size: 0.75rem;
-  line-height: 1.15;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.fluxo-bola-item input:checked ~ .fluxo-bola-nome {
-  color: var(--tinta);
-  font-weight: 700;
-}
-
-.fluxo-amostra {
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  height: 100%;
-  border: 3px solid var(--borda-campo);
-  border-radius: 50%;
-  forced-color-adjust: none; /* alto contraste do sistema: as cores da paleta continuam à vista */
-}
-
-/* Escolhida: anel grosso de tinta por fora e um selo com ✓ no centro (contraste em cor clara e escura). */
-.fluxo-bola-item input:checked + label {
-  outline: 3px solid var(--tinta);
-  outline-offset: 1px;
-}
-
-.fluxo-bola-item input:checked + label::after {
-  content: '\2713';
-  content: '\2713' / '';
-  position: absolute;
-  inset: 50% auto auto 50%;
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border: 2px solid var(--papel);
-  border-radius: 50%;
-  background: var(--tinta);
-  color: var(--papel);
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1;
-  transform: translate(-50%, -50%);
-}
-
-/* Escolhida e com foco de teclado: o anel de foco vai POR FORA do anel de tinta (A-07). Vence a regra da escolhida. */
-.fluxo-bola-item input:checked:focus-visible + label {
-  outline: 3px solid var(--tinta);
-  outline-offset: 1px;
-}
-
-.fluxo-bola-item input:checked:focus-visible + label::before {
-  content: '';
-  position: absolute;
-  inset: -7px;
-  border: 3px solid var(--foco);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
 /* ---------- passo 1: a dica e "Apagar o exemplo" (link discreto) na mesma linha ---------- */
 .fluxo-dica-linha {
   display: flex;
@@ -440,8 +218,7 @@
   font-size: 0.9375rem;
 }
 
-.fluxo-apagar,
-.fluxo-fazer-outro button {
+.fluxo-apagar {
   display: inline-flex;
   align-items: center;
   min-height: 48px;
@@ -457,67 +234,9 @@
   cursor: pointer;
 }
 
-.fluxo-apagar:focus-visible,
-.fluxo-fazer-outro button:focus-visible {
+.fluxo-apagar:focus-visible {
   outline: 3px solid var(--foco);
   outline-offset: 2px;
-}
-
-.fluxo-mais {
-  margin: 0 0 1rem;
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--superficie);
-}
-
-.fluxo-mais summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  min-height: 52px;
-  padding: 0 1rem;
-  font-weight: 700;
-  list-style: none;
-  cursor: pointer;
-}
-
-.fluxo-mais summary::-webkit-details-marker {
-  display: none;
-}
-
-/* Sinal visível de que abre e fecha: + fechado, − aberto (cor do texto: contraste alto). */
-.fluxo-mais summary::after {
-  content: '+';
-  content: '+' / ''; /* só visual: o resumo já diz se está aberto ou fechado */
-  flex: none;
-  color: var(--tinta);
-  font-size: 1.5rem;
-  line-height: 1;
-}
-
-.fluxo-mais[open] summary::after {
-  content: '\2212';
-  content: '\2212' / '';
-}
-
-.fluxo-mais-corpo {
-  padding: 0 1rem 0.5rem;
-}
-
-.fluxo-cor {
-  display: block;
-  width: 100%;
-  min-height: 52px;
-  padding: 4px;
-  border: 2px solid var(--borda-campo);
-  border-radius: var(--raio);
-  background: var(--superficie);
-}
-
-.fluxo-logo-nome {
-  margin: 0.5rem 0 0;
-  overflow-wrap: anywhere;
 }
 
 /* ---------- barra fixa embaixo ---------- */
@@ -591,61 +310,6 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
   scroll-padding-bottom: 0;
 }
 
-/* ---------- Pronto ---------- */
-/* Aviso do exemplo mais compacto: o "Mandar no WhatsApp" cabe na primeira tela. */
-.fluxo-nota-curta {
-  margin-bottom: 0.75rem;
-  padding: 0.375rem 0.625rem;
-  font-size: 0.9375rem;
-}
-
-.fluxo-pronto .fluxo-mandar {
-  margin-top: 0;
-}
-
-.fluxo-pronto .fluxo-moldura {
-  margin-top: 1rem;
-}
-
-.fluxo-saidas,
-.fluxo-acoes {
-  display: grid;
-  gap: 0;
-}
-
-.fluxo-saidas {
-  margin-top: 0.5rem;
-}
-
-.fluxo-saidas [hidden] {
-  display: none;
-}
-
-.fluxo-acoes {
-  margin-top: 1.25rem;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 12px;
-}
-
-.fluxo-acoes .botao {
-  width: 100%;
-}
-
-.fluxo-ata {
-  margin-top: 1.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--borda);
-}
-
-.fluxo-ata h2 {
-  margin: 1rem 0 0;
-  font-size: 1.25rem;
-}
-
-.fluxo-ata .campo-dica {
-  margin-top: 0.5rem;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .fluxo *,
   .fluxo *::before,
@@ -653,40 +317,6 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
     transition: none !important;
     animation: none !important;
     scroll-behavior: auto !important;
-  }
-}
-
-/* ---------- impressão: só o cartaz (a folha A4 é posta por pronto.ts na hora de imprimir) ---------- */
-.fluxo-cartaz-impressao {
-  display: none;
-}
-
-@media print {
-  body.fluxo-imprimindo > *:not(#app) {
-    display: none !important;
-  }
-
-  body.fluxo-imprimindo .fluxo > *:not(.fluxo-cartaz-impressao) {
-    display: none !important;
-  }
-
-  body.fluxo-imprimindo #app,
-  body.fluxo-imprimindo .fluxo {
-    padding: 0;
-    margin: 0;
-    max-width: none;
-    min-height: 0;
-  }
-
-  body.fluxo-imprimindo .fluxo-cartaz-impressao {
-    display: block;
-  }
-
-  body.fluxo-imprimindo .fluxo-cartaz-impressao img {
-    display: block;
-    width: 210mm;
-    height: 297mm;
-    object-fit: contain;
   }
 }
 
@@ -717,11 +347,6 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
   min-height: var(--toque);
 }
 
-/* Pronto: o estado do link fica logo abaixo do "Mandar no WhatsApp", com um respiro. */
-.fluxo-pronto .fluxo-estado-neutro:not(:empty) {
-  margin-top: 0.5rem;
-}
-
 /* Dia que já passou (C-09): avisa, não bloqueia. */
 .fluxo-dia-passado {
   margin-top: 0.25rem;
@@ -742,23 +367,4 @@ html.fluxo-faixas-soltas:has(.fluxo-barra) {
 
 .fluxo-pauta-letras:empty {
   display: none;
-}
-
-/* Pronto: "Fazer outro" fica no fim, longe de "Mudar algo", com a dica acima. */
-.fluxo-fazer-outro {
-  margin-top: 3rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--borda);
-}
-
-.fluxo-fazer-outro .campo-dica {
-  margin: 0 0 0.25rem;
-}
-
-/* Pronto: nota sobre o corte do cartaz. Igual a uma dica de campo. */
-.fluxo-nota-corte {
-  margin: 0.5rem 0 0;
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-  line-height: 1.4;
 }

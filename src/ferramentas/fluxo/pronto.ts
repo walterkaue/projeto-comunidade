@@ -3,6 +3,7 @@
 // (baixar, copiar, imprimir cartaz), "Mudar algo", "Fazer outro" e, na reunião, a ponte para a ata.
 // Nada daqui vai para link nem armazenamento; o único link com dados é o do evento (link.ts).
 
+import './pronto.css';
 import { avisar } from '../../comum/aviso';
 import { baixarImagem, canvasParaArquivo, compartilhar } from '../../comum/compartilhar';
 import { esc } from '../../comum/html';
@@ -39,10 +40,8 @@ import {
   exemploNoLink,
   fraseDaConfirmacao,
   lembreteDoDia,
-  NOTA_DO_LINK,
   perguntarDoOrgaoNoPronto,
   PERGUNTA_DO_ORGAO,
-  PORTAS,
   temAgenda,
   textoParaMandar,
   type DadosDoFluxo,
@@ -52,6 +51,7 @@ import { esquecerTudo } from './memoria';
 import { irAoInicio, mudarAlgo } from './navegacao';
 import { ataComAPauta, haPontosComTexto, PERGUNTA_DA_TROCA } from './ponte';
 import { desenharCardEm, esperarFontes, medirFaixasFixas } from './previa';
+import { topoDoPronto } from './topo';
 
 export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const agenda = temAgenda(d.tipo);
@@ -62,8 +62,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const lembrete = lembreteDoDia(d);
 
   raiz.innerHTML = `<main class="tela fluxo fluxo-pronto">
-    <h1 tabindex="-1"><span class="fluxo-verbo">${esc(PORTAS[d.tipo].verbo)}</span><span class="fluxo-so-leitor">: </span><span class="fluxo-pronto-titulo">Pronto!</span></h1>
-    ${d.origem === 'link' ? `<p class="fluxo-nota">${esc(NOTA_DO_LINK)}</p>` : ''}
+    ${topoDoPronto(d)}
     ${aviso ? `<p class="fluxo-nota fluxo-nota-curta" id="fluxo-aviso-exemplo">${esc(aviso)}</p>` : ''}
 
     ${lembrete ? `<p class="fluxo-nota fluxo-nota-curta" id="fluxo-lembrete-dia">${esc(lembrete)}</p>` : ''}
