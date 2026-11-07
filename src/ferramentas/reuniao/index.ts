@@ -6,6 +6,7 @@ import './reuniao.css';
 import { avisar } from '../../comum/aviso';
 import { ATRIBUTOS_SEM_CORRETOR, campoAreaDeTexto, campoTexto, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
+import { icone } from '../../comum/icones';
 import { linkPara } from '../../comum/rotas';
 import type { Tela } from '../../comum/tela';
 import {
@@ -20,6 +21,7 @@ import {
   type Ata,
 } from './ata';
 import { moverItem, tirarItem } from './convocacao';
+import { exemploDeOrganizacao, sorteioDoExemplo } from './exemploOrg';
 import { apagarAta, apagarConvocacao, ligarAvisoDeSaidaDaAta, rascunho } from './rascunho';
 
 type NomeDaLista = 'pontos' | 'encaminhamentos';
@@ -30,13 +32,20 @@ export const tela: Tela = (raiz) => {
   ligarAvisoDeSaidaDaAta();
   const base = document.createElement('main');
   base.className = 'tela reuniao-tela';
+  base.dataset.porta = 'reuniao';
   // Corretor ortográfico desligado na tela toda (os campos também levam o atributo): o corretor "avançado"
   // do Chrome e o do Edge mandam o texto para fora, e a lista de presença não pode sair do aparelho.
   base.spellcheck = false;
   raiz.replaceChildren(base);
 
-  base.innerHTML = `<h1 tabindex="-1">Depois da reunião: a ata</h1>
-    <p class="reuniao-intro">Escreva o que foi decidido. A ata fica só neste aparelho.</p>
+  // Exemplo cinza do campo Organização: rodízio dos exemplos, fixo enquanto a tela está aberta.
+  const exemploOrg = exemploDeOrganizacao(sorteioDoExemplo());
+
+  // O h1 tem as duas partes juntas: o leitor de tela ouve "Depois da reunião: a ata" (o texto de antes; a maiúscula de "A ata" vem do CSS, ::first-letter). O aria-label fixa o nome: sem ele, o Chrome lia "reunião : a ata" por causa do span escondido.
+  base.innerHTML = `<header class="reuniao-topo">
+      <h1 tabindex="-1" aria-label="Depois da reunião: a ata"><span class="ata-antes"><span class="icone-quadro icone-quadro-p">${icone('ata', { tamanho: 18 })}</span> <span>Depois da reunião<span class="so-leitor">:</span></span></span> <span class="ata-titulo-h1">a ata</span></h1>
+      <p class="reuniao-intro">Escreva o que foi decidido. A ata fica só neste aparelho.</p>
+    </header>
     <div id="painel"></div>
     <div id="ata-saida"></div>
     <a class="botao botao-sec" href="${linkPara('inicio')}">Voltar ao início</a>`;
@@ -238,13 +247,13 @@ export const tela: Tela = (raiz) => {
     const a = rascunho.ata;
     return `<section aria-labelledby="titulo-ata">
       <h2 id="titulo-ata">Ata</h2>
-      <div class="reuniao-aviso" role="note">
-        <p><strong>O rascunho some ao fechar.</strong> A ata fica só na memória desta aba. Ao terminar, salve o PDF ou copie o texto.</p>
-        <p>A lista de presença pode mostrar a que organização cada pessoa pertence. Ela fica só neste aparelho. Mande o PDF só para quem precisa dele.</p>
-        <p>O corretor ortográfico do navegador fica desligado aqui. O teclado do celular ainda pode aprender as palavras digitadas.</p>
+      <div class="cartao reuniao-avisos" role="note">
+        <div class="reuniao-aviso">${icone('relogio', { classe: 'reuniao-aviso-icone' })}<p><strong>O rascunho some ao fechar.</strong> A ata fica só na memória desta aba. Ao terminar, salve o PDF ou copie o texto.</p></div>
+        <div class="reuniao-aviso">${icone('pessoas', { classe: 'reuniao-aviso-icone' })}<p>A lista de presença pode mostrar a que organização cada pessoa pertence. Ela fica só neste aparelho. Mande o PDF só para quem precisa dele.</p></div>
+        <div class="reuniao-aviso">${icone('cadeado', { classe: 'reuniao-aviso-icone' })}<p>O corretor ortográfico do navegador fica desligado aqui. O teclado do celular ainda pode aprender as palavras digitadas.</p></div>
       </div>
-      <p class="reuniao-nota">A ata é um modelo. Ela não substitui o que o estatuto da organização exige. Confira no estatuto quem convoca, o quórum e quem assina.</p>
-      ${campoTexto({ id: 'ata-organizacao', rotulo: 'Organização', obrigatorio: true, valor: a.organizacao, maximo: 80, autocomplete: 'off', semCorretor: true })}
+      <p class="reuniao-nota reuniao-estatuto">${icone('livro', { classe: 'reuniao-aviso-icone' })}<span>A ata é um modelo. Ela não substitui o que o estatuto da organização exige. Confira no estatuto quem convoca, o quórum e quem assina.</span></p>
+      ${campoTexto({ id: 'ata-organizacao', rotulo: 'Organização', obrigatorio: true, exemplo: exemploOrg, valor: a.organizacao, maximo: 80, autocomplete: 'off', semCorretor: true })}
       ${campoTexto({ id: 'ata-data', rotulo: 'Data', tipo: 'date', obrigatorio: true, valor: a.data })}
       ${campoTexto({ id: 'ata-local', rotulo: 'Local', valor: a.local, maximo: 120, autocomplete: 'off', semCorretor: true })}
       ${campoTexto({ id: 'ata-inicio', rotulo: 'Hora de início', tipo: 'time', valor: a.inicio })}

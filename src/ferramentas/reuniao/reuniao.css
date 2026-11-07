@@ -3,7 +3,42 @@
 .reuniao-tela { overflow-wrap: anywhere; }
 .reuniao-tela h2, .reuniao-tela h3 { font-size: 1.375rem; line-height: 1.25; margin: 1.25rem 0 0.5rem; }
 .reuniao-tela h3 { font-size: 1.125rem; margin: 1.5rem 0 0.5rem; }
-.reuniao-intro { margin: 0 0 1rem; }
+.reuniao-intro { margin: 0; }
+
+/* Topo da tela: bloco na cor clara da porta (Petróleo), cantos de baixo de 24 px, sangrando até a borda da tela. */
+.reuniao-topo {
+  margin: -1.5rem -1rem 1.25rem;
+  padding: 1.25rem 1rem 1.25rem;
+  background: var(--cor-clara);
+  color: var(--tinta);
+  border-radius: 0 0 24px 24px;
+}
+.reuniao-topo h1 { margin: 0 0 0.5rem; }
+.ata-antes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--cor);
+  letter-spacing: 0;
+}
+.ata-titulo-h1 { display: block; }
+/* Na tela, "A ata"; no texto do h1 (leitor de tela, título da aba, outros testes), "Depois da reunião: a ata" como antes. */
+.ata-titulo-h1::first-letter { text-transform: uppercase; }
+.reuniao-tela .so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 .reuniao-itens { list-style: none; margin: 0 0 0.5rem; padding: 0; display: grid; gap: 0.75rem; }
 .item { display: grid; gap: 6px; padding: 0.75rem; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--superficie); min-width: 0; }
@@ -15,15 +50,16 @@
 .reuniao-botoes { display: grid; gap: 0.5rem; margin: 0.75rem 0; }
 .reuniao-botoes .botao { margin: 0; }
 
-.reuniao-aviso {
-  margin: 0.5rem 0 1rem;
-  padding: 0.75rem 1rem;
-  border: 2px solid var(--destaque);
-  border-radius: var(--raio);
-}
-.reuniao-aviso p { margin: 0 0 0.5rem; }
-.reuniao-aviso p:last-child { margin: 0; }
+/* Os três avisos: um cartão, uma linha para cada, com o ícone na cor da porta. */
+.reuniao-avisos { margin: 0.5rem 0 1rem; padding: 0.25rem 1rem; display: grid; }
+.reuniao-aviso { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0; min-width: 0; }
+.reuniao-aviso + .reuniao-aviso { border-top: 1px solid var(--borda); }
+.reuniao-aviso p { margin: 0; min-width: 0; }
+.reuniao-aviso-icone { color: var(--cor); margin-top: 0.125rem; }
 .reuniao-nota { color: var(--tinta-suave); font-size: 0.9375rem; margin: 0.5rem 0 1rem; }
+.reuniao-estatuto { display: flex; align-items: flex-start; gap: 0.5rem; }
+.reuniao-estatuto .reuniao-aviso-icone { color: var(--tinta-suave); }
+.reuniao-estatuto span { min-width: 0; }
 
 .reuniao-saida:empty { display: none; }
 
@@ -55,6 +91,11 @@
 .ata-folha table { width: 100%; border-collapse: collapse; }
 .ata-folha th, .ata-folha td { border: 1px solid #111; padding: 0.4rem; text-align: left; vertical-align: top; }
 .ata-aviso { margin-top: 1.5rem !important; font-size: 0.875rem; color: #333; }
+
+/* ---------- alto contraste ---------- */
+@media (forced-colors: active) {
+  .reuniao-topo, .reuniao-avisos { border: 1px solid CanvasText; }
+}
 
 /* ---------- impressão: só a ata ---------- */
 @media print {
