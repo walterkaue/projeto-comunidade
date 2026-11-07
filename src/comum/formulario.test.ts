@@ -21,9 +21,16 @@ describe('campoTexto', () => {
     expect(h).toContain('<label class="campo-rotulo" for="nome">Nome da organização');
     expect(h).toContain('id="nome"');
   });
-  it('marca obrigatório em texto e em aria-required', () => {
-    expect(h).toContain('(obrigatório)');
+  it('obrigatório: só aria-required, sem "(obrigatório)" nem "(opcional)"', () => {
+    expect(h).not.toContain('obrigatório');
+    expect(h).not.toContain('(opcional)');
     expect(h).toContain('aria-required="true"');
+  });
+  it('não obrigatório leva "(opcional)" no rótulo e nunca "(obrigatório)"', () => {
+    const s = campoTexto({ id: 'o', rotulo: 'Outro' });
+    expect(s).toContain('Outro <span class="campo-opcional">(opcional)</span></label>');
+    expect(s).not.toContain('obrigatório');
+    expect(s).not.toContain('aria-required');
   });
   it('liga dica e erro por aria-describedby', () => {
     expect(h).toContain('aria-describedby="nome-dica nome-contador nome-erro"');
@@ -36,8 +43,19 @@ describe('campoTexto', () => {
     expect(h).toContain('autocomplete="organization"');
     expect(h).toContain('type="text"');
   });
-  it('não usa placeholder', () => {
+  it('sem exemplo, sem placeholder', () => {
     expect(h).not.toContain('placeholder');
+  });
+  it('exemplo vira placeholder "Ex.: ..." e o rótulo continua no label', () => {
+    const s = campoTexto({ id: 'n', rotulo: 'Nome', exemplo: 'Associação de Moradores' });
+    expect(s).toContain('placeholder="Ex.: Associação de Moradores"');
+    expect(s).toContain('<label class="campo-rotulo" for="n">Nome');
+  });
+  it('não repete "Ex.:" e escapa o exemplo', () => {
+    expect(campoTexto({ id: 'n', rotulo: 'N', exemplo: 'Ex.: Mutirão' })).toContain('placeholder="Ex.: Mutirão"');
+    const s = campoTexto({ id: 'n', rotulo: 'N', exemplo: ATAQUE });
+    expect(s).not.toContain('<script>');
+    expect(s).toContain('placeholder="Ex.: &quot;&gt;&lt;script&gt;');
   });
   it('sem dica, descreve só pelo erro; sem obrigatório, não marca', () => {
     const s = campoTexto({ id: 'x', rotulo: 'X', tipo: 'date' });
@@ -63,6 +81,19 @@ describe('campoAreaDeTexto', () => {
     expect(h).toContain('aria-describedby="desc-dica desc-erro"');
     expect(h).not.toContain('<script>');
     expect(h).toContain('&lt;script&gt;');
+  });
+  it('exemplo com várias linhas: só a primeira leva "Ex.:"', () => {
+    const h = campoAreaDeTexto({ id: 'd', rotulo: 'D', exemplo: 'Primeira\nSegunda\nTerceira' });
+    expect(h).toContain('placeholder="Ex.: Primeira\nSegunda\nTerceira"');
+    expect(h.match(/Ex\.:/g)).toHaveLength(1);
+  });
+  it('sem exemplo, sem placeholder; "(opcional)" quando não obrigatório', () => {
+    const h = campoAreaDeTexto({ id: 'd', rotulo: 'D' });
+    expect(h).not.toContain('placeholder');
+    expect(h).toContain('<span class="campo-opcional">(opcional)</span>');
+  });
+  it('obrigatório não leva "(opcional)"', () => {
+    expect(campoAreaDeTexto({ id: 'd', rotulo: 'D', obrigatorio: true })).not.toContain('(opcional)');
   });
 });
 
@@ -94,6 +125,12 @@ describe('campoEscolha', () => {
   it('escapa as opções', () => {
     expect(h).not.toContain('<script>');
   });
+  it('"(opcional)" só quando não é obrigatório', () => {
+    expect(h).toContain('(opcional)');
+    const o = campoEscolha({ id: 't', rotulo: 'T', obrigatorio: true, opcoes: [] });
+    expect(o).not.toContain('(opcional)');
+    expect(o).not.toContain('obrigatório');
+  });
 });
 
 describe('grupoDeOpcoes', () => {
@@ -111,13 +148,18 @@ describe('grupoDeOpcoes', () => {
   it('fieldset com legend e radios com label for', () => {
     expect(h).toContain('<fieldset');
     expect(h).toContain('<legend class="campo-rotulo">Turno');
-    expect(h).toContain('(obrigatório)');
+    expect(h).not.toContain('(obrigatório)');
+    expect(h).not.toContain('(opcional)');
     expect(h).toContain('<label for="turno-0">Dia</label>');
     expect(h).toContain('<label for="turno-1">Noite</label>');
     expect(h).toContain('type="radio" id="turno-1" name="turno" value="noite" checked');
   });
   it('liga dica e erro no fieldset', () => {
     expect(h).toContain('aria-describedby="turno-dica turno-erro"');
+  });
+  it('sem obrigatório, a legenda leva "(opcional)"', () => {
+    const s = grupoDeOpcoes({ id: 'g', rotulo: 'G', opcoes: [] });
+    expect(s).toContain('<legend class="campo-rotulo">G <span class="campo-opcional">(opcional)</span></legend>');
   });
   it('escapa valores', () => {
     const s = grupoDeOpcoes({ id: 'g', rotulo: 'g', valor: ATAQUE, opcoes: [{ valor: ATAQUE, texto: ATAQUE }] });
@@ -129,6 +171,7 @@ describe('grupoDeOpcoes', () => {
 class El {
   atributos = new Map<string, string>();
   textContent = '';
+  html = '';
   hidden = true;
   focou = false;
   constructor(
@@ -136,6 +179,14 @@ class El {
     public tagName = 'INPUT',
     private filhos: El[] = [],
   ) {}
+  // Como o DOM: textContent passa a ser só o texto do HTML (sem tags, sem o SVG).
+  set innerHTML(v: string) {
+    this.html = v;
+    this.textContent = v.replace(/<[^>]*>/g, '');
+  }
+  get innerHTML() {
+    return this.html;
+  }
   setAttribute(k: string, v: string) {
     this.atributos.set(k, v);
   }
@@ -178,6 +229,11 @@ describe('mostrarErro / limparErro', () => {
     expect(b.atributos.get('aria-invalid')).toBe('true');
     expect(bErro.textContent).toBe('Erro: Falta o nome.');
     expect(bErro.hidden).toBe(false);
+    // ícone antes do texto, decorativo
+    expect(bErro.innerHTML.startsWith('<svg ')).toBe(true);
+    expect(bErro.innerHTML).toContain('aria-hidden="true"');
+    expect(bErro.innerHTML).toContain('campo-erro-icone');
+    expect(bErro.innerHTML.indexOf('</svg>')).toBeLessThan(bErro.innerHTML.indexOf('<span>'));
     // `a` vem antes na página: é o que recebe o foco por último
     expect(a.focou).toBe(true);
   });
@@ -190,6 +246,14 @@ describe('mostrarErro / limparErro', () => {
     expect(radio.atributos.get('aria-invalid')).toBe('true');
     expect(radio.focou).toBe(true);
     expect(grupo.atributos.has('aria-invalid')).toBe(false);
+  });
+
+  it('escapa a mensagem de erro', () => {
+    const a = new El('a');
+    const aErro = new El('a-erro', 'P');
+    mostrarErro(formFalso([a, aErro]), 'a', ATAQUE);
+    expect(aErro.innerHTML).not.toContain('<script>');
+    expect(aErro.innerHTML).toContain('&lt;script&gt;');
   });
 
   it('limparErro desfaz', () => {

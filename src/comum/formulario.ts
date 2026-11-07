@@ -1,9 +1,11 @@
 // Componentes de formulário acessíveis. Cada um devolve uma string de HTML (o projeto usa innerHTML + esc).
-// Regras: sempre <label for>; dica e erro ligados por aria-describedby; obrigatório escrito em texto
-// ("(obrigatório)"), não só por cor; sem placeholder no lugar de rótulo; todo valor passa por esc.
+// Regras: sempre <label for>, sempre visível; dica e erro ligados por aria-describedby; o que não é obrigatório
+// vem escrito em texto ("(opcional)"), e o obrigatório leva aria-required; o placeholder é só um exemplo
+// ("Ex.: ..."), nunca o rótulo; todo valor passa por esc.
 // Tamanho de toque e fonte de 16 px ficam em componentes.css. O erro nunca depende só de cor (texto "Erro:" + borda grossa).
 
 import { esc } from './html';
+import { icone } from './icones';
 import { letras } from './texto';
 
 export type TipoDeCampo = 'text' | 'date' | 'time' | 'url' | 'tel' | 'email';
@@ -15,6 +17,8 @@ interface Base {
   valor?: string;
   obrigatorio?: boolean;
   autocomplete?: string;
+  /** Exemplo mostrado como placeholder ("Ex.: ..."). Só nos campos de texto; nunca substitui o rótulo. */
+  exemplo?: string;
   /**
    * Desliga o corretor ortográfico do navegador. O corretor "avançado" do Chrome e o do Edge mandam o texto
    * digitado para o Google ou a Microsoft: use em campo com dado que não pode sair do aparelho (ata, presença).
@@ -55,9 +59,20 @@ const idDoErro = (id: string) => `${id}-erro`;
 const idDoContador = (id: string) => `${id}-contador`;
 const idDoAnuncio = (id: string) => `${id}-anuncio`;
 
+const OPCIONAL = ' <span class="campo-opcional">(opcional)</span>';
+
 function rotuloHtml(b: Pick<Base, 'id' | 'rotulo' | 'obrigatorio'>): string {
-  const obrig = b.obrigatorio ? ' <span class="campo-obrig">(obrigatório)</span>' : '';
-  return `<label class="campo-rotulo" for="${esc(b.id)}">${esc(b.rotulo)}${obrig}</label>`;
+  const opc = b.obrigatorio ? '' : OPCIONAL;
+  return `<label class="campo-rotulo" for="${esc(b.id)}">${esc(b.rotulo)}${opc}</label>`;
+}
+
+/** placeholder="Ex.: ..." (sem repetir "Ex.:"; na área de texto, só a primeira linha leva o "Ex.:"). */
+function placeholderHtml(exemplo: string | undefined): string {
+  const e = exemplo?.trim();
+  if (!e) return '';
+  const linhas = e.split(/\r?\n/);
+  const primeira = /^Ex\.:/.test(linhas[0] ?? '') ? linhas[0]! : `Ex.: ${linhas[0]}`;
+  return ` placeholder="${esc([primeira, ...linhas.slice(1)].join('\n'))}"`;
 }
 
 function dicaHtml(b: Pick<Base, 'id' | 'dica'>): string {
@@ -261,7 +276,7 @@ export function campoTexto(campo: CampoTexto): string {
   return `<div class="campo">
   ${rotuloHtml(c)}
   ${dicaHtml(c)}
-  <input class="campo-entrada" type="${esc(tipo)}" id="${esc(c.id)}" name="${esc(c.id)}" value="${esc(valor)}"${extra}${comuns(c, !!contador)}>${contador}
+  <input class="campo-entrada" type="${esc(tipo)}" id="${esc(c.id)}" name="${esc(c.id)}" value="${esc(valor)}"${placeholderHtml(c.exemplo)}${extra}${comuns(c, !!contador)}>${contador}
   ${erroHtml(c.id)}
 </div>`;
 }
@@ -271,7 +286,7 @@ export function campoAreaDeTexto(campo: CampoAreaDeTexto): string {
   return `<div class="campo">
   ${rotuloHtml(c)}
   ${dicaHtml(c)}
-  <textarea class="campo-entrada campo-area" id="${esc(c.id)}" name="${esc(c.id)}" rows="${esc(String(c.linhas ?? 4))}"${extra}${comuns(c, !!contador)}>${esc(valor)}</textarea>${contador}
+  <textarea class="campo-entrada campo-area" id="${esc(c.id)}" name="${esc(c.id)}" rows="${esc(String(c.linhas ?? 4))}"${placeholderHtml(c.exemplo)}${extra}${comuns(c, !!contador)}>${esc(valor)}</textarea>${contador}
   ${erroHtml(c.id)}
 </div>`;
 }
@@ -291,7 +306,7 @@ export function campoEscolha(c: CampoEscolha): string {
 /** Radios num fieldset com legend. O `id` é do fieldset; os radios são `${id}-0`, `${id}-1`... */
 export function grupoDeOpcoes(g: GrupoDeOpcoes): string {
   const nome = g.nome ?? g.id;
-  const obrig = g.obrigatorio ? ' <span class="campo-obrig">(obrigatório)</span>' : '';
+  const opc = g.obrigatorio ? '' : OPCIONAL;
   const radios = g.opcoes
     .map((o, i) => {
       const rid = `${g.id}-${i}`;
@@ -302,7 +317,7 @@ export function grupoDeOpcoes(g: GrupoDeOpcoes): string {
     })
     .join('\n    ');
   return `<fieldset class="campo campo-grupo" id="${esc(g.id)}"${descritoPor(g)}>
-  <legend class="campo-rotulo">${esc(g.rotulo)}${obrig}</legend>
+  <legend class="campo-rotulo">${esc(g.rotulo)}${opc}</legend>
   ${dicaHtml(g)}
   ${radios}
   ${erroHtml(g.id)}
@@ -328,7 +343,7 @@ export function mostrarErro(form: ParentNode, id: string, mensagem: string): voi
   if (!el) return;
   alvoDoErro(el).setAttribute('aria-invalid', 'true');
   if (erro) {
-    erro.textContent = `Erro: ${mensagem}`;
+    erro.innerHTML = `${icone('erro', { tamanho: 20, classe: 'campo-erro-icone' })}<span>${esc(`Erro: ${mensagem}`)}</span>`;
     erro.hidden = false;
   }
   const primeiro = form.querySelector<HTMLElement>('[aria-invalid="true"]');
