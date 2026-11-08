@@ -45,9 +45,9 @@ const RELIGIOSO: Record<ModeloDeCard, readonly [Linha, Linha, Linha]> = {
     ['Encontro do centro adiado', 'O encontro será na semana seguinte, no mesmo horário.', ''],
   ],
   resultado: [
-    ['Alcançamos a meta da campanha de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
-    ['Alcançamos a meta da campanha de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
-    ['Alcançamos a meta da campanha de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
+    ['Alcançamos a meta da arrecadação de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
+    ['Alcançamos a meta da arrecadação de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
+    ['Alcançamos a meta da arrecadação de alimentos', 'Foram arrecadadas mais de 300 cestas. Gratidão a quem doou.', ''],
   ],
   agradecimento: [
     ['Gratidão a quem preparou o encontro', 'Cada mão fez diferença: cozinha, som, limpeza e acolhida.', ''],
