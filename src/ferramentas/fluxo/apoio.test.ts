@@ -6,6 +6,8 @@ import {
   criarAgendador,
   enderecoDaPaginaDoEvento,
   escalaDaMiniatura,
+  ehFalha,
+  nomeDaMiniatura,
   nomeDaPrevia,
   PREVIA_COM_EXEMPLO,
   esperaDoRedesenho,
@@ -219,5 +221,16 @@ describe('nome da prévia com exemplo', () => {
   it('avisa antes da descrição só quando falta algo', () => {
     expect(nomeDaPrevia('Imagem de teste.', true)).toBe(`${PREVIA_COM_EXEMPLO} Imagem de teste.`);
     expect(nomeDaPrevia('Imagem de teste.', false)).toBe('Imagem de teste.');
+    expect(nomeDaMiniatura(true)).toBe('Prévia da imagem, com exemplo no que falta');
+    expect(nomeDaMiniatura(false)).toBe('Prévia da imagem');
+  });
+});
+
+describe('ehFalha', () => {
+  it('só "Não deu…" é falha; instruções não', () => {
+    expect(ehFalha('Não deu para gerar a imagem. Tente de novo.')).toBe(true);
+    expect(ehFalha('Não deu para copiar o texto. Use Mandar no WhatsApp.')).toBe(true);
+    expect(ehFalha('Abrindo a impressão. Para guardar em PDF, escolha “Salvar como PDF”.')).toBe(false);
+    expect(ehFalha('')).toBe(false);
   });
 });

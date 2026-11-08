@@ -29,6 +29,7 @@ import {
   precisaConfirmar,
   soFaltaARede,
   temMenuDeCompartilhar,
+  ehFalha,
 } from './apoio';
 import {
   fraseDoLinkNoPronto,
@@ -52,7 +53,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const agenda = temAgenda(d.tipo);
   const nivel = nivelDoAparelho();
 
-  raiz.innerHTML = `<main class="tela fluxo fluxo-pronto" data-porta="${d.tipo}">
+  raiz.innerHTML = `<main class="tela fluxo fluxo-pronto" data-porta="${esc(d.tipo)}">
     ${topoDoPronto(d)}
 
     <button type="button" class="botao botao-alto fluxo-mandar" id="fluxo-mandar" aria-describedby="fluxo-mandar-dica">${icone('enviar')}Mandar no WhatsApp</button>
@@ -122,8 +123,10 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   let redeVoltou = false;
 
   /** Mensagem importante: na tela e também no aviso falado. */
-  function dizer(mensagem: string): void {
-    estado.textContent = mensagem;
+  function dizer(mensagem: string, falha = ehFalha(mensagem)): void {
+    // Falha: cor de erro e o ícone antes (nunca só a cor). Instrução (abrir a impressão, baixar…): cor neutra.
+    estado.classList.toggle('fluxo-estado-neutro', !falha);
+    estado.innerHTML = `${falha ? icone('erro', { tamanho: 18, classe: 'fluxo-estado-icone' }) : ''}${esc(mensagem)}`;
     avisar(mensagem);
   }
   /** Instrução de como continuar depois de um toque: fica escrita na tela até a próxima ação. */
@@ -246,7 +249,7 @@ export function montarPronto(raiz: HTMLElement, d: DadosDoFluxo): () => void {
     arquivoPronto = ap;
     ap.catch((e) => {
       if (vigente() && !(e instanceof Error && e.message === 'fechada')) {
-        dizer(e instanceof Error ? e.message : 'Não deu para gerar a imagem.');
+        dizer(e instanceof Error ? e.message : 'Não deu para gerar a imagem.', true);
       }
     });
     lp.then((r) => {

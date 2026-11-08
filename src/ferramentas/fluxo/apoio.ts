@@ -135,5 +135,11 @@ export function criarAgendador(espera: number, acao: () => void): Agendador {
 /** Começo do nome da prévia dos passos 1 e 2 quando ela usa o exemplo em algum campo vazio. */
 export const PREVIA_COM_EXEMPLO = 'Prévia com exemplo nos campos vazios.';
 
+/** Nome curto da miniatura dos passos 1 e 2; a descrição inteira fica só no canvas do diálogo "Ver a prévia maior". */
+export const nomeDaMiniatura = (usaExemplo: boolean): string =>
+  usaExemplo ? 'Prévia da imagem, com exemplo no que falta' : 'Prévia da imagem';
 /** Nome (aria-label) da prévia: com exemplo no que falta (usaExemplo), avisa antes de descrever, para não parecer dado da pessoa. */
 export const nomeDaPrevia = (descricao: string, usaExemplo: boolean): string => (usaExemplo ? `${PREVIA_COM_EXEMPLO} ${descricao}` : descricao);
+
+/** A mensagem do estado do Pronto é uma falha ("Não deu…") e não uma instrução? Falha leva a cor de erro e o ícone. */
+export const ehFalha = (mensagem: string): boolean => /^Não deu(\s|$)/.test(mensagem.trim());

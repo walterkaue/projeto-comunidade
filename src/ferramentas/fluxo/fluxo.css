@@ -26,6 +26,13 @@
   border: 0;
 }
 
+/* Pontuação só para leitor de tela, colada ao texto vizinho (font-size 0 fica inline, sem espaço antes dela; o
+   .fluxo-so-leitor é absoluto e o leitor de tela lê "reunião . Passo"). */
+.fluxo-pausa {
+  font-size: 0;
+  line-height: 0;
+}
+
 /* ---------- topo do passo ---------- */
 /* No código: o bloco do título e, depois dele, a linha da prévia. O envoltório some do desenho (display: contents)
    para a linha da prévia poder ficar fixa na tela inteira; nos passos 1 e 2 a tela vira uma coluna e a linha da
@@ -171,6 +178,17 @@
   text-align: start;
 }
 
+/* cópia provisória: pedido em docs/pedidos-comum.md */
+/* O campo de data nativo tem largura mínima própria: com letra a 200% em 320 px não pode passar da tela (WCAG 1.4.10). */
+.fluxo-form .campo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.fluxo-form .campo-entrada {
+  min-width: 0;
+  max-width: 100%;
+}
+
 /* ---------- linha da prévia (passos 1 e 2): fixa no topo ---------- */
 .fluxo-mini {
   position: sticky;
@@ -178,6 +196,7 @@
   z-index: 5;
   order: -1;
   display: flex;
+  flex-wrap: wrap; /* texto a 200%: "Ver maior" desce para a própria linha em vez de ficar sobre o texto (WCAG 1.4.4) */
   align-items: center;
   gap: 8px;
   min-height: 4rem;
@@ -199,14 +218,14 @@
 
 /* O texto fica no meio: "Assim vai ficar a imagem" e, embaixo, "(com exemplo no que falta)". */
 .fluxo-mini-lado {
-  flex: 1 1 0;
+  flex: 1 1 7rem;
   min-width: 0;
 }
 
 .fluxo-mini-texto,
 .fluxo-mini-exemplo {
   margin: 0;
-  font-size: 0.8125rem;
+  font-size: 0.8125rem; /* 14 px não cabe numa linha em 360 px (o texto tem 161 px) */
   line-height: 1.2;
 }
 

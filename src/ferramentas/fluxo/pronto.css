@@ -80,6 +80,13 @@
   color: var(--tinta-suave);
 }
 
+/* Falha: o ícone vem antes do texto (a falha nunca se mostra só pela cor). */
+.fluxo-estado-icone {
+  display: inline-block;
+  margin-inline-end: 6px;
+  vertical-align: -3px;
+}
+
 /* Os radios de formato e de cor cobrem a opção inteira, invisíveis (continuam no teclado e no leitor de tela);
    o label é o que se vê. */
 .fluxo-seg-item,
@@ -244,7 +251,7 @@
 .fluxo-bola-item input:checked:focus-visible + label::before {
   content: '';
   position: absolute;
-  inset: -11px;
+  inset: -9px -9px -5px;
   border: 3px solid var(--foco);
   border-radius: 50%;
   pointer-events: none;

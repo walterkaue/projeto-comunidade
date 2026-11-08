@@ -6,7 +6,7 @@ import { nivelDoAparelho } from '../../comum/nivel';
 import { desenharCard, FAMILIA, tamanhoDoCanvas } from '../cards/desenho';
 import { escalaDoFormato, type Formato } from '../cards/modelos';
 import { camposDoCard, comExemplo, faltaAlgo, type DadosDoFluxo } from './estado';
-import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, nomeDaPrevia, paletaDoFluxo } from './apoio';
+import { criarAgendador, descricaoDaImagem, escalaDaMiniatura, esperaDoRedesenho, nomeDaMiniatura, nomeDaPrevia, paletaDoFluxo } from './apoio';
 import { logoAtual } from './memoria';
 import { abreTeclado, rolagemParaOCampo, tecladoAberto } from './teclado';
 
@@ -57,9 +57,6 @@ export async function desenharCardEm(
 }
 
 // ---------- miniatura dos passos 1 e 2 ----------
-
-/** Botão "Ver a prévia maior" (abre o diálogo de htmlDoDialogo). */
-export const BOTAO_VER_MAIOR = '<button type="button" class="botao botao-sec fluxo-ver" id="fluxo-ver-maior">Ver a prévia maior</button>';
 
 /** Linha da miniatura enquanto ela usa o exemplo em algum campo vazio (faltaAlgo). */
 export const TEXTO_COM_EXEMPLO = '(com exemplo no que falta)';
@@ -143,7 +140,7 @@ export function ligarMiniatura(raiz: HTMLElement, obter: () => DadosDoFluxo): Mi
     const d = comExemplo(obter());
     try {
       const r = await desenharCardEm(canvas, d, d.formato, escalaDaMiniatura(d.formato), '', () => meu === token);
-      if (r) canvas.setAttribute('aria-label', nomeDaPrevia(descricaoDaImagem(d, d.formato), faltaAlgo(obter())));
+      if (r) canvas.setAttribute('aria-label', nomeDaMiniatura(faltaAlgo(obter())));
     } catch {
       // a miniatura é só uma ajuda: sem ela, o resto da tela segue
     }

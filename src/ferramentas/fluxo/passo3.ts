@@ -26,8 +26,9 @@ export function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   const formatos = FORMATOS.map((f) => {
     const id = `fluxo-formato-${f}`;
     return `<div class="fluxo-seg-item">
-        <input type="radio" id="${id}" name="fluxo-formato" value="${f}"${f === d.formato ? ' checked' : ''}>
-        <label for="${id}">${icone(ICONE_DO_FORMATO[f], { classe: 'fluxo-seg-icone' })}<span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span><span class="fluxo-so-leitor">. ${esc(EXPLICACAO_DO_FORMATO[f])}</span>${icone('check', { classe: 'fluxo-seg-check', traco: 2.5 })}</label>
+        <input type="radio" id="${id}" name="fluxo-formato" value="${f}" aria-describedby="${id}-expl"${f === d.formato ? ' checked' : ''}>
+        <label for="${id}">${icone(ICONE_DO_FORMATO[f], { classe: 'fluxo-seg-icone' })}<span class="fluxo-seg-nome">${esc(NOME_DO_FORMATO[f])}</span>${icone('check', { classe: 'fluxo-seg-check', traco: 2.5 })}</label>
+        <span class="fluxo-so-leitor" id="${id}-expl">${esc(EXPLICACAO_DO_FORMATO[f])}</span>
       </div>`;
   }).join('');
   // Cor: bolinhas com o nome curto embaixo (o leitor de tela lê o nome só uma vez, no rótulo). A escolhida leva
@@ -42,7 +43,7 @@ export function montarPasso3(raiz: HTMLElement, d: DadosDoFluxo): () => void {
   }).join('');
   const nomeDaCor = (id: string): string => (id === 'livre' ? 'Cor livre' : paletaPorId(id).nome);
 
-  raiz.innerHTML = `<main class="tela fluxo fluxo-passo3" data-porta="${d.tipo}">
+  raiz.innerHTML = `<main class="tela fluxo fluxo-passo3" data-porta="${esc(d.tipo)}">
     ${topoDoPasso(d, 3)}
     <p class="fluxo-estado" id="fluxo-estado"></p>
     <form class="fluxo-form" id="fluxo-form" novalidate>

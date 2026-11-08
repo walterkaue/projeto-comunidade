@@ -16,6 +16,8 @@ export interface ExtrasDoTopo {
   aoLadoDaDica?: string;
   /** HTML da linha da prévia (passos 1 e 2): vem logo depois do título no código e sobe para o alto da tela no CSS. */
   miniatura?: string;
+  /** Passo 2: o navegador tem campo de calendário? Sem ele, a dica muda. */
+  comCalendario?: boolean;
 }
 
 /** As três barrinhas do progresso: enfeite (o "Passo N de 3" escrito é que informa). Cheias até o passo atual. */
@@ -25,8 +27,8 @@ export function barrinhasDoPasso(passo: PassoNumerado): string {
 }
 
 /** O nome da porta com o quadradinho do ícone (enfeite) de 30 px. */
-const nomeDaPorta = (tipo: Tipo): string =>
-  `<span class="fluxo-verbo"><span class="icone-quadro icone-quadro-p">${icone(tipo, { tamanho: 18 })}</span><span class="fluxo-verbo-texto">${esc(PORTAS[tipo].verbo)}</span></span>`;
+const nomeDaPorta = (tipo: Tipo, pontuacao: string): string =>
+  `<span class="fluxo-verbo"><span class="icone-quadro icone-quadro-p">${icone(tipo, { tamanho: 18 })}</span><span class="fluxo-verbo-texto">${esc(PORTAS[tipo].verbo)}<span class="fluxo-pausa">${pontuacao}</span></span></span>`;
 
 /** Nota fixa dos dados que vieram de um link: aviso de informação, a primeira frase em negrito. */
 export function avisoDaNota(nota: string): string {
@@ -42,15 +44,15 @@ export function avisoDaNota(nota: string): string {
  * o leitor). Depois dele vêm a linha da prévia (passos 1 e 2), a nota e a dica.
  */
 export function topoDoPasso(d: DadosDoFluxo, passo: PassoNumerado, extras: ExtrasDoTopo = {}): string {
-  const { aoLadoDaDica = '', miniatura = '' } = extras;
-  const { nota, dica } = notaEDicaDoPasso(d, passo);
+  const { aoLadoDaDica = '', miniatura = '', comCalendario = true } = extras;
+  const { nota, dica } = notaEDicaDoPasso(d, passo, comCalendario);
   const htmlDaDica = dica ? `<p class="fluxo-dica">${esc(dica)}</p>` : '';
   // Passo 1: a dica e "Apagar tudo" dividem a mesma linha (o primeiro campo cabe na primeira tela).
   const linha = aoLadoDaDica ? `<div class="fluxo-dica-linha">${htmlDaDica}${aoLadoDaDica}</div>` : htmlDaDica;
   // A linha da prévia vem depois do título no código: o Tab passa por "Ver maior" e "Apagar" antes do primeiro campo.
   // O CSS a põe no alto da tela, fixa.
   return `<div class="fluxo-topo">
-    <div class="fluxo-topo-corpo"><h1 tabindex="-1">${nomeDaPorta(d.tipo)}<span class="fluxo-so-leitor">. </span><span class="fluxo-passo"><span>Passo ${passo} de 3</span>${barrinhasDoPasso(passo)}</span><span class="fluxo-so-leitor">: </span><span class="fluxo-nome">${esc(NOME_DO_PASSO(d, passo))}</span></h1></div>
+    <div class="fluxo-topo-corpo"><h1 tabindex="-1">${nomeDaPorta(d.tipo, '.')}<span class="fluxo-passo"><span>Passo ${passo} de 3<span class="fluxo-pausa">:</span></span>${barrinhasDoPasso(passo)}</span><span class="fluxo-nome">${esc(NOME_DO_PASSO(d, passo))}</span></h1></div>
     ${miniatura}
   </div>
   ${avisoDaNota(nota)}${linha}`;
@@ -63,7 +65,7 @@ export function topoDoPasso(d: DadosDoFluxo, passo: PassoNumerado, extras: Extra
 export function topoDoPronto(d: DadosDoFluxo): string {
   const check = `<span class="fluxo-check" aria-hidden="true">${icone('check', { tamanho: 20, traco: 2.5 })}</span>`;
   return `<div class="fluxo-topo">
-    <div class="fluxo-topo-corpo"><h1 tabindex="-1">${nomeDaPorta(d.tipo)}<span class="fluxo-so-leitor">: </span><span class="fluxo-pronto-titulo">${check}<span>Pronto!</span></span></h1></div>
+    <div class="fluxo-topo-corpo"><h1 tabindex="-1">${nomeDaPorta(d.tipo, ':')}<span class="fluxo-pronto-titulo">${check}<span>Pronto!</span></span></h1></div>
   </div>
   ${d.origem === 'link' ? avisoDaNota(NOTA_DO_LINK) : ''}`;
 }
