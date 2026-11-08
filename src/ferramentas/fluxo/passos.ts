@@ -134,12 +134,12 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
   const nativo = passo === 2 && temCampoDeData();
   const { pergunta, resto } = perguntaDoOrgaoEmPartes();
   raiz.innerHTML = `<main class="tela fluxo" data-porta="${esc(d.tipo)}"${d.tipo === 'reuniao' ? ' spellcheck="false"' : ''}>
-    ${topoDoPasso(d, passo, { aoLadoDaDica: passo === 1 ? htmlDoApagar(d) : '', miniatura: htmlDaMiniatura() })}
+    ${topoDoPasso(d, passo, { aoLadoDaDica: passo === 1 ? htmlDoApagar(d) : '', miniatura: htmlDaMiniatura(), comCalendario: passo === 2 ? nativo : true })}
     <form class="fluxo-form" id="fluxo-form" novalidate>
       ${passo === 1 ? camposDoPasso1Html(d) : camposDoPasso2Html(d, nativo)}
     </form>
-    <dialog class="painel" id="fluxo-orgao" aria-labelledby="fluxo-orgao-pergunta">
-      <div class="aviso-atencao">${icone('predio', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p id="fluxo-orgao-texto"><strong id="fluxo-orgao-pergunta">${esc(pergunta)}</strong> ${esc(resto)}</p></div></div>
+    <dialog class="painel" id="fluxo-orgao" aria-labelledby="fluxo-orgao-pergunta" aria-describedby="fluxo-orgao-resto">
+      <div class="aviso-atencao">${icone('predio', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p id="fluxo-orgao-texto"><strong id="fluxo-orgao-pergunta">${esc(pergunta)}</strong> <span id="fluxo-orgao-resto">${esc(resto)}</span></p></div></div>
       <div class="painel-acoes">
         <button type="button" class="botao" id="fluxo-orgao-mudar" autofocus>Mudar o texto</button>
         <button type="button" class="botao botao-sec" id="fluxo-orgao-seguir">Seguir assim</button>
@@ -281,6 +281,7 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
       const r = lerDataBr(entrada('fluxo-data').value);
       if (r === null) {
         diaInvalido = true;
+        d.data = '';
         extenso.textContent = '';
         mostrarDiaPassado();
         atualizarAtalhos();
@@ -373,8 +374,8 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
         limparTodosOsErros(form);
         atualizarOBotao();
         mini.redesenhar();
-        entrada('fluxo-titulo').focus();
         avisar('Voltou o que você tinha escrito.');
+        entrada('fluxo-titulo').focus();
         return;
       }
       copia = copiaDoPasso1(d);
@@ -383,8 +384,8 @@ function montarPasso12(raiz: HTMLElement, d: DadosDoFluxo, passo: 1 | 2): () => 
       mudou();
       limparTodosOsErros(form);
       mini.redesenhar();
-      entrada('fluxo-titulo').focus();
       avisar(AVISO_DE_APAGAR);
+      entrada('fluxo-titulo').focus();
     });
   }
 

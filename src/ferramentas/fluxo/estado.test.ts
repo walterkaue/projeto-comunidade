@@ -22,6 +22,7 @@ import {
   ROTULO_DESFAZER,
   assinatura,
   atalhosDoDia,
+  DICA_DO_PASSO_2_SEM_CALENDARIO,
   camposDoCard,
   type CamposDoExemplo,
   convocacaoDoFluxo,
@@ -181,6 +182,20 @@ describe('datas no formato brasileiro', () => {
       { rotulo: 'Próximo sábado', data: '2026-11-07' },
     ]);
     expect(atalhosDoDia(SABADO)[2]!.data).toBe('2026-11-14');
+  });
+
+  it('atalhos: numa sexta, "Amanhã" e "Próximo sábado" são o mesmo dia e só o primeiro fica', () => {
+    const sexta = new Date(2026, 10, 6, 10, 0);
+    expect(atalhosDoDia(sexta)).toEqual([
+      { rotulo: 'Hoje', data: '2026-11-06' },
+      { rotulo: 'Amanhã', data: '2026-11-07' },
+    ]);
+    // num sábado, o próximo sábado é daqui a 7 dias
+    expect(atalhosDoDia(SABADO).map((a) => a.rotulo)).toEqual(['Hoje', 'Amanhã', 'Próximo sábado']);
+    for (const dia of [1, 2, 3, 4, 5, 6, 7]) {
+      const datas = atalhosDoDia(new Date(2026, 10, dia)).map((a) => a.data);
+      expect(new Set(datas).size).toBe(datas.length);
+    }
   });
 
   it('dia por extenso embaixo do calendário: sem ano no ano de hoje, com ano nos outros', () => {
@@ -406,6 +421,10 @@ describe('link original e notas de dados de link', () => {
     const p2 = notaEDicaDoPasso(doLink, 2);
     expect(p2.nota).toBe('');
     expect(p2.dica).not.toBe('');
+    expect(DICA_DO_PASSO_2_SEM_CALENDARIO).toBe('Escolha o dia num toque ou escreva o dia.');
+    expect(notaEDicaDoPasso(doLink, 2, false).dica).toBe(DICA_DO_PASSO_2_SEM_CALENDARIO);
+    expect(notaEDicaDoPasso(doLink, 2, true).dica).toBe(p2.dica);
+    expect(notaEDicaDoPasso(doLink, 3, false).dica).toBe(p3.dica);
     for (const passo of [1, 2, 3] as const) {
       const sem = notaEDicaDoPasso({ origem: 'pessoa', ficouDeFora: '' }, passo);
       expect(sem.nota).toBe('');
@@ -576,6 +595,9 @@ describe('comExemplo e faltaAlgo (miniatura e prévia maior dos passos 1 e 2)', 
     expect(comExemplo(d).titulo).toBe('Festa');
     expect(comExemplo(d).texto).toBe(d.exemplo.texto);
     expect(d.texto).toBe('');
+    // um opcional esvaziado ganha o exemplo na miniatura, mas nunca nas saídas
+    const tudo = saidas(d);
+    for (const t of textosDoExemplo(d.exemplo)) expect(tudo, t).not.toContain(t);
   });
 });
 

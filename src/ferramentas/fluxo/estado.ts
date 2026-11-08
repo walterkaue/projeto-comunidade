@@ -297,6 +297,8 @@ export const FRASE_DO_LINK_ORIGINAL =
 export const fraseDoLinkNoPronto = (d: DadosDoFluxo): string =>
   d.origem === 'link' && d.linkOriginal && linkAindaVale(d) ? FRASE_DO_LINK_ORIGINAL : avisoDoLinkNoPronto(d.tipo);
 
+/** Dica do passo 2 quando o navegador não tem calendário (campo de texto de reserva). */
+export const DICA_DO_PASSO_2_SEM_CALENDARIO = 'Escolha o dia num toque ou escreva o dia.';
 const DICA_DO_PASSO: Record<1 | 2 | 3, string> = {
   1: 'Escreva com as suas palavras. O que está em cinza é só exemplo.',
   2: 'Escolha o dia num toque ou abra o calendário.',
@@ -310,10 +312,12 @@ const DICA_DO_PASSO: Record<1 | 2 | 3, string> = {
 export function notaEDicaDoPasso(
   d: Pick<DadosDoFluxo, 'origem' | 'ficouDeFora'>,
   passo: 1 | 2 | 3,
+  comCalendario = true,
 ): { nota: string; dica: string } {
   const doLink = d.origem === 'link' && (passo === 1 || passo === 3);
   const nota = doLink ? [NOTA_DO_LINK, passo === 1 ? d.ficouDeFora : ''].filter(Boolean).join(' ') : '';
-  return { nota, dica: passo === 1 && doLink ? '' : DICA_DO_PASSO[passo] };
+  const dica = passo === 1 && doLink ? '' : passo === 2 && !comCalendario ? DICA_DO_PASSO_2_SEM_CALENDARIO : DICA_DO_PASSO[passo];
+  return { nota, dica };
 }
 export const PERGUNTA_DA_TROCA_DO_RASCUNHO = 'Trocar o que você estava fazendo pelos dados deste evento?';
 
@@ -551,11 +555,13 @@ export function lerDataBr(texto: string, hoje: Date = new Date()): string | null
 /** Atalhos do passo 2. */
 export function atalhosDoDia(hoje: Date = new Date()): { rotulo: string; data: string }[] {
   const amanha = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate() + 1);
-  return [
+  const todos = [
     { rotulo: 'Hoje', data: isoDe(hoje) },
     { rotulo: 'Amanhã', data: isoDe(amanha) },
     { rotulo: 'Próximo sábado', data: proximoSabado(hoje) },
   ];
+  // Numa sexta, "Amanhã" e "Próximo sábado" são o mesmo dia: fica só o primeiro.
+  return todos.filter((a, i) => todos.findIndex((b) => b.data === a.data) === i);
 }
 
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
