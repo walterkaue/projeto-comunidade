@@ -7,7 +7,6 @@ import type { Porta } from './apoio';
 /** Organização fictícia e neutra. */
 export const ORGANIZACAO_DE_TESTE = 'Associação de Moradores Jardim das Acácias';
 
-/** O que a "pessoa" escreve nos testes. Nada aqui é igual a um exemplo do rodízio, nem a um item de pauta dele. */
 const p2 = (n: number): string => String(n).padStart(2, '0');
 /** Daqui a 14 dias (hora local): nunca é um dia que já passou. */
 const emQuatorzeDias = ((): Date => {
@@ -15,6 +14,7 @@ const emQuatorzeDias = ((): Date => {
   return new Date(h.getFullYear(), h.getMonth(), h.getDate() + 14);
 })();
 
+/** O que a "pessoa" escreve nos testes. Nada aqui é igual a um exemplo do rodízio, nem a um item de pauta dele. */
 export const DADOS = {
   titulo: 'Mutirão da horta nova',
   organizacao: ORGANIZACAO_DE_TESTE,
