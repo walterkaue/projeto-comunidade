@@ -8,17 +8,24 @@ import type { Porta } from './apoio';
 export const ORGANIZACAO_DE_TESTE = 'Associação de Moradores Jardim das Acácias';
 
 /** O que a "pessoa" escreve nos testes. Nada aqui é igual a um exemplo do rodízio, nem a um item de pauta dele. */
+const p2 = (n: number): string => String(n).padStart(2, '0');
+/** Daqui a 14 dias (hora local): nunca é um dia que já passou. */
+const emQuatorzeDias = ((): Date => {
+  const h = new Date();
+  return new Date(h.getFullYear(), h.getMonth(), h.getDate() + 14);
+})();
+
 export const DADOS = {
   titulo: 'Mutirão da horta nova',
   organizacao: ORGANIZACAO_DE_TESTE,
   texto: 'Traga uma cadeira e um prato',
   pauta: 'Prestação de contas da festa\nCalendário de visitas',
-  dia: '14/11/2026',
+  dia: `${p2(emQuatorzeDias.getDate())}/${p2(emQuatorzeDias.getMonth() + 1)}/${emQuatorzeDias.getFullYear()}`,
   /** O mesmo dia no campo de calendário (type="date" guarda AAAA-MM-DD). */
-  diaIso: '2026-11-14',
+  diaIso: `${emQuatorzeDias.getFullYear()}-${p2(emQuatorzeDias.getMonth() + 1)}-${p2(emQuatorzeDias.getDate())}`,
   hora: '18:30',
-  local: 'Salão da associação, Rua dos Ipês, 12',
-} as const;
+  local: 'Quadra coberta da Rua dos Ipês, 12',
+};
 
 export interface Quais {
   /** Escrever a organização (opcional no fluxo). Padrão: sim. */

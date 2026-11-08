@@ -40,7 +40,7 @@ Modelo de pedido (copie, preencha e apague os comentários):
 ## Pedidos atendidos
 
 ### 2026-11-07 · Sessão 2 (parte A, exemplo só em cinza) · exceção em `e2e/apoio.ts` e `e2e/evento.spec.ts`
-- **O que foi feito:** a Sessão 2 mexeu em dois arquivos de e2e compartilhados, só no mínimo, porque a mudança dela (os campos do fluxo começam vazios, com o exemplo em cinza) quebrava esses testes. Em `e2e/apoio.ts`, `irAteOPronto` agora preenche os obrigatórios que estiverem vazios (título, pauta da reunião, dia, hora e local) por `preencherObrigatoriosVazios` (novo `e2e/fluxo-apoio.ts`); sem isso, o passo 1 e o 2 barram. Em `e2e/evento.spec.ts`, `criarEvento` escreve o título em vez de ler o do exemplo. Nada mais mudou nesses arquivos.
+- **O que foi feito:** a Sessão 2 mexeu em dois arquivos de e2e compartilhados, só no mínimo, porque a mudança dela (os campos do fluxo começam vazios, com o exemplo em cinza) quebrava esses testes. Em `e2e/apoio.ts`, `irAteOPronto` agora preenche os obrigatórios que estiverem vazios (título, pauta da reunião, dia, hora e local) por `preencherObrigatoriosVazios` (novo `e2e/fluxo-apoio.ts`); sem isso, o passo 1 e o 2 barram. Em `e2e/evento.spec.ts`, `criarEvento` escreve o título em vez de ler o do exemplo. Também `e2e/simulacoes/b-quem-recebe/g3-varredura.vitest.ts`: troca `exemploDoFluxo` por `dadosNovos` + `exemploDoRodizio`, porque o nome sumiu. Nada mais mudou nesses arquivos.
 - **Atendido em 07/11/2026** (Sessão 2).
 
 ### 2026-11-06 · sessão 1 das correções da simulação (filtro e leitura do link) · `pagina.ts` usar os dados já cortados

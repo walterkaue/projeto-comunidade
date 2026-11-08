@@ -3,9 +3,28 @@
 
 import { abrirPorta, conferirTela, esperarOPronto, expect, irAteOPronto, linkNoTexto, mandar, ORGANIZACAO, partilhas, PORTAS, test, titulo, type Porta } from './apoio';
 import type { Page } from '@playwright/test';
-import { camposDoPasso1, DADOS, exemplosDosCampos, preencherPasso1, preencherPasso2 } from './fluxo-apoio';
+import { VOLTA_DO_RODIZIO } from '../src/ferramentas/cards/exemplos';
+import { exemploDoRodizio, TIPOS } from '../src/ferramentas/fluxo/estado';
+import { camposDoPasso1, DADOS, exemplosDosCampos, preencherObrigatoriosVazios, preencherPasso1, preencherPasso2 } from './fluxo-apoio';
 
 const LINK_DO_EVENTO = /^http:\/\/localhost:\d+\/#\/evento\/[A-Za-z0-9_-]+$/;
+
+test('os dados de teste não repetem nenhum exemplo do rodízio, nem o contrário (sem página)', () => {
+  const nosDados = [DADOS.titulo, DADOS.organizacao, DADOS.texto, DADOS.local, ...DADOS.pauta.split('\n')].map((t) => t.toLowerCase());
+  expect(nosDados.length).toBeGreaterThan(4);
+  for (const tipo of TIPOS)
+    for (let i = 0; i < VOLTA_DO_RODIZIO; i++) {
+      const ex = exemploDoRodizio(tipo, i);
+      const deExemplo = [ex.titulo, ex.organizacao, ex.texto, ex.local, ...ex.pauta.split('\n')]
+        .map((t) => t.trim().toLowerCase())
+        .filter(Boolean);
+      for (const e of deExemplo)
+        for (const v of nosDados) {
+          expect(v.includes(e), `${tipo} ${i}: "${v}" contém o exemplo "${e}"`).toBe(false);
+          expect(e.includes(v), `${tipo} ${i}: o exemplo "${e}" contém "${v}"`).toBe(false);
+        }
+    }
+});
 
 test.describe('as cinco portas começam vazias, com o exemplo só em cinza', () => {
   for (const porta of PORTAS) {
@@ -251,6 +270,9 @@ test('D1: órgão público no título abre o painel modal; "Seguir assim" avanç
   await expect(orgao).toBeVisible();
   expect(await orgao.evaluate((el: HTMLDialogElement) => el.matches(':modal'))).toBe(true);
   await expect(orgao).toHaveAccessibleName('Este convite fala em nome de um órgão público?');
+  // O resto do texto (o aviso jurídico) é a descrição do painel: o leitor de tela lê tudo.
+  await expect(orgao).toHaveAttribute('aria-describedby', 'fluxo-orgao-resto');
+  await expect(orgao.locator('#fluxo-orgao-resto')).not.toBeEmpty();
   await expect(titulo(page)).toContainText('Passo 1 de 3');
   await expect(orgao.getByRole('button', { name: 'Mudar o texto' })).toBeFocused();
   await page.keyboard.press('Tab');
@@ -301,10 +323,15 @@ test('D1: com letra a 200%, o painel do órgão mostra a pergunta inteira ao alc
   await page.waitForTimeout(400); // a folha sobe com uma animação curta
   const caixa = await orgao.evaluate((el) => {
     const r = el.getBoundingClientRect();
-    return { top: r.top, bottom: r.bottom, altura: window.innerHeight, rolavel: el.scrollHeight > el.clientHeight };
+    const p = el.querySelector('#fluxo-orgao-pergunta')!.getBoundingClientRect();
+    return { top: r.top, bottom: r.bottom, altura: window.innerHeight, perguntaTop: p.top, perguntaBottom: p.bottom };
   });
   expect(caixa.top).toBeGreaterThanOrEqual(0);
   expect(caixa.bottom).toBeLessThanOrEqual(caixa.altura + 1);
+  // A pergunta em negrito está dentro da área visível do painel (e da tela), sem precisar rolar.
+  expect(caixa.perguntaTop).toBeGreaterThanOrEqual(caixa.top);
+  expect(caixa.perguntaBottom).toBeLessThanOrEqual(caixa.bottom);
+  expect(caixa.perguntaBottom).toBeLessThanOrEqual(caixa.altura);
   await page.keyboard.press('Escape');
   await expect(orgao).toBeHidden();
 });
@@ -510,4 +537,76 @@ test('Pronto da reunião: Mandar logo abaixo do topo, "Outros jeitos de usar" e 
   await expect(ata).toContainText('A ata já abre com a pauta.');
   await expect(ata.getByRole('button', { name: 'Fazer a ata' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Fazer outro' })).toBeVisible();
+});
+
+// ---------- passo 2 sem calendário (campo de texto de reserva) ----------
+
+test('passo 2 sem calendário: o campo vira texto, o atalho escreve dd/mm/aaaa, o texto inválido tira o atalho e o dia certo segue', async ({ page }) => {
+  // O navegador "não aceita" type="date": o código cai no campo de texto.
+  await page.addInitScript(() => {
+    const original = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'type')!;
+    Object.defineProperty(HTMLInputElement.prototype, 'type', {
+      configurable: true,
+      get: original.get,
+      set(valor: string) {
+        if (String(valor).toLowerCase() !== 'date') original.set!.call(this, valor);
+      },
+    });
+  });
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  await preencherPasso1(page, evento);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+
+  const dia = page.locator('#fluxo-data');
+  await expect(dia).toHaveAttribute('type', 'text');
+  await expect(page.locator('.fluxo-dica').first()).toHaveText('Escolha o dia num toque ou escreva o dia.');
+
+  const grupo = page.getByRole('group', { name: 'Atalhos do dia' });
+  const amanha = grupo.getByRole('button', { name: 'Amanhã' });
+  await amanha.click();
+  await expect(dia).toHaveValue(/^\d{2}\/\d{2}\/\d{4}$/);
+  await expect(amanha).toHaveAttribute('aria-pressed', 'true');
+
+  await dia.fill('xyz');
+  await expect(grupo.locator('[aria-pressed="true"]')).toHaveCount(0);
+  await preencherObrigatoriosVazios(page, evento, 2);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(page.locator('#fluxo-data-erro')).toContainText('escreva o dia como 14/11/2026.');
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+
+  await dia.fill(DADOS.dia);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 3 de 3');
+});
+
+// ---------- nomes acessíveis ----------
+
+test('o nome do h1 lê com a pontuação no lugar, no passo e no Pronto', async ({ page }) => {
+  const reuniao = PORTAS[0];
+  await abrirPorta(page, reuniao);
+  await expect(page.getByRole('heading', { level: 1, name: 'Chamar para uma reunião. Passo 1 de 3: O quê', exact: true })).toBeVisible();
+  await irAteOPronto(page, reuniao);
+  await expect(page.getByRole('heading', { level: 1, name: 'Chamar para uma reunião: Pronto!', exact: true })).toBeVisible();
+});
+
+test('passo 3: o nome de cada formato é só o nome, e a explicação é a descrição; a miniatura tem nome curto', async ({ page }) => {
+  const evento = PORTAS[1];
+  await abrirPorta(page, evento);
+  const mini = page.locator('#fluxo-mini-canvas');
+  await expect(mini).toHaveAttribute('aria-label', 'Prévia da imagem, com exemplo no que falta');
+  await page.getByRole('button', { name: 'Ver maior a prévia' }).click();
+  await expect(page.locator('#fluxo-dialogo-canvas')).toHaveAttribute('aria-label', /^Prévia com exemplo nos campos vazios\. .{20,}/);
+  await page.keyboard.press('Escape');
+  await preencherPasso1(page, evento);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await preencherPasso2(page, evento);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 3 de 3');
+  for (const nome of ['Status', 'Grupo', 'Cartaz']) {
+    const radio = page.getByRole('radio', { name: nome, exact: true });
+    await expect(radio).toHaveCount(1);
+    await expect(radio).toHaveAccessibleDescription(/.{15,}/);
+  }
 });

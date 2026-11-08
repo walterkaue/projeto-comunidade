@@ -66,7 +66,7 @@ describe('o exemplo só ilustra (placeholder e miniatura dos passos 1 e 2)', () 
     for (const f of arquivos.filter((a) => a.endsWith('.ts') && !podem.includes(a))) expect(semComentarios(f), f).not.toMatch(cita);
   });
 
-  it('só previa.ts e passos.ts usam comExemplo (a miniatura, o diálogo e os placeholders)', () => {
+  it('só previa.ts usa comExemplo e faltaAlgo (a miniatura e o diálogo); passos.ts usa só os placeholders', () => {
     for (const f of arquivos.filter((a) => a.endsWith('.ts') && a !== 'estado.ts')) {
       const usa = /comExemplo|faltaAlgo/.test(semComentarios(f));
       expect(usa, f).toBe(f === 'previa.ts');

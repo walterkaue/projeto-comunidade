@@ -54,6 +54,26 @@ async function inteiroATela(page: Page, item: Locator, nome: string, semRolar: b
   expect(c.right).toBeLessThanOrEqual(area.largura + 0.5);
 }
 
+/** Nenhum texto da linha da prévia fica sobre o botão "Ver maior" (as caixas não se cruzam). */
+async function miniSemSobrepor(page: Page, nome: string): Promise<void> {
+  const r = await page.evaluate(() => {
+    const botao = document.querySelector('#fluxo-ver-maior')!.getBoundingClientRect();
+    const textos = [...document.querySelectorAll<HTMLElement>('.fluxo-mini-texto, .fluxo-mini-exemplo')]
+      .filter((el) => !el.hidden)
+      .map((el) => {
+        const intervalo = document.createRange();
+        intervalo.selectNodeContents(el);
+        const c = intervalo.getBoundingClientRect();
+        const cruza = c.left < botao.right && botao.left < c.right && c.top < botao.bottom && botao.top < c.bottom;
+        return { texto: el.textContent, cruza };
+      });
+    const mini = document.querySelector('.fluxo-mini')!.getBoundingClientRect();
+    return { textos, direita: Math.max(botao.right, ...[...document.querySelectorAll('.fluxo-mini-lado')].map((e) => e.getBoundingClientRect().right)), mini: mini.height };
+  });
+  expect(r.textos.length, nome).toBeGreaterThan(0);
+  for (const t of r.textos) expect(t.cruza, `${nome}: "${t.texto}" sobre o "Ver maior"`).toBe(false);
+}
+
 /** Texto a 200%: tudo no site é medido em rem, como no aparelho com a letra grande. */
 async function textoEm200(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -107,6 +127,19 @@ for (const { escala, esquema } of CASOS) {
           await expect(page.locator('#fluxo-aviso-do-link + .campo:has(#fluxo-pauta)')).toHaveCount(1);
           await expect(page.locator('#fluxo-pauta')).toHaveAttribute('aria-describedby', /^fluxo-aviso-do-link /);
           await expect(page.locator('#fluxo-titulo')).toHaveAttribute('aria-describedby', /fluxo-aviso-do-link/);
+        }
+        if (escala === 200) await miniSemSobrepor(page, `${porta.tipo}: linha da prévia a 200%`);
+        else {
+          // A 100%: a linha tem de 64 a 72 px e cada frase cabe numa linha só.
+          const linha = await page.evaluate(() => ({
+            mini: document.querySelector('.fluxo-mini')!.getBoundingClientRect().height,
+            frases: [...document.querySelectorAll<HTMLElement>('.fluxo-mini-texto, .fluxo-mini-exemplo')]
+              .filter((el) => !el.hidden)
+              .map((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)),
+          }));
+          expect(linha.mini, 'altura da linha da prévia').toBeGreaterThanOrEqual(64);
+          expect(linha.mini, 'altura da linha da prévia').toBeLessThanOrEqual(72);
+          for (const n of linha.frases) expect(Math.round(n), 'cada frase numa linha').toBe(1);
         }
         if (escala === 200 || esquema === 'dark') await conferirTela(page, `${porta.tipo}: passo 1 (${escala}%, ${esquema})`);
 
@@ -186,4 +219,36 @@ test('320 px: as seis cores ficam lado a lado, com o nome inteiro, e a tela não
   expect(Math.max(...itens.map((i) => i.right))).toBeLessThanOrEqual(320);
   const largura = await page.evaluate(() => ({ p: document.documentElement.scrollWidth, t: document.documentElement.clientWidth }));
   expect(largura.p).toBeLessThanOrEqual(largura.t);
+});
+
+test('320 px com texto a 175%: a linha da prévia quebra e nenhum texto passa por baixo de "Ver maior"', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.addInitScript(() => {
+    const aplicar = () => document.documentElement.style.setProperty('font-size', '175%');
+    if (document.documentElement) aplicar();
+    else document.addEventListener('DOMContentLoaded', aplicar);
+  });
+  await abrirPorta(page, PORTAS[1]);
+  await page.waitForTimeout(200);
+  await miniSemSobrepor(page, 'linha da prévia a 175% em 320 px');
+  const largura = await page.evaluate(() => ({ p: document.documentElement.scrollWidth, t: document.documentElement.clientWidth }));
+  expect(largura.p).toBeLessThanOrEqual(largura.t);
+});
+
+test('320 px com texto a 200%: o passo 2 da reunião não rola para o lado e o campo Dia cabe na largura', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await textoEm200(page);
+  const reuniao = PORTAS[0];
+  await abrirPorta(page, reuniao);
+  await preencherObrigatoriosVazios(page, reuniao, 1);
+  await page.getByRole('button', { name: 'Continuar' }).click();
+  await expect(titulo(page)).toContainText('Passo 2 de 3');
+  const dia = page.locator('#fluxo-data');
+  await expect(dia).toHaveAttribute('type', 'date');
+  const c = await caixa(dia);
+  const largura = await page.evaluate(() => ({ p: document.documentElement.scrollWidth, t: document.documentElement.clientWidth }));
+  expect(c.left).toBeGreaterThanOrEqual(0);
+  expect(c.right, 'o campo Dia dentro da largura').toBeLessThanOrEqual(largura.t);
+  expect(largura.p, 'sem rolagem lateral').toBeLessThanOrEqual(largura.t);
+  await conferirTela(page, 'reunião: passo 2 (320 px, 200%)');
 });
