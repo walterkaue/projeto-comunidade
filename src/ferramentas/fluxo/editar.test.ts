@@ -3,7 +3,7 @@ import type { Aberto } from '../evento/abrir';
 import type { Evento } from '../evento/validar';
 import { esc } from '../../comum/html';
 import { linkPara } from '../../comum/rotas';
-import { textosDoRemovido } from '../evento/removido';
+import { htmlDoParagrafo, textosDoRemovido } from '../evento/removido';
 import { abrirParaEditar, type DependenciasDeEditar } from './editar';
 
 const BASE = 'https://exemplo.test/projeto/';
@@ -57,7 +57,7 @@ describe('abrirParaEditar', () => {
     expect(raiz.innerHTML).toContain('foi removido');
     expect(raiz.innerHTML).toContain('Fazer um evento');
     // O motivo e o caminho para pedir revisão, como na página do evento removido.
-    for (const p of textosDoRemovido({ tipo: 'regra', regra: 5 }).paragrafos) expect(raiz.innerHTML).toContain(esc(p));
+    for (const p of textosDoRemovido({ tipo: 'regra', regra: 5 }).paragrafos) expect(raiz.innerHTML).toContain(htmlDoParagrafo(p));
     expect(raiz.innerHTML).toContain(`href="${esc(linkPara('regras'))}"`);
     expect(raiz.innerHTML).toContain('Ver as Regras de uso');
     expect(foco).toHaveBeenCalled();
@@ -70,7 +70,7 @@ describe('abrirParaEditar', () => {
       const { raiz } = raizFalsa();
       const { d, tipada } = deps({ estado: 'bloqueado', motivo } as Aberto);
       await abrirParaEditar(raiz, '1rABC', () => true, tipada);
-      for (const p of textosDoRemovido(motivo).paragrafos) expect(raiz.innerHTML).toContain(esc(p));
+      for (const p of textosDoRemovido(motivo).paragrafos) expect(raiz.innerHTML).toContain(htmlDoParagrafo(p));
       expect(raiz.innerHTML).toContain(`href="${esc(linkPara('regras'))}"`);
       expect(raiz.innerHTML).toContain('Fazer um evento');
       expect(d.guardar).not.toHaveBeenCalled();

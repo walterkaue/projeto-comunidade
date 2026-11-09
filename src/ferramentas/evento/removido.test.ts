@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { EMAIL_CONTATO } from '../../comum/marca';
 import { REGRAS_DE_USO } from '../../comum/regras';
-import { REGRAS_DE_PROTECAO_A_CRIANCAS, textosDoRemovido } from './removido';
+import { htmlDoParagrafo, REGRAS_DE_PROTECAO_A_CRIANCAS, textosDoRemovido } from './removido';
 
 // Auditoria 05/11/2026, M7 e M8: a tela de link removido diz o motivo e como pedir revisão.
 describe('tela de link removido', () => {
@@ -54,6 +54,19 @@ describe('D3: aviso de golpe na tela de link removido', () => {
     expect(p[i + 1]).toBe('Se você recebeu este link, não pague nem mande documentos. Avise quem mandou.');
     for (const motivo of [{ tipo: 'regra', regra: 1 }, { tipo: 'pedido' }] as Parameters<typeof textosDoRemovido>[0][]) {
       expect(textosDoRemovido(motivo).paragrafos.join(' ')).not.toContain('Se você recebeu este link');
+    }
+  });
+});
+
+describe('e-mail de contato na tela', () => {
+  it('ganha <wbr> depois do @ e dos pontos, sem mudar uma palavra', () => {
+    for (const motivo of [{ tipo: 'pedido' }, { tipo: 'regra', regra: 1 }] as Parameters<typeof textosDoRemovido>[0][]) {
+      const p = textosDoRemovido(motivo).paragrafos.find((x) => x.includes(EMAIL_CONTATO))!;
+      const html = htmlDoParagrafo(p);
+      expect(html).toContain('<wbr>');
+      expect(html).not.toContain(EMAIL_CONTATO);
+      expect(html.replaceAll('<wbr>', '')).toBe(p);
+      expect(html).toContain('contato.<wbr>projetocomunidade@<wbr>gmail.<wbr>com');
     }
   });
 });

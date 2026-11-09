@@ -4,7 +4,17 @@
 
 import type { MotivoDaRemocao } from '../../comum/entreTelas';
 import { EMAIL_CONTATO, PRAZO_DENUNCIA_DIAS_UTEIS } from '../../comum/marca';
+import { esc } from '../../comum/html';
 import { textoDaRegra } from '../../comum/regras';
+
+/**
+ * O parágrafo pronto para innerHTML: escapado e, no e-mail de contato, com <wbr> depois do @ e dos pontos, para o
+ * e-mail quebrar nesses pontos e não no meio do domínio. Nenhuma palavra muda (<wbr> não aparece nem é lido).
+ */
+export function htmlDoParagrafo(paragrafo: string): string {
+  const comQuebra = esc(EMAIL_CONTATO).replace(/([@.])/g, '$1<wbr>');
+  return esc(paragrafo).split(esc(EMAIL_CONTATO)).join(comQuebra);
+}
 
 export interface TextosDoRemovido {
   titulo: string;

@@ -6,7 +6,7 @@ import { avisar } from '../../comum/aviso';
 import { esc } from '../../comum/html';
 import { linkPara } from '../../comum/rotas';
 import type { Aberto } from '../evento/abrir';
-import { textosDoRemovido } from '../evento/removido';
+import { htmlDoParagrafo, textosDoRemovido } from '../evento/removido';
 import { dadosDoEvento, enderecoDoPasso, type DadosDoFluxo } from './estado';
 import { trocarPorDadosDeLink } from './memoria';
 import { zerarPassos } from './navegacao';
@@ -56,7 +56,7 @@ export function telaDeBloqueado(raiz: HTMLElement, motivo: Parameters<typeof tex
   const t = textosDoRemovido(motivo);
   raiz.innerHTML = `<main class="tela fluxo">
     <h1 tabindex="-1">${esc('Este link foi removido e não pode ser usado como modelo.')}</h1>
-    ${t.paragrafos.map((p) => `<p>${esc(p)}</p>`).join('')}
+    ${t.paragrafos.map((p) => `<p>${htmlDoParagrafo(p)}</p>`).join('')}
     <a class="botao" href="${esc(linkPara('regras'))}">Ver as Regras de uso</a>
     <a class="botao botao-sec" href="${esc(enderecoDoPasso('evento', 1))}">Fazer um evento</a>
   </main>`;

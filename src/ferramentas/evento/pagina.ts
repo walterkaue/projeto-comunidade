@@ -14,7 +14,7 @@ import { abrirEvento } from './abrir';
 import { gerarIcs, hrefExterno, jaPassou, linkDoGoogleAgenda, linkDoMapa, nomeDoArquivoIcs, quandoNaPagina } from './agenda';
 import { MENSAGEM_DO_PROBLEMA } from './formato';
 import { dadosDoCardDoEvento, enderecoDoSite, ligarCompartilhar, ligarQr } from './partes';
-import { AVISO_DE_GOLPE, textosDoRemovido, type TextosDoRemovido } from './removido';
+import { AVISO_DE_GOLPE, htmlDoParagrafo, textosDoRemovido, type TextosDoRemovido } from './removido';
 import { semIndexar } from './semindexar';
 import type { Evento } from './validar';
 
@@ -63,7 +63,7 @@ function telaDeMensagem(raiz: HTMLElement, titulo: string, texto: string, foco: 
 export function htmlDoRemovido(t: TextosDoRemovido): string {
   // Negrito na frase principal: o aviso de golpe, quando há (protege quem recebeu o link); senão, a primeira.
   const forte = t.paragrafos.includes(AVISO_DE_GOLPE) ? AVISO_DE_GOLPE : t.paragrafos[0];
-  const paragrafos = t.paragrafos.map((p) => `<p>${p === forte ? `<strong>${esc(p)}</strong>` : esc(p)}</p>`).join('');
+  const paragrafos = t.paragrafos.map((p) => `<p>${p === forte ? `<strong>${htmlDoParagrafo(p)}</strong>` : htmlDoParagrafo(p)}</p>`).join('');
   return `<main class="tela evento" data-porta="evento">
     ${FAIXA_DE_CORES}
     <h1 tabindex="-1">${esc(t.titulo)}</h1>

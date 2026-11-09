@@ -4,7 +4,7 @@
 import { esc } from './html';
 
 export const CAMINHOS = {
-  // As cinco portas (iguais aos de src/paginas/inicio.ts)
+  // As cinco portas (o início usa icone(); src/comum/icones.test.ts guarda estes caminhos)
   reuniao:
     '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2 20c0-3.5 2.7-6 6-6s6 2.5 6 6M15 14.5c3 0 7 1.5 7 5.5"/>',
   evento: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
