@@ -1,6 +1,8 @@
 // A2 Rogério, 41, sindicato. Samsung Internet (aproximação), modo escuro. Reunião com pauta de 9 itens (2 longos),
 // WhatsApp, cartaz em PDF, página do evento e .ics, ata com 15 presentes, recarregar e fechar a aba.
 import { readFileSync } from 'node:fs';
+import { preencherDia } from '../../fluxo-apoio';
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { cronometro, copias, foto, inspecionar, partilhas, registrar, salvarPartilhado, salvarPdf, salvarTexto, baixarPor, test, expect, tocar, titulo, cobertoPorFaixa } from './sim';
 
 const ORG = 'Sindicato dos Trabalhadores em Serviços Gerais da Região';
@@ -45,9 +47,15 @@ test.describe('A2 Rogério', () => {
     cron.marca('inicio');
     await tocar(page.getByRole('link', { name: /Chamar para uma reunião/ }));
     await expect(titulo(page)).toContainText('Passo 1 de 3');
-    await inspecionar(page, 'passo 1 (exemplo)');
-    await foto(page, 'passo1-exemplo', true);
-    registrar('exemplo-reuniao', { organizacao: await page.locator('#fluxo-organizacao').inputValue(), titulo: await page.locator('#fluxo-titulo').inputValue(), pauta: await page.locator('#fluxo-pauta').inputValue() });
+    await inspecionar(page, 'passo 1 (vazio)');
+    await foto(page, 'passo1-vazio', true);
+    // Os campos começam vazios; o exemplo é só o cinza de dentro (placeholder).
+    registrar('exemplo-reuniao', {
+      organizacao: await page.locator('#fluxo-organizacao').getAttribute('placeholder'),
+      titulo: await page.locator('#fluxo-titulo').getAttribute('placeholder'),
+      pauta: await page.locator('#fluxo-pauta').getAttribute('placeholder'),
+      valoresAoAbrir: [await page.locator('#fluxo-organizacao').inputValue(), await page.locator('#fluxo-titulo').inputValue(), await page.locator('#fluxo-pauta').inputValue()],
+    });
 
     // pauta de 9 itens com 2 longos
     await passo1(page, PAUTA_COMPLETA, true);
@@ -96,7 +104,7 @@ test.describe('A2 Rogério', () => {
     // WhatsApp
     await tocar(page.getByRole('button', { name: 'Mandar no WhatsApp' }));
     if (await page.locator('#fluxo-confirma').isVisible()) {
-      registrar('painel-apareceu-com-org-trocada', { texto: await page.locator('#fluxo-confirma-texto').innerText() });
+      registrar('painel-apareceu-no-mandar', { texto: await page.locator('#fluxo-confirma-texto').innerText() });
       await foto(page, 'painel-inesperado');
       await tocar(page.getByRole('button', { name: 'Mandar mesmo assim' }));
     }
@@ -213,7 +221,7 @@ test.describe('A2 Rogério', () => {
     // Recarregar no meio da ata
     await page.reload();
     await page.waitForTimeout(600);
-    registrar('ata-apos-reload', { url: page.url(), presentes: await page.getByLabel('Presentes').inputValue(), org: await page.locator('#ata-organizacao').inputValue(), aviso: await page.locator('.reuniao-aviso').first().innerText().catch(() => '') });
+    registrar('ata-apos-reload', { url: page.url(), presentes: await page.getByLabel('Presentes').inputValue(), org: await page.locator('#ata-organizacao').inputValue(), aviso: await page.locator('.reuniao-avisos').innerText().catch(() => '') }); // o cartão inteiro; '.reuniao-aviso' é só uma linha dele
     await foto(page, 'ata-apos-reload', true);
 
     // Fechar a aba e voltar
@@ -225,25 +233,34 @@ test.describe('A2 Rogério', () => {
     await foto(nova, 'ata-aba-nova', true);
   });
 
-  test('A2 Rogério: reunião sem trocar a organização (painel do exemplo, Mudar algo, Fazer outro) @SAMSUNG', async ({ page }) => {
+  test('A2 Rogério: reunião sem escrever a organização (o link sai assim, Voltar, Fazer outro) @SAMSUNG', async ({ page }) => {
     await page.goto('./');
     await tocar(page.getByRole('link', { name: /Chamar para uma reunião/ }));
     await expect(titulo(page)).toContainText('Passo 1 de 3');
-    // só muda o título e a pauta (pessoa apressada) e deixa a organização do exemplo
+    // só escreve o título e a pauta (pessoa apressada) e deixa a organização vazia; o passo 2 pede dia, hora e local
     await digitar(page, '#fluxo-titulo', 'Assembleia geral da categoria');
     await page.locator('#fluxo-pauta').fill(PAUTA_CURTA.join('\n'));
     await tocar(page.getByRole('button', { name: 'Continuar' }));
+    await expect(titulo(page)).toContainText('Passo 2 de 3');
+    await preencherObrigatoriosVazios(page, { tipo: 'reuniao', agenda: true }, 2);
     await tocar(page.getByRole('button', { name: 'Continuar' }));
     await tocar(page.getByRole('button', { name: 'Ficou bom' }));
     await expect(titulo(page)).toContainText('Pronto!');
-    await inspecionar(page, 'Pronto (organização do exemplo)');
-    await foto(page, 'pronto-exemplo', true);
-    registrar('aviso-exemplo', { aviso: await page.locator('#fluxo-aviso-exemplo').innerText().catch(() => ''), linkEstado: await page.locator('#fluxo-link-estado').innerText() });
+    await inspecionar(page, 'Pronto (sem organização)');
+    await foto(page, 'pronto-sem-organizacao', true);
+    await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…', { timeout: 60_000 });
+    // O aviso do exemplo não existe mais (conta 0) e o link sai com ou sem organização.
+    registrar('aviso-exemplo', { avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count(), linkEstado: await page.locator('#fluxo-link-estado').innerText() });
     await tocar(page.getByRole('button', { name: 'Mandar no WhatsApp' }));
-    await expect(page.locator('#fluxo-confirma')).toBeVisible();
-    await inspecionar(page, 'painel do exemplo');
-    await foto(page, 'painel-exemplo');
-    registrar('painel-exemplo', { texto: await page.locator('#fluxo-confirma').innerText() });
+    const painelAbriu = await page.locator('#fluxo-confirma').isVisible();
+    registrar('painel-exemplo', { abriu: painelAbriu, texto: painelAbriu ? await page.locator('#fluxo-confirma').innerText() : null });
+    if (painelAbriu) {
+      await inspecionar(page, 'painel');
+      await foto(page, 'painel');
+      await tocar(page.getByRole('button', { name: 'Mandar mesmo assim' }));
+    }
+    const enviadoSemOrg = (await partilhas(page)).at(-1);
+    registrar('link-sem-organizacao', { temLink: /#\/evento\//.test(enviadoSemOrg?.texto ?? ''), texto: enviadoSemOrg?.texto ?? null });
     // Voltar do navegador no Pronto
     await page.goBack();
     await page.waitForTimeout(500);
@@ -270,6 +287,7 @@ test.describe('A2 Rogério', () => {
     await passo1(page, PAUTA_CURTA, true);
     await tocar(page.getByRole('button', { name: 'Continuar' }));
     await expect(titulo(page)).toContainText('Passo 2 de 3');
+    await preencherObrigatoriosVazios(page, { tipo: 'reuniao', agenda: true }, 2);
     await page.locator('#fluxo-hora').fill('19:30');
     await tocar(page.getByRole('button', { name: 'Continuar' }));
     await expect(titulo(page)).toContainText('Passo 3 de 3');
@@ -299,6 +317,7 @@ test.describe('A2 Rogério', () => {
     const erro = await page.locator('.campo-erro:visible').allInnerTexts();
     registrar('pauta-limite', { letras: itens.join('').replace(/[^A-Za-zÀ-ú]/g, '').length, erro });
     if (erro.length) return;
+    await preencherDia(page);
     await page.locator('#fluxo-hora').fill('19:30');
     await page.locator('#fluxo-local').fill('Sede do sindicato');
     await tocar(page.getByRole('button', { name: 'Continuar' }));

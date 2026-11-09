@@ -7,6 +7,7 @@ import {
   digitar,
   esperarPasso,
   esperarPronto,
+  exemplosEmCinza,
   estadoDoFluxo,
   medirFormatos,
   naTela,
@@ -34,18 +35,30 @@ async function caminhoDaCida(page: import('@playwright/test').Page, acao: Acao, 
   registrar('alvo-porta', { caixa: await porta.boundingBox() });
   await toque(porta, 'porta Divulgar um evento');
 
-  // ---- 1ª tentativa: só o exemplo ----
+  // ---- 1ª tentativa: os campos vêm vazios (o exemplo é só o cinza de dentro); ela escreve só o obrigatório ----
   await esperarPasso(page, 1);
-  const ex = await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']);
-  registrar('exemplo-visto', ex);
+  registrar('exemplo-visto', await exemplosEmCinza(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
+  registrar('valores-ao-abrir', await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
   cron.marca('passo1-abriu');
-  await tela(page, 'passo1-exemplo');
+  await tela(page, 'passo1-vazio');
+  // Toca em Continuar sem escrever nada: o título é obrigatório, então não passa.
+  await toque(page.getByRole('button', { name: 'Continuar' }), 'Continuar 1 (vazio)');
+  await page.waitForTimeout(400);
+  registrar('continuar-vazio-passo1', { h1: (await titulo(page).innerText()).replace(/\s+/g, ' '), erros: await page.locator('.campo-erro:not([hidden])').allInnerTexts() });
+  await tela(page, 'passo1-vazio-com-erro');
+  await digitar(page.locator('#fluxo-titulo'), 'Mutirao da praca');
   await toque(page.getByRole('button', { name: 'Continuar' }), 'Continuar 1');
   await esperarPasso(page, 2);
-  cron.marca('passo1-feito-sem-trocar');
+  cron.marca('passo1-feito-so-titulo');
   await toque(page.getByRole('button', { name: 'Próximo sábado' }), 'atalho Próximo sábado');
   registrar('dia-atalho', await valores(page, ['fluxo-data', 'fluxo-hora', 'fluxo-local']));
-  await tela(page, 'passo2-exemplo');
+  // Hora e local também são obrigatórios e começam vazios.
+  await toque(page.getByRole('button', { name: 'Continuar' }), 'Continuar 2 (sem hora e local)');
+  await page.waitForTimeout(400);
+  registrar('continuar-vazio-passo2', { h1: (await titulo(page).innerText()).replace(/\s+/g, ' '), erros: await page.locator('.campo-erro:not([hidden])').allInnerTexts() });
+  await page.locator('#fluxo-hora').fill('19:00');
+  await digitar(page.locator('#fluxo-local'), 'Praca central');
+  await tela(page, 'passo2-so-obrigatorios');
   await toque(page.getByRole('button', { name: 'Continuar' }), 'Continuar 2');
   await esperarPasso(page, 3);
   cron.marca('passo2-feito');
@@ -56,25 +69,29 @@ async function caminhoDaCida(page: import('@playwright/test').Page, acao: Acao, 
   await toque(page.getByRole('button', { name: 'Ficou bom' }), 'Ficou bom');
   await esperarPronto(page, true);
   cron.marca('pronto-1');
-  await tela(page, 'pronto-com-exemplo');
-  registrar('aviso-exemplo-pronto', { texto: await page.locator('#fluxo-aviso-exemplo').innerText().catch(() => '(sem)') });
+  await tela(page, 'pronto-so-obrigatorios');
+  // O aviso do exemplo não existe mais (o exemplo é só ilustrativo): conta 0.
+  registrar('aviso-exemplo-pronto', { avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count() });
 
-  // O toque que ela faz achando que está tudo certo.
+  // O toque que ela faz achando que está tudo certo. Com o link pronto o painel não abre mais por causa do exemplo.
   const mandar = page.locator('#fluxo-mandar');
+  const partilhasAntes = (await partilhas(page)).length;
   await toque(mandar, 'Mandar no WhatsApp (1ª)');
-  await expect(page.locator('#fluxo-confirma')).toBeVisible();
+  const painelAbriu = await page.locator('#fluxo-confirma').isVisible();
   registrar('painel-exemplo', {
-    texto: await page.locator('#fluxo-confirma-texto').innerText(),
-    botoes: await page.locator('#fluxo-confirma button').allInnerTexts(),
-    posicao: await naTela(page.locator('#fluxo-confirma')),
-    compartilhou: (await partilhas(page)).length,
+    abriu: painelAbriu,
+    texto: painelAbriu ? await page.locator('#fluxo-confirma-texto').innerText() : null,
+    botoes: painelAbriu ? await page.locator('#fluxo-confirma button').allInnerTexts() : [],
+    posicao: painelAbriu ? await naTela(page.locator('#fluxo-confirma')) : null,
+    compartilhou: (await partilhas(page)).length - partilhasAntes,
   });
-  await tela(page, 'painel-do-exemplo');
+  await tela(page, 'depois-do-primeiro-mandar');
 
-  // Mudar algo, pelo painel.
-  await toque(page.locator('#fluxo-confirma-mudar'), 'Mudar algo (painel)');
+  // Mudar algo: pelo painel, se abriu; senão pelo botão de baixo do Pronto.
+  if (painelAbriu) await toque(page.locator('#fluxo-confirma-mudar'), 'Mudar algo (painel)');
+  else await toque(page.locator('#fluxo-mudar'), 'Mudar algo (de baixo)');
   await esperarPasso(page, 1);
-  cron.marca('mudar-algo-pelo-painel');
+  cron.marca('mudar-algo');
   registrar('apos-mudar-algo', await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
   await tela(page, 'passo1-depois-de-mudar-algo');
 
@@ -113,7 +130,7 @@ async function caminhoDaCida(page: import('@playwright/test').Page, acao: Acao, 
   await esperarPronto(page, true);
   cron.marca('pronto-2');
   await tela(page, 'pronto-final');
-  registrar('painel-na-2a', { aberto: await page.locator('#fluxo-confirma').isVisible(), aviso: await page.locator('#fluxo-aviso-exemplo').count() });
+  registrar('painel-na-2a', { aberto: await page.locator('#fluxo-confirma').isVisible(), avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count() });
   registrar('estado-link', {
     estado: await page.locator('#fluxo-link-estado').innerText(),
     frase: await page.locator('#fluxo-aviso-link').innerText().catch(() => ''),

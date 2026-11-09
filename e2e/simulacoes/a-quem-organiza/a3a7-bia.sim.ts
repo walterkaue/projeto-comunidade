@@ -38,6 +38,7 @@ test('A7 Bia: teclado aberto (360x330) @AND-DEITADO', async ({ page }) => {
     await foto(page, `a7tec foco ${id}`);
   }
   await inspecionar(page, 'a7tec passo 1 teclado');
+  await page.locator('#fluxo-titulo').fill('Conseguimos a quadra'); // o título começa vazio e é obrigatório
   await page.locator('#fluxo-texto').blur();
   await tocar(page.getByRole('button', { name: 'Continuar' }));
   await expect(titulo(page)).toContainText('Passo 2 de 3');

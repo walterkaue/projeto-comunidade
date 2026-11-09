@@ -3,7 +3,7 @@
 // Registra em .saida/c5-*.md e fotos em .fotos/c5-*. Personagem fictício.
 import type { Page } from '@playwright/test';
 import { APARELHOS, anotar, cronometro, escutarAnuncios, expect, focado, foto, lerAnuncios, ORGANIZACAO, regioesVivas, test, titulo, type Compartilhar } from './apoio-sim';
-import { digitar, lerTela, medirFoco, ordemVisual, tabAte, type Parada } from './teclado-sim';
+import { digitar, digitarDia, lerTela, medirFoco, ordemVisual, tabAte, type Parada } from './teclado-sim';
 
 test.use({ ...APARELHOS['PC-GRANDE'] });
 
@@ -37,7 +37,8 @@ async function fazerPorTeclado(page: Page, tipo: 'evento' | 'aviso', D: string, 
   anotar(D, `\n## ${tipo} — passo 2 | foco ao entrar: ${await focado(page)}`);
   if (o.fotos) await foto(page, `${prefixo}-02-passo2`);
   if (tipo === 'evento') {
-    await digitar(page, '#fluxo-data', '21/11/2026', { arquivo: D, trilha });
+    const dia = await digitarDia(page, '21/11/2026', { arquivo: D, trilha });
+    if (!dia.porTeclas) anotar(D, `Dia: as teclas não bastaram, preenchido pelo valor (${dia.valor})`);
     await digitar(page, '#fluxo-hora', '1500', { arquivo: D, trilha });
     await digitar(page, '#fluxo-local', 'Centro Comunitário, Rua das Acácias 120', { arquivo: D, trilha });
   } else {
@@ -148,7 +149,7 @@ test('C5: evento e aviso até o Pronto (cores normais)', async ({ page, erros, f
   await lerAnuncios(page);
   await page.keyboard.press('Enter');
   await page.waitForTimeout(500);
-  anotar(D, `Mandar aviso (exemplo trocado): painel ${await page.locator('#fluxo-confirma').isVisible()} | avisos ${JSON.stringify(await lerAnuncios(page))} | partilhas ${(await page.evaluate(() => window.__partilhas)).length}`);
+  anotar(D, `Mandar aviso: painel ${await page.locator('#fluxo-confirma').isVisible()} | avisos ${JSON.stringify(await lerAnuncios(page))} | partilhas ${(await page.evaluate(() => window.__partilhas)).length}`);
   resumoFoco(D, trilhaAv, 'aviso');
   anotar(D, `\nTempo total: evento ${tEvento} ms (${tq1} teclas); erros JS ${JSON.stringify(erros)}; fora do site ${JSON.stringify(foraDoSite)}`);
   expect(erros).toEqual([]);
@@ -258,7 +259,7 @@ for (const modo of ['ausente', 'cancela', 'recusa-arquivo'] as Compartilhar[]) {
       const av = await lerAnuncios(page);
       anotar(D, `Depois de Mandar: foco ${await focado(page)} | avisos ${JSON.stringify(av)}`);
       anotar(D, `Estado (#fluxo-estado): "${await page.locator('#fluxo-estado').innerText()}" | link-estado: "${await page.locator('#fluxo-link-estado').innerText()}"`);
-      anotar(D, `Painel do exemplo: ${await page.locator('#fluxo-confirma').isVisible()} | partilhas: ${JSON.stringify(await page.evaluate(() => window.__partilhas)).slice(0, 200)} | cópias: ${(await page.evaluate(() => window.__copias)).length} | downloads: ${JSON.stringify(baixados)} | abas novas: ${JSON.stringify(popups)}`);
+      anotar(D, `Painel de confirmação do Pronto: ${await page.locator('#fluxo-confirma').isVisible()} | partilhas: ${JSON.stringify(await page.evaluate(() => window.__partilhas)).slice(0, 200)} | cópias: ${(await page.evaluate(() => window.__copias)).length} | downloads: ${JSON.stringify(baixados)} | abas novas: ${JSON.stringify(popups)}`);
       anotar(D, `Regiões vivas: ${JSON.stringify(await regioesVivas(page))}`);
       anotar(D, `Botões visíveis agora: ${JSON.stringify(await page.getByRole('button').evaluateAll((bs) => bs.filter((b) => (b as HTMLElement).offsetParent).map((b) => (b.textContent ?? '').trim())))}`);
       await foto(page, `c5-compartilhar-${modo}`, true);
@@ -278,6 +279,7 @@ for (const forced of [false, true]) {
     if (forced) await page.emulateMedia({ forcedColors: 'active' });
     await page.goto('./#/fazer/evento');
     await expect(titulo(page)).toContainText('Passo 1 de 3');
+    await page.locator('#fluxo-titulo').fill('Roda de conversa'); // o título começa vazio e é obrigatório
     await tabAte(page, '#fluxo-continuar');
     await page.keyboard.press('Enter');
     await expect(titulo(page)).toContainText('Passo 2 de 3');

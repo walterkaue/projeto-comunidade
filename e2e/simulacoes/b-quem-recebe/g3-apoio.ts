@@ -6,6 +6,7 @@ import type { Page } from '@playwright/test';
 import { codificar } from '../../../src/ferramentas/evento/formato';
 import type { Evento } from '../../../src/ferramentas/evento/validar';
 import { linkDoEvento, SAIDAS } from './aparelhos';
+import { preencherDiaBr } from './dia-apoio';
 
 export type CampoFluxo = 'titulo' | 'organizacao' | 'texto' | 'local';
 export type CampoLink = 'titulo' | 'organizacao' | 'descricao' | 'local';
@@ -332,6 +333,17 @@ async function erroDe(page: Page, campo: CampoFluxo): Promise<string> {
 
 const tituloPasso = async (page: Page) => (await page.getByRole('heading', { level: 1 }).first().innerText()).trim();
 
+/**
+ * Texto que cita órgão público (Prefeitura, Defesa Civil…) abre o painel modal `dialog#fluxo-orgao` ao tocar em
+ * Continuar. Fecha com "Mudar o texto" (como quem desiste) e diz se abriu, para o roteiro seguir sem ficar preso no modal.
+ */
+async function fecharPainelDoOrgao(page: Page): Promise<boolean> {
+  const orgao = page.locator('dialog#fluxo-orgao');
+  if (!(await orgao.isVisible())) return false;
+  await orgao.getByRole('button', { name: 'Mudar o texto' }).click();
+  return true;
+}
+
 /** Passo 1 com os campos válidos, vindo da porta "Divulgar um evento". */
 export async function irAoPasso1(page: Page): Promise<void> {
   await page.goto('./');
@@ -350,6 +362,7 @@ export async function tentarNoFluxo(page: Page, texto: string, campos: CampoFlux
     await page.locator(`#fluxo-${campo}`).fill(texto);
     await page.getByRole('button', { name: 'Continuar' }).click();
     await page.waitForTimeout(150);
+    const painelDoOrgao = await fecharPainelDoOrgao(page);
     const msg = await erroDe(page, campo);
     const outros: string[] = [];
     for (const o of ['titulo', 'organizacao', 'texto'] as const) if (o !== campo) {
@@ -358,7 +371,7 @@ export async function tentarNoFluxo(page: Page, texto: string, campos: CampoFlux
     }
     const passo = await tituloPasso(page);
     const passou = /Passo 2 de 3/.test(passo);
-    saida[campo] = { barrou: !!msg, mensagem: msg || (outros.length ? `(campo sem erro; outros: ${outros.join(' | ')})` : ''), passou };
+    saida[campo] = { barrou: !!msg, mensagem: msg || (painelDoOrgao ? '(abriu o painel "fala em nome de um órgão público?")' : outros.length ? `(campo sem erro; outros: ${outros.join(' | ')})` : ''), passou };
     if (passou) {
       await page.getByRole('button', { name: 'Voltar' }).first().click();
       await page.locator('#fluxo-titulo').waitFor();
@@ -369,14 +382,15 @@ export async function tentarNoFluxo(page: Page, texto: string, campos: CampoFlux
     await page.getByRole('button', { name: 'Continuar' }).click();
     await page.waitForTimeout(150);
     if (/Passo 2 de 3/.test(await tituloPasso(page))) {
-      await page.locator('#fluxo-data').fill('15/12/2026');
+      await preencherDiaBr(page, '15/12/2026');
       await page.locator('#fluxo-hora').fill('19:00');
       await page.locator('#fluxo-local').fill(texto);
       await page.getByRole('button', { name: 'Continuar' }).click();
       await page.waitForTimeout(150);
+      const painelDoOrgao = await fecharPainelDoOrgao(page);
       const msg = await erroDe(page, 'local');
       const passou = /Passo 3 de 3/.test(await tituloPasso(page));
-      saida.local = { barrou: !!msg, mensagem: msg, passou };
+      saida.local = { barrou: !!msg, mensagem: msg || (painelDoOrgao ? '(abriu o painel "fala em nome de um órgão público?")' : ''), passou };
     } else {
       saida.local = { barrou: false, mensagem: '(não chegou ao passo 2)', passou: false };
     }

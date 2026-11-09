@@ -1,5 +1,6 @@
 // Apoio do grupo a5 (neutralidade: dois personagens, mesmo roteiro). Só testes; nada entra no site.
 import type { Page } from '@playwright/test';
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { cronometro, expect, foto, inspecionar as inspecionarCompleto, partilhas, registrar, salvarPartilhado, salvarTexto, tocar, titulo } from './sim';
 
 export const PORTAS = [
@@ -15,10 +16,10 @@ export const porta = (tipo: Porta['tipo']): Porta => PORTAS.find((p) => p.tipo =
 
 /** Os tipos de organização do rodízio (src/ferramentas/cards/exemplos.ts), pelo começo do nome. */
 export const TIPOS: [string, RegExp][] = [
-  ['associacao-de-moradores', /^Associação de Moradores/],
+  ['associacao-de-moradores', /^Associação/],
   ['sindicato', /^Sindicato/],
-  ['grupo-de-oracao', /^(Grupo de Oração|Casa de Matriz Africana|Centro Espírita)/], // o grupo religioso agora alterna entre 3 tradições (exemplos.ts)
-  ['nucleo-de-bairro', /^Núcleo de Bairro/],
+  ['grupo-de-oracao', /^(Grupo|Casa|Centro)/], // o grupo religioso alterna entre 3 tradições; o exemplo em cinza usa o nome curto (NOMES_CURTOS em exemplos.ts)
+  ['nucleo-de-bairro', /^Núcleo/],
   ['coletivo-cultural', /^Coletivo/],
   ['instituto-ong', /^Instituto/],
   ['conselho-escolar', /^Conselho Escolar/],
@@ -64,10 +65,11 @@ export async function tocarNaPorta(page: Page, p: Porta): Promise<void> {
   await expect(titulo(page)).toContainText('Passo 1 de 3');
 }
 
-/** Lê organização e título do exemplo no passo 1. */
+/** Lê organização e título do exemplo no passo 1. Os campos começam vazios: o exemplo é o cinza de dentro (placeholder 'Ex.: …'). */
 export async function exemploDoPasso1(page: Page) {
-  const organizacao = await page.locator('#fluxo-organizacao').inputValue();
-  const tituloEx = await page.locator('#fluxo-titulo').inputValue();
+  const cinza = async (id: string) => ((await page.locator(id).getAttribute('placeholder')) ?? '').replace(/^Ex\.:\s*/, '');
+  const organizacao = await cinza('#fluxo-organizacao');
+  const tituloEx = await cinza('#fluxo-titulo');
   return { organizacao, titulo: tituloEx, tipo: tipoDaOrg(organizacao) };
 }
 
@@ -154,11 +156,11 @@ export async function caminhoInteiro(
   opc: { completar: boolean; prefixoFoto: string },
 ): Promise<Telas> {
   const cron = cronometro(personagem);
-  const r: Telas = { tipo: p.tipo, organizacaoTipada: opc.completar ? org : '(exemplo)' };
+  const r: Telas = { tipo: p.tipo, organizacaoTipada: opc.completar ? org : '(vazia: só o obrigatório)' };
   await irParaOInicio(page);
   r.home = await mainTexto(page);
   r.homeIcones = await page.evaluate(() =>
-    Object.fromEntries([...document.querySelectorAll('.inicio-portas a')].map((a) => [(a.getAttribute('href') ?? '').split('/').pop() ?? '', a.querySelector('svg')?.innerHTML ?? ''])),
+    Object.fromEntries([...document.querySelectorAll('.ini-portas a')].map((a) => [(a.getAttribute('href') ?? '').split('/').pop() ?? '', a.querySelector('svg')?.innerHTML ?? ''])),
   );
   await inspecionar(page, `${opc.prefixoFoto} início`);
   await foto(page, `${opc.prefixoFoto} início`);
@@ -167,6 +169,7 @@ export async function caminhoInteiro(
   await tocarNaPorta(page, p);
   r.exemplo = await exemploDoPasso1(page);
   if (opc.completar) await passo1(page, p, org);
+  else await preencherObrigatoriosVazios(page, p, 1); // sem digitar o resto: só o obrigatório (título; pauta na reunião)
   r.passo1 = await mainTexto(page);
   await inspecionar(page, `${opc.prefixoFoto} ${p.tipo} passo 1`);
   await foto(page, `${opc.prefixoFoto} ${p.tipo} passo 1`);
@@ -174,6 +177,7 @@ export async function caminhoInteiro(
 
   await continuar(page, 'Passo 2 de 3');
   if (opc.completar) await passo2(page, p);
+  else await preencherObrigatoriosVazios(page, p, 2); // dia, hora e local (reunião e evento)
   r.passo2 = await mainTexto(page);
   await inspecionar(page, `${opc.prefixoFoto} ${p.tipo} passo 2`);
   await foto(page, `${opc.prefixoFoto} ${p.tipo} passo 2`);
@@ -191,7 +195,7 @@ export async function caminhoInteiro(
 
   await tocar(page.getByRole('button', { name: 'Ficou bom' }));
   await expect(titulo(page)).toContainText('Pronto!');
-  if (p.agenda && opc.completar) await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…');
+  if (p.agenda) await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…');
   await page.waitForTimeout(400);
   r.pronto = await mainTexto(page);
   r.botoesPronto = await botoesVisiveis(page);

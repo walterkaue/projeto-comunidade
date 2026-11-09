@@ -109,7 +109,7 @@ async function acoesDoPronto(page: Page, fase: string, log: (s: string) => void)
   const antes = await page.evaluate(() => window.__partilhas.length);
   await page.locator('#fluxo-mandar').click();
   if (await page.locator('#fluxo-confirma').isVisible()) {
-    log(`[${fase}] painel do exemplo apareceu: ${await page.locator('#fluxo-confirma-texto').textContent()}`);
+    log(`[${fase}] painel de confirmação apareceu: ${await page.locator('#fluxo-confirma-texto').textContent()}`);
     await page.locator('#fluxo-confirma-seguir').click();
   }
   let ok = true;
@@ -261,11 +261,11 @@ async function percurso(page: Page, cfg: Cfg) {
   await medirTudoDeMovimento(page, 'depois de abrir o passo 1', achados);
   await dark(page, 'passo 1', achados);
 
-  const titulo0 = await page.locator('#fluxo-titulo').inputValue();
+  const titulo0 = (await page.locator('#fluxo-titulo').getAttribute('placeholder')) ?? ''; // os campos começam vazios: o exemplo é o cinza de dentro
   await page.locator('#fluxo-titulo').fill('Jogo da Várzea do Bairro Novo');
   await page.locator('#fluxo-organizacao').fill('Associação Amigos da Várzea');
   await page.locator('#fluxo-texto').fill(TEXTO_INICIAL);
-  log(`título do exemplo era: "${titulo0}"`);
+  log(`exemplo em cinza do título era: "${titulo0}"`);
   await foto(page, `${cfg.nome}-2-passo1`);
   if (await page.locator('#fluxo-ver-maior').isVisible()) {
     await page.locator('#fluxo-ver-maior').click();

@@ -2,6 +2,7 @@
 // (esperas de alguns segundos entre as ações, para não ver como erro o que é só pressa do robô).
 // Rodar com --repeat-each 2. Cada teste anota o que viu em .saida/repro.md.
 
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { APARELHOS, anotar, expect, foto, ORGANIZACAO, test, titulo } from './apoio-sim';
 import type { Page } from '@playwright/test';
 
@@ -37,6 +38,7 @@ test('R-rede: rede cai no passo 2 (sem service worker) e o convite vai sem link'
     }
   });
   expect(caiu, 'a rede caiu de verdade').toBe(true);
+  await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 2); // dia, hora e local começam vazios
   await continuar(page);
   await expect(titulo(page)).toContainText('Passo 3 de 3');
   await continuar(page);
@@ -62,7 +64,7 @@ test('R-rede: rede cai no passo 2 (sem service worker) e o convite vai sem link'
   expect(/#\/evento\//.test(texto)).toBe(true);
 });
 
-test('R-apagar: "Apagar tudo" no passo 1 apaga o que a pessoa escreveu, sem perguntar nem desfazer', async ({ page }) => {
+test('R-apagar: "Apagar tudo" no passo 1 apaga o que a pessoa escreveu, sem perguntar, e o botão vira "Desfazer"', async ({ page }) => {
   await porta(page, 'Dar um aviso');
   await page.locator('#fluxo-titulo').fill('Reunião mudou para quinta');
   await page.locator('#fluxo-organizacao').fill('Pastoral da comunidade');
@@ -72,11 +74,18 @@ test('R-apagar: "Apagar tudo" no passo 1 apaga o que a pessoa escreveu, sem perg
   await botao.click();
   await pausa(page, 1);
   const depois = [await page.locator('#fluxo-titulo').inputValue(), await page.locator('#fluxo-organizacao').inputValue()];
+  const rotuloDepois = (await botao.textContent())?.trim();
   const desfazer = await page.getByRole('button', { name: /desfazer|voltar o que/i }).count();
   await foto(page, 'repro-apagar');
-  anotar('repro', `R-apagar: botão="${nome}"; depois do toque título="${depois[0]}", organização="${depois[1]}"; botão de desfazer: ${desfazer}`);
+  // Desfazer devolve o que estava escrito.
+  await botao.click();
+  await pausa(page, 1);
+  const volta = [await page.locator('#fluxo-titulo').inputValue(), await page.locator('#fluxo-organizacao').inputValue()];
+  anotar('repro', `R-apagar: botão="${nome}"; depois do toque título="${depois[0]}", organização="${depois[1]}"; botão agora="${rotuloDepois}" (desfazer: ${desfazer}); depois de Desfazer: ${JSON.stringify(volta)}`);
   expect(nome).toBe('Apagar tudo');
   expect(depois).toEqual(['', '']);
+  expect(rotuloDepois).toBe('Desfazer');
+  expect(volta).toEqual(['Reunião mudou para quinta', 'Pastoral da comunidade']);
 });
 
 test('R-outro: "Fazer outro" no Pronto apaga tudo sem perguntar', async ({ page }) => {
@@ -140,27 +149,33 @@ test('R-corte: título longo é cortado sem aviso', async ({ page }) => {
   expect(guardado.length).toBeLessThan(longo.length);
 });
 
-test('R-dia: na reunião com a organização trocada, o aviso do exemplo não cita dia e hora', async ({ page }) => {
+test('R-dia: na reunião o dia começa vazio e o Pronto não tem mais o aviso do exemplo', async ({ page }) => {
   await porta(page, 'Chamar para uma reunião');
   await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
+  await preencherObrigatoriosVazios(page, { tipo: 'reuniao', agenda: true }, 1);
   await continuar(page);
   await expect(titulo(page)).toContainText('Passo 2 de 3');
   const dia = await page.locator('#fluxo-data').inputValue();
+  await preencherObrigatoriosVazios(page, { tipo: 'reuniao', agenda: true }, 2);
   await continuar(page);
   await continuar(page);
   await expect(titulo(page)).toContainText('Pronto!');
   await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…', { timeout: 60_000 });
-  const aviso = (await page.locator('#fluxo-aviso-exemplo').textContent())?.trim();
+  const aviso = await page.locator('#fluxo-aviso-exemplo').count();
   await foto(page, 'repro-dia-pronto');
-  anotar('repro', `R-dia: dia do exemplo=${dia}; aviso do Pronto="${aviso}"`);
-  expect(aviso ?? '').not.toMatch(/dia|hora/i);
+  anotar('repro', `R-dia: dia ao abrir o passo 2="${dia}"; avisos do exemplo no Pronto: ${aviso}`);
+  expect(dia).toBe('');
+  expect(aviso).toBe(0);
 });
 
 test('R-passado: dia no passado é aceito', async ({ page }) => {
   await porta(page, 'Divulgar um evento');
+  await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 1);
   await continuar(page);
   await expect(titulo(page)).toContainText('Passo 2 de 3');
-  await page.locator('#fluxo-data').fill('01/01/2020');
+  await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 2);
+  const campoDia = page.locator('#fluxo-data');
+  await campoDia.fill((await campoDia.getAttribute('type')) === 'date' ? '2020-01-01' : '01/01/2020');
   await pausa(page, 1);
   await continuar(page);
   await pausa(page, 1);
@@ -193,7 +208,9 @@ test.describe('sem menu de compartilhar', () => {
   test.use({ compartilhar: 'ausente' });
   test('R-sem-menu: a dica "Abre o menu do celular" fica na tela e nada abre', async ({ page }) => {
     await porta(page, 'Dar um aviso');
+    await page.locator('#fluxo-titulo').fill('Reunião mudou para quinta'); // o título começa vazio e é obrigatório
     await continuar(page);
+    await expect(titulo(page)).toContainText(/Passo [23] de 3/); // espera o passo trocar antes de olhar qual é
     if (await titulo(page).textContent().then((t) => t?.includes('Passo 2'))) await continuar(page);
     await continuar(page);
     await expect(titulo(page)).toContainText('Pronto!');

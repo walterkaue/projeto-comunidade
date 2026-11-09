@@ -67,10 +67,10 @@ async function percurso(page: Page, rotulo: string) {
   await medir(page, `${rotulo} início`);
   await foto(page, `${N}-${rotulo}-0-inicio`);
   await aoPasso(page, 'abrir Dar um aviso', () => page.getByRole('link', { name: /Dar um aviso/ }).click(), 'Passo 1 de 3');
-  await medir(page, `${rotulo} passo 1 (com exemplo)`);
+  await medir(page, `${rotulo} passo 1 (vazio)`);
   await camposTapados(page, `${rotulo} passo 1`);
   await page.evaluate(() => scrollTo(0, 0));
-  await foto(page, `${N}-${rotulo}-1-passo1-exemplo`);
+  await foto(page, `${N}-${rotulo}-1-passo1-vazio`);
   await page.locator('#fluxo-titulo').fill(TITULO);
   await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
   await page.locator('#fluxo-texto').fill(TEXTO);
@@ -94,11 +94,11 @@ async function percurso(page: Page, rotulo: string) {
   await foto(page, `${N}-${rotulo}-4-pronto`);
   await foto(page, `${N}-${rotulo}-4-pronto-inteira`, true);
   const aviso = await page.locator('#fluxo-aviso-exemplo').count();
-  anotar(N, `- aviso do exemplo no Pronto: ${aviso ? 'sim' : 'não (tudo trocado)'}`);
+  anotar(N, `- aviso do exemplo no Pronto (não existe mais): ${aviso}`);
   const t1 = Date.now();
   await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
   if (await page.locator('#fluxo-confirma').isVisible()) {
-    anotar(N, `- painel do exemplo apareceu mesmo com tudo trocado: ${await page.locator('#fluxo-confirma-texto').textContent()}`);
+    anotar(N, `- painel apareceu: ${await page.locator('#fluxo-confirma-texto').textContent()}`);
     await page.getByRole('button', { name: 'Mandar mesmo assim' }).click();
   }
   await expect.poll(() => page.evaluate(() => window.__partilhas.length), { timeout: 60_000 }).toBe(1);
@@ -166,31 +166,39 @@ test.describe('C2 toques errados, 200%', () => {
     await foto(page, `${N}-recarregar-passo2`);
   });
 
-  test('Apagar o exemplo sem querer: dá para desfazer?', async ({ page }) => {
+  test('Apagar tudo sem querer: dá para desfazer?', async ({ page }) => {
     await abrir(page);
     const ler = async () => ({ t: await page.locator('#fluxo-titulo').inputValue(), o: await page.locator('#fluxo-organizacao').inputValue(), x: await page.locator('#fluxo-texto').inputValue() });
-    const antes = await ler();
-    await page.locator('#fluxo-apagar').click();
-    const depois = await ler();
-    const botoes = await page.getByRole('button').allTextContents();
-    const desfazer = botoes.some((b) => /desfaz/i.test(b));
-    await page.locator('#fluxo-titulo').focus();
-    await page.keyboard.press('Control+z');
-    const aposZ = await page.locator('#fluxo-titulo').inputValue();
-    anotar(N, `\n## Apagar o exemplo\n- antes: ${JSON.stringify(antes)}\n- depois: ${JSON.stringify(depois)}\n- botão Desfazer: ${desfazer}\n- Ctrl+Z recupera? título após = "${aposZ}"\n- botões: ${JSON.stringify(botoes)}`);
+    const apagar = page.locator('#fluxo-apagar');
+    // Os campos começam vazios e o "Apagar tudo" fica escondido; ele só aparece quando há texto escrito.
+    const vazio = await ler();
+    const visivelVazio = await apagar.isVisible();
     await page.locator('#fluxo-titulo').fill(TITULO);
+    await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
     await page.locator('#fluxo-texto').fill(TEXTO);
-    const rotulo = await page.locator('#fluxo-apagar').textContent();
+    const antes = await ler();
+    const visivelComTexto = await apagar.isVisible();
+    const rotuloComTexto = (await apagar.textContent())?.trim();
     let perguntou = false;
     page.removeAllListeners('dialog');
     page.on('dialog', (d) => {
       perguntou = true;
       void d.dismiss();
     });
-    await page.locator('#fluxo-apagar').click();
-    const t = await page.locator('#fluxo-titulo').inputValue();
-    anotar(N, `- com texto da pessoa: botão="${rotulo}", perguntou antes? ${perguntou}, título depois="${t}" -> ${t === '' ? 'APAGOU TUDO DA PESSOA' : 'manteve'}`);
+    // Apaga tudo (um toque, sem pergunta) e vê se o botão vira "Desfazer".
+    await apagar.click();
+    const depois = await ler();
+    const rotuloDepois = (await apagar.textContent())?.trim();
+    const botoes = await page.getByRole('button').allTextContents();
+    const desfazer = botoes.some((b) => /desfaz/i.test(b));
+    const relogio = await apagar.locator('svg').count();
+    const foco = await page.evaluate(() => document.activeElement?.id ?? document.activeElement?.tagName);
     await foto(page, `${N}-apagou`);
+    // Desfazer devolve o que estava escrito?
+    await apagar.click();
+    const volta = await ler();
+    const igual = JSON.stringify(volta) === JSON.stringify(antes);
+    anotar(N, `\n## Apagar tudo\n- ao abrir (vazio): ${JSON.stringify(vazio)}, "Apagar tudo" visível? ${visivelVazio}\n- com texto: ${JSON.stringify(antes)}, botão visível? ${visivelComTexto} rótulo="${rotuloComTexto}"\n- depois de Apagar tudo: ${JSON.stringify(depois)}, perguntou antes? ${perguntou}, rótulo agora="${rotuloDepois}", ícone de relógio no botão: ${relogio}, foco em "${foco}"\n- botão Desfazer: ${desfazer}\n- depois de Desfazer: ${JSON.stringify(volta)} -> ${igual ? 'VOLTOU TUDO' : 'NÃO VOLTOU'}\n- botões: ${JSON.stringify(botoes)}`);
     const m = await medirAlvos(page);
     anotar(N, `- colados no passo 1 (200%): ${JSON.stringify(m.colados)}`);
   });

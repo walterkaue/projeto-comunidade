@@ -31,8 +31,12 @@ for (const porta of PORTAS.filter((p) => !p.agenda)) {
         await page.getByRole('button', { name: 'Continuar' }).click();
         await page.waitForTimeout(250);
         const erros = await page.locator('.campo-erro:not([hidden])').allInnerTexts();
+        // Título ou texto que fala em nome de órgão público abre o painel modal (dialog#fluxo-orgao): registra e toca em "Seguir assim".
+        const painelOrgao = page.locator('dialog#fluxo-orgao');
+        const painelDoOrgao = await painelOrgao.isVisible();
+        if (painelDoOrgao) await painelOrgao.getByRole('button', { name: 'Seguir assim' }).click();
         const passo = await titulo(page).innerText();
-        const r: Record<string, unknown> = { erros, passoDepois: passo.trim() };
+        const r: Record<string, unknown> = { erros, painelDoOrgao, passoDepois: passo.trim() };
         if (!erros.length) {
           // segue até o Pronto
           for (let i = 0; i < 2; i++) {

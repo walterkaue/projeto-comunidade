@@ -6,6 +6,7 @@ import { appendFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { esperarOPronto, linkNoTexto, mandar, PORTAS, titulo } from '../../apoio';
 import { abrirAparelho, foto, medirEGuardar, SAIDAS } from './aparelhos';
+import { preencherDiaBr } from './dia-apoio';
 import { abrirLinkAMao, irAoPasso1, type CampoLink } from './g3-apoio';
 
 test.describe.configure({ mode: 'parallel' });
@@ -35,7 +36,7 @@ for (const e of ERROS) {
       if (e.campo === 'fluxo-local') {
         await page.getByRole('button', { name: 'Continuar' }).click();
         await expect(titulo(page)).toContainText('Passo 2 de 3');
-        await page.locator('#fluxo-data').fill('15/12/2026');
+        await preencherDiaBr(page, '15/12/2026');
         await page.locator('#fluxo-hora').fill('19:00');
       }
       await page.locator(`#${e.campo}`).fill(e.texto);
@@ -136,7 +137,7 @@ test('g3 cena pronto autoridade', async ({ browser }) => {
       await painelOrgao.getByRole('button', { name: 'Seguir' }).click();
     }
     await expect(titulo(page)).toContainText('Passo 2 de 3');
-    await page.locator('#fluxo-data').fill('15/12/2026');
+    await preencherDiaBr(page, '15/12/2026');
     await page.locator('#fluxo-hora').fill('19:00');
     await page.locator('#fluxo-local').fill('Ginásio municipal de Vila Alegre');
     await page.getByRole('button', { name: 'Continuar' }).click();
@@ -182,7 +183,7 @@ test('g3 cena reuniao pauta telefone', async ({ browser }) => {
     guardar({ cena: 'reuniao-pauta-telefone', erros, passo });
     if (!erros.length) {
       await foto(page, 'g3-reuniao-pauta-telefone-passo2');
-      await page.locator('#fluxo-data').fill('15/12/2026');
+      await preencherDiaBr(page, '15/12/2026');
       await page.locator('#fluxo-hora').fill('19:00');
       await page.locator('#fluxo-local').fill('Salão da comunidade, Rua da Paz, 300');
       await page.getByRole('button', { name: 'Continuar' }).click();

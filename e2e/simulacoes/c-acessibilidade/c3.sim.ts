@@ -103,7 +103,7 @@ test('C3 erro de campo e exemplo sob filtros', async ({ page }) => {
   await expect(titulo(page)).toContainText('Passo 1 de 3');
   for (const f of [null, ...FILTROS]) {
     await filtrar(page, f);
-    await foto(page, `${N}-passo1-exemplo-${f ?? 'normal'}`);
+    await foto(page, `${N}-passo1-vazio-${f ?? 'normal'}`);
   }
   await filtrar(page, null);
   await page.locator('#fluxo-titulo').fill('');
@@ -122,7 +122,7 @@ test('C3 erro de campo e exemplo sob filtros', async ({ page }) => {
     await foto(page, `${N}-erro-${f ?? 'normal'}`);
   }
   await filtrar(page, null);
-  // Pronto com exemplo: aviso
+  // Pronto só com o título (o exemplo é só ilustrativo)
   await page.locator('#fluxo-titulo').fill(TITULO);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.getByRole('button', { name: 'Continuar' }).click();
@@ -133,7 +133,7 @@ test('C3 erro de campo e exemplo sob filtros', async ({ page }) => {
   await page.waitForTimeout(300);
   for (const f of [null, 'deuteranopia', 'tritanopia']) {
     await filtrar(page, f);
-    await foto(page, `${N}-pronto-exemplo-${f ?? 'normal'}`);
+    await foto(page, `${N}-pronto-so-titulo-${f ?? 'normal'}`);
   }
   await filtrar(page, null);
 });

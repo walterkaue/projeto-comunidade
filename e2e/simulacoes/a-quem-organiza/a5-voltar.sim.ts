@@ -1,4 +1,5 @@
-// A5: "Mudar algo", "Fazer outro", Voltar do navegador (page.goBack) e o painel do exemplo, nos dois aparelhos.
+// A5: "Mudar algo", "Fazer outro", Voltar do navegador (page.goBack) e o Pronto só com o obrigatório, nos dois aparelhos.
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { continuar, exemploDoPasso1, inspecionar, irParaOInicio, passo1, passo2, porta, tocarNaPorta } from './a5-apoio';
 import { expect, foto, partilhas, registrar, tocar, test, titulo } from './sim';
 
@@ -74,37 +75,47 @@ for (const pessoa of PESSOAS) {
       nota('goBack depois de Fazer outro', { titulo: await titulo(page).innerText().catch(() => '?'), url: page.url().split('#')[1] ?? '' });
     });
 
-    test(`A5 ${pessoa.nome}: exemplo intacto, painel e Fazer outro traz o próximo (${tipo}) @${pessoa.aparelho}`, async ({ page }) => {
+    test(`A5 ${pessoa.nome}: só o obrigatório, sem aviso de exemplo e Fazer outro traz o próximo (${tipo}) @${pessoa.aparelho}`, async ({ page }) => {
       test.setTimeout(900_000);
       const p = porta(tipo);
       const nota = (o: string, d: Record<string, unknown>) => registrar('navegacao', { pessoa: pessoa.nome, porta: tipo, o, ...d });
       await irParaOInicio(page);
       await tocarNaPorta(page, p);
+      // Os campos começam vazios; o exemplo é o cinza de dentro. Escreve só o obrigatório.
       const ex1 = await exemploDoPasso1(page);
+      await preencherObrigatoriosVazios(page, p, 1);
       await continuar(page, 'Passo 2 de 3');
+      await preencherObrigatoriosVazios(page, p, 2);
       await continuar(page, 'Passo 3 de 3');
       await tocar(page.getByRole('button', { name: 'Ficou bom' }));
       await expect(titulo(page)).toContainText('Pronto!');
+      if (p.agenda) await expect(page.locator('#fluxo-link-estado')).not.toHaveText('Preparando o link…');
       await page.waitForTimeout(500);
-      nota('aviso do exemplo no Pronto', { aviso: (await page.locator('#fluxo-aviso-exemplo').innerText().catch(() => '')).trim() });
+      nota('aviso do exemplo no Pronto', { avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count() }); // 0: não existe mais
+      // O painel não abre mais por causa do exemplo; só se faltar o link ou houver órgão público.
+      const antes = (await partilhas(page)).length;
       await tocar(page.locator('#fluxo-mandar'));
-      await expect(page.locator('#fluxo-confirma')).toBeVisible();
-      nota('painel', { painel: await page.locator('#fluxo-confirma').innerText(), botoes: await page.locator('#fluxo-confirma button').allInnerTexts() });
-      await foto(page, `${tipo} painel do exemplo`);
-      await inspecionar(page, `${tipo} painel do exemplo`);
-      await tocar(page.locator('#fluxo-confirma-mudar'));
+      const painel = await page.locator('#fluxo-confirma').isVisible();
+      nota('painel', { abriu: painel, texto: painel ? await page.locator('#fluxo-confirma').innerText() : null, botoes: painel ? await page.locator('#fluxo-confirma button').allInnerTexts() : [] });
+      if (painel) {
+        await foto(page, `${tipo} painel`);
+        await inspecionar(page, `${tipo} painel`);
+        await tocar(page.getByRole('button', { name: 'Mandar mesmo assim' }));
+      }
+      await expect.poll(async () => (await partilhas(page)).length).toBe(antes + 1);
+      nota('texto mandado só com o obrigatório', { texto: (await partilhas(page))[antes]!.texto });
+
+      // Mudar algo (de baixo), Voltar do navegador e seguir de novo.
+      await tocar(page.locator('#fluxo-mudar'));
       await expect(titulo(page)).toContainText('Passo 1 de 3');
       await page.goBack();
-      nota('goBack depois do Mudar algo do painel', { titulo: await titulo(page).innerText() });
+      nota('goBack depois do Mudar algo', { titulo: await titulo(page).innerText() });
       await page.goForward();
       await continuar(page, 'Passo 2 de 3');
       await continuar(page, 'Passo 3 de 3');
       await tocar(page.getByRole('button', { name: 'Ficou bom' }));
       await expect(titulo(page)).toContainText('Pronto!');
-      await tocar(page.locator('#fluxo-mandar'));
-      await tocar(page.getByRole('button', { name: 'Mandar mesmo assim' }));
-      await expect.poll(async () => (await partilhas(page)).length).toBe(1);
-      nota('texto mandado do exemplo', { texto: (await partilhas(page))[0]!.texto });
+
       // Fazer outro e tocar na mesma porta de novo: vem o próximo do rodízio?
       await tocar(page.locator('#fluxo-outro'));
       await expect(titulo(page)).toHaveText('O que você quer fazer?');

@@ -1,4 +1,5 @@
 // A4 Mãe Iara, 58, terreiro. Aparelho pequeno (320×568). Evento em casa, depois "Agradecer". E um passeio pelos exemplos.
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { expect, test, cronometro, partilhas, registrar, salvarPartilhado, salvarTexto, titulo, baixarPor } from './sim';
 import {
   analisarTexto,
@@ -6,6 +7,7 @@ import {
   digitar,
   esperarPasso,
   esperarPronto,
+  exemplosEmCinza,
   estadoDoFluxo,
   medirFormatos,
   tela,
@@ -29,11 +31,13 @@ test('A4 Mãe Iara: festa de caruru e depois agradecer @AND-PEQUENO', async ({ p
 
   // ---- passo 1 ----
   await esperarPasso(page, 1);
-  registrar('exemplo-visto', await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
-  await tela(page, 'passo1-exemplo');
-  await toque(page.locator('#fluxo-apagar'), 'Apagar o exemplo');
-  registrar('apos-apagar', { campos: await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']), avisos: await avisos(page) });
+  registrar('exemplo-visto', await exemplosEmCinza(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
+  registrar('valores-ao-abrir', await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
+  await tela(page, 'passo1-vazio');
+  // Os campos vêm vazios: o "Apagar tudo" ainda está escondido e só aparece depois de escrever.
+  const apagarAntes = await page.locator('#fluxo-apagar').isVisible();
   await digitar(page.locator('#fluxo-titulo'), 'Festa de caruru para Cosme e Damião');
+  registrar('apagar-tudo', { visivelAntes: apagarAntes, visivelDepois: await page.locator('#fluxo-apagar').isVisible(), rotulo: await page.locator('#fluxo-apagar').innerText() });
   await digitar(page.locator('#fluxo-organizacao'), 'Ilê Axé Flor do Dendê');
   await digitar(page.locator('#fluxo-texto'), 'Caruru, samba de roda e muito axé');
   await tela(page, 'passo1-digitado');
@@ -89,7 +93,7 @@ test('A4 Mãe Iara: festa de caruru e depois agradecer @AND-PEQUENO', async ({ p
   await esperarPronto(page, true);
   cron.marca('pronto');
   await tela(page, 'pronto', true);
-  registrar('painel-no-evento', { aberto: await page.locator('#fluxo-confirma').isVisible(), aviso: await page.locator('#fluxo-aviso-exemplo').count() });
+  registrar('painel-no-evento', { aberto: await page.locator('#fluxo-confirma').isVisible(), avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count() });
 
   // ---- mandar ----
   const antes = Date.now();
@@ -145,9 +149,8 @@ test('A4 Mãe Iara: festa de caruru e depois agradecer @AND-PEQUENO', async ({ p
   await toque(page.getByRole('link', { name: /Agradecer/ }), 'porta Agradecer');
   await esperarPasso(page, 1);
   cron2.marca('passo1-abriu');
-  registrar('exemplo-visto-agradecer', await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
-  await tela(page, 'agradecer-passo1-exemplo');
-  await toque(page.locator('#fluxo-apagar'), 'Apagar o exemplo');
+  registrar('exemplo-visto-agradecer', await exemplosEmCinza(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']));
+  await tela(page, 'agradecer-passo1-vazio');
   await digitar(page.locator('#fluxo-titulo'), 'Axé e gratidão a quem ajudou');
   await digitar(page.locator('#fluxo-organizacao'), 'Ilê Axé Flor do Dendê');
   await digitar(page.locator('#fluxo-texto'), 'Obrigada a quem cozinhou, cantou e arrumou a casa. A festa foi linda.');
@@ -168,7 +171,7 @@ test('A4 Mãe Iara: festa de caruru e depois agradecer @AND-PEQUENO', async ({ p
   await esperarPronto(page, false);
   cron2.marca('pronto');
   await tela(page, 'agradecer-pronto', true);
-  registrar('painel-no-agradecimento', { aberto: await page.locator('#fluxo-confirma').isVisible(), aviso: await page.locator('#fluxo-aviso-exemplo').count() });
+  registrar('painel-no-agradecimento', { aberto: await page.locator('#fluxo-confirma').isVisible(), avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count() });
   const n0 = (await partilhas(page)).length;
   await toque(page.locator('#fluxo-mandar'), 'Mandar no WhatsApp (agradecimento)');
   if (await page.locator('#fluxo-confirma').isVisible()) await toque(page.locator('#fluxo-confirma-seguir'), 'Mandar mesmo assim');
@@ -197,13 +200,18 @@ test('A4 Exemplos das portas evento e agradecimento (neutralidade) @AND-GRANDE',
     for (const [tipo, nome] of [['evento', /Divulgar um evento/], ['agradecimento', /Agradecer/]] as const) {
       await page.getByRole('link', { name: nome }).tap();
       await esperarPasso(page, 1);
-      const v = await valores(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']);
+      // Os campos vêm vazios: o exemplo é o cinza de dentro (placeholder). Escreve só o título, que é obrigatório.
+      const v = await exemplosEmCinza(page, ['fluxo-titulo', 'fluxo-organizacao', 'fluxo-texto']);
+      await preencherObrigatoriosVazios(page, { tipo, agenda: tipo === 'evento' }, 1);
       await page.getByRole('button', { name: 'Continuar' }).tap();
       await esperarPasso(page, 2);
-      if (tipo === 'evento') Object.assign(v, await valores(page, ['fluxo-local']));
+      if (tipo === 'evento') Object.assign(v, await exemplosEmCinza(page, ['fluxo-local']));
       vistos[tipo]!.push(v);
       if (tipo === 'agradecimento') await page.locator('#fluxo-pular').tap();
-      else await page.getByRole('button', { name: 'Continuar' }).tap();
+      else {
+        await preencherObrigatoriosVazios(page, { tipo, agenda: true }, 2);
+        await page.getByRole('button', { name: 'Continuar' }).tap();
+      }
       await esperarPasso(page, 3);
       await page.getByRole('button', { name: 'Ficou bom' }).tap();
       await esperarPronto(page, tipo === 'evento');

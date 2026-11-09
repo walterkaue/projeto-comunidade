@@ -2,6 +2,7 @@
 import type { Page } from '@playwright/test';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { gerarFixtures, type Arquivos } from './a6-apoio';
 import {
   baixarPor, copias, cronometro, expect, foto, inspecionar, pastaDoTeste, partilhas, registrar, SAIDAS, salvarPdf, salvarTexto, test, titulo,
@@ -45,6 +46,7 @@ async function ate3(page: Page, cron: ReturnType<typeof cronometro>) {
   await expect(titulo(page)).toContainText('Passo 2 de 3');
   await page.getByRole('button', { name: 'Próximo sábado' }).click();
   await digitar(page, '#fluxo-local', 'Rua das Flores, 120, Centro');
+  await page.locator('#fluxo-hora').fill('19:00'); // a hora começa vazia e é obrigatória
   await inspecionar(page, 'passo 2');
   await foto(page, 'passo2');
   cron.marca('passo2');
@@ -162,7 +164,7 @@ async function roteiro(page: Page, ehChromium: boolean) {
   cron.marca('pronto');
   registrar('a6-pronto', {
     estadoLink: await page.locator('#fluxo-link-estado').textContent(),
-    avisoExemplo: await page.locator('#fluxo-aviso-exemplo').textContent().catch(() => null),
+    avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count(), // 0: o aviso do exemplo não existe mais
     qrNota: await page.locator('#fluxo-aviso-qr').isVisible().catch(() => false),
     dica: await page.locator('#fluxo-mandar-dica').textContent(),
     canvas: await page.locator('#fluxo-canvas').boundingBox(),
@@ -251,7 +253,10 @@ async function roteiro(page: Page, ehChromium: boolean) {
   registrar('a6-fazer-outro', { dica, url: page.url(), titulo: await titulo(page).textContent() });
   await page.getByRole('link', { name: /Divulgar um evento/ }).click();
   registrar('a6-fazer-outro', { passo1Titulo: await page.locator('#fluxo-titulo').inputValue(), org: await page.locator('#fluxo-organizacao').inputValue() });
+  // Depois de "Fazer outro" os campos voltam vazios: escreve o obrigatório para chegar ao passo 3.
+  await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 1);
   await page.getByRole('button', { name: 'Continuar' }).click();
+  await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 2);
   await page.getByRole('button', { name: 'Continuar' }).click().catch(() => undefined);
   await page.waitForTimeout(500);
   if ((await titulo(page).textContent())?.includes('Passo 3')) {

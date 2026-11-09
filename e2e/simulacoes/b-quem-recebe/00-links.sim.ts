@@ -6,6 +6,7 @@ import { writeFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { esperarOPronto, expect, linkNoTexto, mandar, PORTAS, test, titulo } from '../../apoio';
 import { PASTA } from './aparelhos';
+import { preencherDiaBr } from './dia-apoio';
 
 interface Pedido {
   chave: string;
@@ -47,7 +48,10 @@ export const PEDIDOS: Pedido[] = [
 async function continuar(page: Page, botao: string, proximo: string, p: Pedido): Promise<void> {
   await page.getByRole('button', { name: botao }).click();
   await page.waitForTimeout(300);
-  const erros = await page.locator('.campo-erro:not([hidden])').allInnerTexts();
+  // Texto que cita órgão público (a pauta longa fala em "prefeitura") abre o painel do órgão: "Seguir assim" continua.
+  const orgao = page.locator('dialog#fluxo-orgao');
+  if (await orgao.isVisible()) await orgao.getByRole('button', { name: 'Seguir assim' }).click();
+  const erros =await page.locator('.campo-erro:not([hidden])').allInnerTexts();
   if (erros.length) throw new Error(`${p.chave}: recusado no fluxo: ${erros.join(' | ')}`);
   await expect(titulo(page)).toContainText(proximo);
 }
@@ -62,7 +66,7 @@ async function preencher(page: Page, p: Pedido): Promise<string> {
   await page.locator('#fluxo-organizacao').fill(p.organizacao);
   await page.locator(p.tipo === 'reuniao' ? '#fluxo-pauta' : '#fluxo-texto').fill(p.corpo);
   await continuar(page, 'Continuar', 'Passo 2 de 3', p);
-  await page.locator('#fluxo-data').fill(p.data);
+  await preencherDiaBr(page, p.data);
   await page.locator('#fluxo-hora').fill(p.hora);
   await page.locator('#fluxo-local').fill(p.local);
   await continuar(page, 'Continuar', 'Passo 3 de 3', p);

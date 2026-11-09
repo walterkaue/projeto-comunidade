@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
 import type { Browser, Page } from '@playwright/test';
 import { abrirAparelho, PASTA, SAIDAS } from './aparelhos';
+import { preencherDiaBr } from './dia-apoio';
 
 export const LINKS = JSON.parse(readFileSync(`${PASTA}links.json`, 'utf8')) as Record<string, { dados: string; titulo: string }>;
 
@@ -48,7 +49,7 @@ export async function criarEvento(browser: Browser, baseURL: string, p: PedidoDe
     };
     await seguir();
     if (erros.length) return { erros };
-    await page.locator('#fluxo-data').fill(p.data);
+    await preencherDiaBr(page, p.data);
     await page.locator('#fluxo-hora').fill(p.hora);
     await page.locator('#fluxo-local').fill(p.local);
     await seguir();

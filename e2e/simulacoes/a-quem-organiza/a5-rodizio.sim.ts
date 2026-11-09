@@ -1,7 +1,8 @@
-// A5: o rodízio dos exemplos. memoria.ts: contador `proximo` começa ao acaso (0..6) a cada carga da aba e anda um
+// A5: o rodízio dos exemplos (o exemplo é o cinza 'Ex.: …' dos campos, que começam vazios). memoria.ts: contador `proximo` começa ao acaso (0..6) a cada carga da aba e anda um
 // a cada exemplo novo (qualquer porta compartilha o mesmo contador); "Fazer outro" apaga os dados e o próximo exemplo
 // é o seguinte. Contagem: 30 aberturas por porta com aba nova; mais a sequência com "Fazer outro" e o "voltar ao início
 // e tocar de novo" na mesma aba.
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { exemploDoPasso1, irParaOInicio, PORTAS, TIPOS, tipoDaOrg, tocarNaPorta } from './a5-apoio';
 import { expect, registrar, tocar, test, titulo } from './sim';
 
@@ -50,8 +51,11 @@ for (const aparelho of APARELHOS) {
         const e = await exemploDoPasso1(page);
         outro.push(e.tipo);
         titulos.push(e.titulo);
+        // Os campos começam vazios: escreve só o obrigatório para poder seguir.
+        await preencherObrigatoriosVazios(page, p, 1);
         await tocar(page.getByRole('button', { name: 'Continuar' }));
         await expect(titulo(page)).toContainText('Passo 2 de 3');
+        await preencherObrigatoriosVazios(page, p, 2);
         await tocar(page.getByRole('button', { name: 'Continuar' }));
         await expect(titulo(page)).toContainText('Passo 3 de 3');
         await tocar(page.getByRole('button', { name: 'Ficou bom' }));

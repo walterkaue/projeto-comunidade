@@ -6,6 +6,7 @@ import { expect, test, webkit, type Page } from '@playwright/test';
 import { impressaoDoLink } from '../../../src/comum/entreTelas';
 import { codificar } from '../../../src/ferramentas/evento/formato';
 import { abrirAparelho, cronometro, foto, medirEGuardar, salvarSaida, SAIDAS } from './aparelhos';
+import { preencherDiaBr } from './dia-apoio';
 import { anotar, subirServidor, texto } from './g2-apoio';
 import { lerQrDoPdf } from './g2-qr';
 
@@ -44,7 +45,7 @@ async function fazerCartaz(page: Page, base: string, p: Pedido): Promise<string>
   await page.locator('#fluxo-texto').fill(p.corpo);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Passo 2 de 3');
-  await page.locator('#fluxo-data').fill(p.data);
+  await preencherDiaBr(page, p.data);
   await page.locator('#fluxo-hora').fill(p.hora);
   await page.locator('#fluxo-local').fill(p.local);
   await page.getByRole('button', { name: 'Continuar' }).click();

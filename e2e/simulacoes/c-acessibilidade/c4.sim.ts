@@ -7,6 +7,8 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import type { Porta } from '../../apoio';
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { APARELHOS, SAIDA, condicoes, cronometro, expect, foto, guardar, medirAlvos, ORGANIZACAO, PORTAS, rolagemLateral, test, titulo } from './apoio-sim';
 
 test.use({ ...APARELHOS['AND-FRACO'] });
@@ -174,9 +176,31 @@ async function abrirPorta(page: Page, tipo: string): Promise<void> {
   await expect(titulo(page)).toContainText('Passo 1 de 3', { timeout: 120_000 });
 }
 
-async function atePasso3(page: Page): Promise<void> {
+const PORTA_AVISO = { tipo: 'aviso', verbo: 'Dar um aviso', agenda: false } as Porta;
+
+/** Escreve o dia (dd/mm/aaaa) em #fluxo-data. No calendário (type="date") vai AAAA-MM-DD; texto livre e dia impossível não cabem (devolve false). */
+async function escreverDia(page: Page, texto: string): Promise<boolean> {
+  const campo = page.locator('#fluxo-data');
+  if ((await campo.getAttribute('type')) !== 'date') {
+    await campo.fill(texto);
+    return true;
+  }
+  const m = /^(\d\d)\/(\d\d)\/(\d{4})$/.exec(texto);
+  if (!m) return false;
+  try {
+    await campo.fill(`${m[3]}-${m[2]}-${m[1]}`);
+  } catch {
+    return false;
+  }
+  return (await campo.inputValue()) !== '';
+}
+
+/** Os campos dos passos 1 e 2 começam vazios: escreve só os obrigatórios que faltam e segue até o passo 3. */
+async function atePasso3(page: Page, porta: Porta): Promise<void> {
+  await preencherObrigatoriosVazios(page, porta, 1);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 2 de 3');
+  await preencherObrigatoriosVazios(page, porta, 2);
   await page.getByRole('button', { name: 'Continuar' }).click();
   await expect(titulo(page)).toContainText('Passo 3 de 3');
 }
@@ -209,11 +233,13 @@ test('C4: início, rodapé e as cinco portas (passos 1, 2 e 3)', async ({ page, 
 
   for (const porta of PORTAS) {
     await abrirPorta(page, porta.tipo);
-    await tela(page, `${porta.verbo}: passo 1`);
+    await tela(page, `${porta.verbo}: passo 1 (vazio, com o exemplo em cinza)`);
     if (porta.tipo === 'reuniao') await foto(page, 'c4-reuniao-passo1', true);
+    await preencherObrigatoriosVazios(page, porta, 1);
     await page.getByRole('button', { name: 'Continuar' }).click();
     await expect(titulo(page)).toContainText('Passo 2 de 3');
     await tela(page, `${porta.verbo}: passo 2`);
+    await preencherObrigatoriosVazios(page, porta, 2);
     await page.getByRole('button', { name: 'Continuar' }).click();
     await expect(titulo(page)).toContainText('Passo 3 de 3');
     await tela(page, `${porta.verbo}: passo 3`);
@@ -225,10 +251,9 @@ test('C4: início, rodapé e as cinco portas (passos 1, 2 e 3)', async ({ page, 
 
 test('C4: erros de campo vazio e longo demais, atalhos de dia, passo 3 com Mais opções, Ver maior e cor livre', async ({ page }) => {
   await iniciar(page);
-  // Evento: apagar o exemplo e tocar em Continuar (campos vazios).
+  // Evento: os campos já começam vazios (o exemplo é só o cinza de dentro); toca em Continuar sem escrever.
   await abrirPorta(page, 'evento');
-  await page.locator('#fluxo-apagar').click();
-  await tela(page, 'Evento passo 1: depois de "Apagar o exemplo"');
+  await tela(page, 'Evento passo 1: campos vazios, antes de Continuar');
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.waitForTimeout(400);
   await tela(page, 'Evento passo 1: campos vazios, depois de Continuar (erros)');
@@ -258,19 +283,16 @@ test('C4: erros de campo vazio e longo demais, atalhos de dia, passo 3 com Mais 
   await page.waitForTimeout(400);
   await tela(page, 'Evento passo 2: tudo vazio, depois de Continuar (erros)');
   await foto(page, 'c4-erro-passo2', true);
-  await page.locator('#fluxo-data').fill('amanhã');
-  await page.locator('#fluxo-data').blur();
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  await page.waitForTimeout(300);
-  await tela(page, 'Evento passo 2: dia escrito "amanhã"');
-  await page.locator('#fluxo-data').fill('32/13/2026');
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  await page.waitForTimeout(300);
-  await tela(page, 'Evento passo 2: dia "32/13/2026"');
-  await page.locator('#fluxo-data').fill('01/01/2020');
-  await page.getByRole('button', { name: 'Continuar' }).click();
-  await page.waitForTimeout(300);
-  await tela(page, 'Evento passo 2: dia no passado "01/01/2020"');
+  // O dia é <input type="date"> (AAAA-MM-DD): texto livre e dia impossível não cabem no calendário; só o campo de
+  // texto de reserva (navegador sem calendário) aceita escrever "amanhã" ou "32/13/2026".
+  for (const [texto, rotulo] of [['amanhã', 'dia escrito "amanhã"'], ['32/13/2026', 'dia "32/13/2026"'], ['01/01/2020', 'dia no passado "01/01/2020"']] as const) {
+    if (await escreverDia(page, texto)) {
+      if (texto === 'amanhã') await page.locator('#fluxo-data').blur();
+      await page.getByRole('button', { name: 'Continuar' }).click();
+      await page.waitForTimeout(300);
+      await tela(page, `Evento passo 2: ${rotulo}`);
+    } else test.info().annotations.push({ type: 'dia', description: `o campo de calendário não aceita ${rotulo}` });
+  }
   await page.locator('#fluxo-local').fill('x'.repeat(300));
   await page.getByRole('button', { name: 'Continuar' }).click();
   await page.waitForTimeout(300);
@@ -286,8 +308,7 @@ test('C4: erros de campo vazio e longo demais, atalhos de dia, passo 3 com Mais 
 test('C4: erros da reunião (pauta vazia, nome de pessoa na pauta)', async ({ page }) => {
   await iniciar(page);
   await abrirPorta(page, 'reuniao');
-  await page.locator('#fluxo-apagar').click();
-  await page.getByRole('button', { name: 'Continuar' }).click();
+  await page.getByRole('button', { name: 'Continuar' }).click(); // campos vazios
   await page.waitForTimeout(400);
   await tela(page, 'Reunião passo 1: vazio, depois de Continuar (erros)');
   await foto(page, 'c4-erro-reuniao-p1', true);
@@ -302,7 +323,7 @@ test('C4: erros da reunião (pauta vazia, nome de pessoa na pauta)', async ({ pa
 test('C4: passo 3 do aviso: Ver maior, Mais opções, cor livre e logo', async ({ page }) => {
   await iniciar(page);
   await abrirPorta(page, 'aviso');
-  await atePasso3(page);
+  await atePasso3(page, PORTA_AVISO);
   await page.locator('#fluxo-ver-maior').click();
   await page.waitForTimeout(800);
   await tela(page, 'Aviso passo 3: "Ver a prévia maior" aberto', { raiz: 'dialog[open]' });
@@ -339,20 +360,21 @@ test('C4: passo 3 do aviso: Ver maior, Mais opções, cor livre e logo', async (
 
 // ---------- 3. Pronto (exemplo e organização trocada) ----------
 
-test('C4: Pronto com o exemplo, painel do exemplo, copiar e imprimir', async ({ page }) => {
+test('C4: Pronto só com o obrigatório, mandar, copiar e imprimir', async ({ page }) => {
   await iniciar(page);
   for (const porta of PORTAS) {
     await abrirPorta(page, porta.tipo);
-    await atePasso3(page);
+    await atePasso3(page, porta);
     await chegarAoPronto(page, porta.agenda);
-    await tela(page, `${porta.verbo}: Pronto com o exemplo`);
-    if (porta.tipo === 'aviso') await foto(page, 'c4-pronto-aviso-exemplo', true);
+    await tela(page, `${porta.verbo}: Pronto só com o obrigatório`);
+    if (porta.tipo === 'aviso') await foto(page, 'c4-pronto-aviso-obrigatorio', true);
     if (porta.tipo === 'reuniao' || porta.tipo === 'aviso') {
       await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
-      await expect(page.locator('#fluxo-confirma')).toBeVisible();
-      await tela(page, `${porta.verbo}: painel "Isto ainda tem partes do exemplo"`);
-      if (porta.tipo === 'aviso') await foto(page, 'c4-painel-exemplo');
-      await page.getByRole('button', { name: 'Mandar mesmo assim' }).click();
+      // O painel "Isto ainda tem partes do exemplo" não existe mais; o painel do Pronto só abre sem link ou com órgão público.
+      if (await page.locator('#fluxo-confirma').isVisible()) {
+        await tela(page, `${porta.verbo}: painel de confirmação do Pronto`);
+        await page.getByRole('button', { name: 'Mandar mesmo assim' }).click();
+      }
       await page.waitForTimeout(1500);
       await tela(page, `${porta.verbo}: Pronto depois de mandar (WhatsApp)`);
       await page.getByRole('button', { name: 'Copiar só o texto' }).click();
@@ -367,8 +389,8 @@ test('C4: Pronto com o exemplo, painel do exemplo, copiar e imprimir', async ({ 
       await page.waitForTimeout(500);
       await tela(page, `${porta.verbo}: depois de "Baixar a imagem"`);
       const texto = await page.evaluate(() => window.__partilhas.map((p) => p.texto).join('\n----\n'));
-      guardar(`c4-texto-mandado-exemplo-${porta.tipo}.txt`, texto);
-      guardar(`c4-texto-copiado-exemplo-${porta.tipo}.txt`, (await page.evaluate(() => window.__copias)).join('\n----\n'));
+      guardar(`c4-texto-mandado-obrigatorio-${porta.tipo}.txt`, texto);
+      guardar(`c4-texto-copiado-obrigatorio-${porta.tipo}.txt`, (await page.evaluate(() => window.__copias)).join('\n----\n'));
     }
   }
 });
@@ -379,7 +401,7 @@ test('C4: Pronto com organização trocada (reunião e evento): link, QR, copiar
   for (const porta of [PORTAS[0], PORTAS[1]]) {
     await abrirPorta(page, porta.tipo);
     await page.locator('#fluxo-organizacao').fill(ORGANIZACAO);
-    await atePasso3(page);
+    await atePasso3(page, porta);
     await chegarAoPronto(page, true);
     await tela(page, `${porta.verbo}: Pronto com link (organização trocada)`);
     if (porta.tipo === 'reuniao') await foto(page, 'c4-pronto-reuniao-link', true);
@@ -521,7 +543,7 @@ test('C4: rodízio dos exemplos (cada porta 6 vezes) e neutralidade', async ({ p
       await page.locator(`a[href$="#/fazer/${porta.tipo}"]`).click();
       await expect(titulo(page)).toContainText('Passo 1 de 3');
       const campos = await page.evaluate(() =>
-        [...document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('#fluxo-titulo,#fluxo-organizacao,#fluxo-texto,#fluxo-pauta')].map((c) => `${c.id.replace('fluxo-', '')}=${c.value.replace(/\n/g, ' / ')}`).join(' | '),
+        [...document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('#fluxo-titulo,#fluxo-organizacao,#fluxo-texto,#fluxo-pauta')].map((c) => `${c.id.replace('fluxo-', '')}=${(c.placeholder || c.value).replace(/\n/g, ' / ')}`).join(' | '),
       );
       tabela[porta.tipo]!.push(campos);
     }
@@ -535,7 +557,7 @@ test('C4: rodízio dos exemplos (cada porta 6 vezes) e neutralidade', async ({ p
   appendFileSync(join(SAIDA, 'c4-rodizio.md'), md);
   // paletas (nomes e cores)
   await abrirPorta(page, 'aviso');
-  await atePasso3(page);
+  await atePasso3(page, PORTA_AVISO);
   const paletas = await page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('.fluxo-amostra')].map((e) => `${e.dataset.paleta}: fundo ${e.style.background} / borda ${e.style.borderColor}; nome lido: ${e.closest('label')?.textContent?.trim()}`),
   );
@@ -550,7 +572,7 @@ test.describe('sem menu de compartilhar', () => {
   test('C4: Pronto no aparelho sem menu de compartilhar', async ({ page }) => {
     await iniciar(page);
     await abrirPorta(page, 'aviso');
-    await atePasso3(page);
+    await atePasso3(page, PORTA_AVISO);
     await chegarAoPronto(page, false);
     await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
     await page.waitForTimeout(500);
@@ -566,7 +588,7 @@ test.describe('o menu de compartilhar é fechado', () => {
   test('C4: Pronto quando a pessoa fecha o menu', async ({ page }) => {
     await iniciar(page);
     await abrirPorta(page, 'aviso');
-    await atePasso3(page);
+    await atePasso3(page, PORTA_AVISO);
     await chegarAoPronto(page, false);
     await page.getByRole('button', { name: 'Mandar no WhatsApp' }).click();
     await page.waitForTimeout(500);
@@ -611,7 +633,7 @@ for (const rodada of [1, 2]) {
     t = marca();
     await page.getByRole('button', { name: 'Ficou bom' }).click();
     await expect(titulo(page)).toContainText('Pronto!');
-    await expect(page.locator('#fluxo-aviso-exemplo, #fluxo-mandar').first()).toBeVisible();
+    await expect(page.locator('#fluxo-mandar')).toBeVisible();
     // desenhar a imagem: espera o botão de mandar pronto (arquivo desenhado) sem mandar
     await page.waitForFunction(() => !document.querySelector('#fluxo-estado')?.textContent?.includes('Preparando'));
     tecnico += t();
@@ -645,7 +667,7 @@ for (const rodada of [1, 2]) {
   test(`C4: quanto tempo o aviso "copiado/baixado" fica na tela (rodada ${rodada})`, async ({ page }) => {
     await iniciar(page);
     await abrirPorta(page, 'aviso');
-    await atePasso3(page);
+    await atePasso3(page, PORTA_AVISO);
     await chegarAoPronto(page, false);
     await page.getByRole('button', { name: 'Copiar só o texto' }).click();
     if (await page.locator('#fluxo-confirma').isVisible()) await page.getByRole('button', { name: 'Copiar mesmo assim' }).click();

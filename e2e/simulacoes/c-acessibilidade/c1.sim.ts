@@ -1,7 +1,7 @@
 // C1 Sérgio, 48, cego, conselho de saúde. Android grande, 4G, "TalkBack" simulado: só Tab, Shift+Tab, Enter, Espaço e setas.
 // Reunião inteira + ata. Registra em .saida/c1-*.md. Personagem fictício.
 import { APARELHOS, anotar, condicoes, cronometro, escutarAnuncios, expect, focado, foto, guardar, lerAnuncios, medirAlvos, ORGANIZACAO, regioesVivas, test, titulo } from './apoio-sim';
-import { digitar, lerTela, ordemVisual, tabAte, type Parada } from './teclado-sim';
+import { digitar, digitarDia, lerTela, ordemVisual, tabAte, type Parada } from './teclado-sim';
 
 test.use({ ...APARELHOS['AND-GRANDE'], compartilhar: 'aceita' });
 
@@ -80,7 +80,8 @@ test('C1: reunião inteira e ata, só por foco', async ({ page, erros, consoleEr
   // atalhos do dia (grupo)
   await tabAte(page, '.fluxo-atalho', { arquivo: D, trilha });
   anotar(D, `Atalho do dia: ${await focado(page)}`);
-  await digitar(page, '#fluxo-data', '21/11/2026', { arquivo: D, trilha });
+  const dia = await digitarDia(page, '21/11/2026', { arquivo: D, trilha });
+  anotar(D, `Dia escrito só pelo teclado: valor "${dia.valor}" (${dia.porTeclas ? 'as teclas bastaram' : 'PRECISOU preencher pelo valor'}); tipo do campo: ${await page.locator('#fluxo-data').getAttribute('type')}`);
   await page.keyboard.press('Tab'); // sai do campo: dispara o aviso do dia
   await page.waitForTimeout(500);
   anotar(D, `Avisos ao sair do campo Dia (extenso): ${JSON.stringify(await lerAnuncios(page))} | regiões: ${JSON.stringify(await regioesVivas(page))}`);
@@ -154,7 +155,7 @@ test('C1: reunião inteira e ata, só por foco', async ({ page, erros, consoleEr
   await page.waitForTimeout(500);
   anotar(D, `\n### Depois de "Mandar no WhatsApp"`);
   const painel = await page.locator('#fluxo-confirma').isVisible();
-  anotar(D, `Painel do exemplo visível: ${painel} | foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))}`);
+  anotar(D, `Painel de confirmação do Pronto visível (só abre sem link ou com órgão público): ${painel} | foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))}`);
   const partilhas = await page.evaluate(() => window.__partilhas);
   anotar(D, `Compartilhado (${partilhas.length}): ${JSON.stringify(partilhas).slice(0, 600)}`);
   if (partilhas[0]) guardar('c1-texto-mandado.txt', partilhas[0].texto);
@@ -224,50 +225,39 @@ test('C1: reunião inteira e ata, só por foco', async ({ page, erros, consoleEr
   expect(foraDoSite).toEqual([]);
 });
 
-test('C1: painel "Isto ainda tem partes do exemplo" com o foco', async ({ page }) => {
+test('C1: painel do órgão público (diálogo) com o foco', async ({ page }) => {
+  // O painel "Isto ainda tem partes do exemplo" não existe mais (o exemplo é só ilustrativo). O painel que sobra no
+  // passo 1 é o do órgão público: <dialog id="fluxo-orgao"> com "Mudar o texto" e "Seguir assim".
   const D2 = 'c1-painel';
   await condicoes(page, { rede: '4G' });
   await escutarAnuncios(page);
   await page.goto('./#/fazer/aviso');
   await expect(titulo(page)).toContainText('Passo 1 de 3');
-  // passo 1 -> 2 -> 3 -> Pronto só com Tab/Enter
-  for (let i = 0; i < 2; i++) {
-    await tabAte(page, '#fluxo-continuar', { max: 25 });
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(400);
-  }
+  await digitar(page, '#fluxo-titulo', 'Defesa Civil: aviso de chuva forte', { arquivo: D2 });
+  await lerAnuncios(page);
   await tabAte(page, '#fluxo-continuar', { max: 25 });
   await page.keyboard.press('Enter');
-  await expect(titulo(page)).toContainText('Pronto!');
-  await page.waitForTimeout(600);
-  await lerAnuncios(page);
-  await lerTela(page, 'c1-07-pronto-aviso', D2);
-  await tabAte(page, '#fluxo-mandar', { max: 25 });
-  await page.keyboard.press('Enter');
   await page.waitForTimeout(500);
-  anotar(D2, `Após Mandar (exemplo): painel ${await page.locator('#fluxo-confirma').isVisible()} | foco ${await focado(page)}`);
+  const orgao = page.locator('dialog#fluxo-orgao');
+  anotar(D2, `Após Continuar (órgão público): painel ${await orgao.isVisible()} | modal ${await orgao.evaluate((el: HTMLDialogElement) => el.matches(':modal')).catch(() => false)} | foco ${await focado(page)} | h1 ${(await titulo(page).innerText()).replace(/\s+/g, ' ')}`);
   anotar(D2, `Avisos vivos: ${JSON.stringify(await lerAnuncios(page))}`);
-  anotar(D2, `Painel texto: ${await page.locator('#fluxo-confirma-texto').innerText()}`);
-  await foto(page, 'c1-painel-exemplo');
+  anotar(D2, `Painel texto: ${(await orgao.innerText().catch(() => '')).replace(/\s+/g, ' ')}`);
+  anotar(D2, `Nome acessível: ${await orgao.getAttribute('aria-labelledby')} | descrição: ${await orgao.getAttribute('aria-describedby')}`);
+  await foto(page, 'c1-painel-orgao');
   // Tab dentro do painel
-  const a = await tabAte(page, '#fluxo-confirma-seguir', { arquivo: D2, max: 6 });
-  anotar(D2, `Tab dentro do painel chegou ao 'seguir' em ${a.paradas.length} toques: ${await focado(page)}`);
+  const a = await tabAte(page, '#fluxo-orgao-seguir', { arquivo: D2, max: 6 });
+  anotar(D2, `Tab dentro do painel chegou ao 'Seguir assim' em ${a.paradas.length} toques: ${await focado(page)}`);
   await tabAte(page, '#fluxo-nada', { arquivo: D2, max: 4 });
   anotar(D2, `Tab além do painel: ${await focado(page)}`);
-  // Esc
+  // Esc = "Mudar o texto"
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
-  anotar(D2, `Depois de Esc: painel visível ${await page.locator('#fluxo-confirma').isVisible()} | foco ${await focado(page)}`);
-  if (await page.locator('#fluxo-confirma').isVisible()) {
-    // Mudar algo
-    await page.locator('#fluxo-confirma-mudar').focus();
-    await page.keyboard.press('Enter');
-    await page.waitForTimeout(400);
-    anotar(D2, `Depois de "Mudar algo": painel ${await page.locator('#fluxo-confirma').isVisible()} | foco ${await focado(page)} | h1 ${await titulo(page).innerText()}`);
-  }
+  anotar(D2, `Depois de Esc: painel visível ${await orgao.isVisible()} | foco ${await focado(page)} | h1 ${(await titulo(page).innerText()).replace(/\s+/g, ' ')}`);
 });
 
 test('C1: a descrição da prévia acompanha o que ele digita?', async ({ page }) => {
+  // A miniatura (canvas role=img) só leva um nome curto ("Prévia da imagem, com exemplo no que falta"); a descrição
+  // completa do que está escrito fica na prévia grande, que abre em "Ver maior".
   const D3 = 'c1-previa';
   await condicoes(page, { rede: '4G' });
   await page.goto('./#/fazer/aviso');
@@ -277,23 +267,37 @@ test('C1: a descrição da prévia acompanha o que ele digita?', async ({ page }
   const logo = await page.locator('#fluxo-mini-canvas').getAttribute('aria-label');
   await page.waitForTimeout(1500);
   const depois = await page.locator('#fluxo-mini-canvas').getAttribute('aria-label');
-  anotar(D3, `Descrição antes: ${antes}
+  anotar(D3, `Nome da miniatura antes: ${antes}
 Logo depois de digitar: ${logo}
 1,5 s depois: ${depois}`);
-  anotar(D3, `Atualizou com 1,5 s de espera: ${depois?.includes('Mutirão de limpeza')}; logo ao digitar: ${logo?.includes('Mutirão de limpeza')}`);
-  // Sai do campo e olha de novo (o que o leitor lê ao voltar a passar pela imagem)
   await page.keyboard.press('Tab');
   const ao_sair = await page.locator('#fluxo-mini-canvas').getAttribute('aria-label');
-  anotar(D3, `Ao sair do campo: ${ao_sair?.includes('Mutirão de limpeza')}`);
-  expect.soft(depois).toContain('Mutirão de limpeza');
+  anotar(D3, `Nome da miniatura ao sair do campo: ${ao_sair}`);
+  // A descrição completa: "Ver maior" abre a prévia grande.
+  await page.locator('#fluxo-ver-maior').click();
+  await page.waitForTimeout(800);
+  const grande = await page.locator('#fluxo-dialogo-canvas').getAttribute('aria-label');
+  anotar(D3, `Descrição da prévia grande: ${grande}`);
+  anotar(D3, `A prévia grande cita o título digitado: ${grande?.includes('Mutirão de limpeza')}`);
+  expect.soft(grande).toContain('Mutirão de limpeza');
 });
 
-test('C1: onde fica o foco depois de "Mandar mesmo assim" e de "Mudar algo"?', async ({ page }) => {
+test('C1: onde fica o foco depois de "Seguir assim" no painel do órgão?', async ({ page }) => {
   const D4 = 'c1-painel-foco';
   await escutarAnuncios(page);
   await page.goto('./#/fazer/aviso');
   await expect(titulo(page)).toContainText('Passo 1 de 3');
-  for (let i = 0; i < 3; i++) {
+  await digitar(page, '#fluxo-titulo', 'Defesa Civil: aviso de chuva forte', { arquivo: D4 });
+  await tabAte(page, '#fluxo-continuar', { max: 25 });
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(500);
+  anotar(D4, `Painel do órgão aberto, foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))}`);
+  await page.keyboard.press('Tab');
+  anotar(D4, `Tab: ${await focado(page)}`);
+  await page.keyboard.press('Enter'); // "Seguir assim"
+  await page.waitForTimeout(800);
+  anotar(D4, `Depois de "Seguir assim": painel visível ${await page.locator('dialog#fluxo-orgao').isVisible()} | h1 ${(await titulo(page).innerText()).replace(/\s+/g, ' ')} | foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))}`);
+  for (let i = 0; i < 2; i++) {
     await tabAte(page, '#fluxo-continuar', { max: 25 });
     await page.keyboard.press('Enter');
     await page.waitForTimeout(500);
@@ -302,16 +306,6 @@ test('C1: onde fica o foco depois de "Mandar mesmo assim" e de "Mudar algo"?', a
   await lerAnuncios(page);
   await tabAte(page, '#fluxo-mandar', { max: 25 });
   await page.keyboard.press('Enter');
-  await page.waitForTimeout(400);
-  anotar(D4, `Painel aberto, foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))}`);
-  await page.keyboard.press('Tab');
-  anotar(D4, `Tab: ${await focado(page)}`);
-  await page.keyboard.press('Enter'); // "Mandar mesmo assim"
-  await page.waitForTimeout(800);
-  anotar(D4, `Depois de "Mandar mesmo assim": painel visível ${await page.locator('#fluxo-confirma').isVisible()} | foco: ${await focado(page)} | avisos: ${JSON.stringify(await lerAnuncios(page))} | partilhas: ${(await page.evaluate(() => window.__partilhas)).length}`);
-  // segundo toque em Mandar: painel volta?
-  await tabAte(page, '#fluxo-mandar', { max: 25, voltar: true });
-  await page.keyboard.press('Enter');
   await page.waitForTimeout(500);
-  anotar(D4, `Segundo Mandar: painel visível ${await page.locator('#fluxo-confirma').isVisible()} | partilhas ${(await page.evaluate(() => window.__partilhas)).length} | foco ${await focado(page)} | avisos ${JSON.stringify(await lerAnuncios(page))}`);
+  anotar(D4, `Mandar no Pronto (órgão já conferido no passo 1): painel do Pronto visível ${await page.locator('#fluxo-confirma').isVisible()} | partilhas ${(await page.evaluate(() => window.__partilhas)).length} | foco ${await focado(page)} | avisos ${JSON.stringify(await lerAnuncios(page))}`);
 });

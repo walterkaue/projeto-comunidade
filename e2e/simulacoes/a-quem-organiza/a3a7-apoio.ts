@@ -1,5 +1,6 @@
 // Apoio dos grupos a3 (Pastora Lúcia) e a7 (Bia). Só para a simulação; nada daqui entra no site.
 import type { Locator, Page } from '@playwright/test';
+import { preencherObrigatoriosVazios } from '../obrigatorios';
 import { cobertoPorFaixa, expect, foto, inspecionar, registrar, salvarTexto, titulo, tocar } from './sim';
 
 export const nota = (chave: string, dados: Record<string, unknown> = {}): void => registrar('achados-a3a7', { chave, ...dados });
@@ -75,15 +76,17 @@ export async function caminho(page: Page, r: Roteiro, cron: { marca(e: string): 
   cron.marca('inicio');
   await tocar(page.getByRole('link', { name: new RegExp(r.porta) }));
   await expect(titulo(page)).toContainText('Passo 1 de 3');
+  // Os campos começam vazios; o exemplo é só o cinza de dentro (placeholder) e a miniatura.
   const exemplo = {
-    titulo: await page.locator('#fluxo-titulo').inputValue(),
-    org: await page.locator('#fluxo-organizacao').inputValue(),
-    texto: await page.locator('#fluxo-texto').inputValue(),
-    botao: await page.locator('#fluxo-apagar').textContent(),
+    titulo: await page.locator('#fluxo-titulo').getAttribute('placeholder'),
+    org: await page.locator('#fluxo-organizacao').getAttribute('placeholder'),
+    texto: await page.locator('#fluxo-texto').getAttribute('placeholder'),
+    valoresAoAbrir: [await page.locator('#fluxo-titulo').inputValue(), await page.locator('#fluxo-organizacao').inputValue(), await page.locator('#fluxo-texto').inputValue()],
+    apagarVisivel: await page.locator('#fluxo-apagar').isVisible(),
   };
   nota('exemplo-passo1', { prefixo, ...exemplo });
-  await foto(page, `${prefixo} passo1 exemplo`);
-  await inspecionar(page, `${prefixo} passo 1 (exemplo)`);
+  await foto(page, `${prefixo} passo1 vazio`);
+  await inspecionar(page, `${prefixo} passo 1 (vazio)`);
   if (r.medirFaixas) await medirMini(page, `${prefixo} passo 1`);
 
   // Passo 1
@@ -121,6 +124,7 @@ export async function caminho(page: Page, r: Roteiro, cron: { marca(e: string): 
     nota('passo2-dia', { prefixo, dia: await page.locator('#fluxo-data').inputValue(), extenso: await page.locator('#fluxo-data-extenso').textContent(), hora: await page.locator('#fluxo-hora').inputValue(), local: await page.locator('#fluxo-local').inputValue() });
     await page.locator('#fluxo-hora').fill('19:30');
     if (r.local) await digitar(page.locator('#fluxo-local'), r.local);
+    else await preencherObrigatoriosVazios(page, { tipo: 'evento', agenda: true }, 2); // o local começa vazio e é obrigatório
   } else {
     await tocar(page.getByRole('button', { name: 'Hoje' }));
     nota('passo2-dia', { prefixo, dia: await page.locator('#fluxo-data').inputValue(), extenso: await page.locator('#fluxo-data-extenso').textContent() });
@@ -161,7 +165,7 @@ export async function caminho(page: Page, r: Roteiro, cron: { marca(e: string): 
   if (r.medirFaixas) await medirMini(page, `${prefixo} pronto`);
   nota('pronto', {
     prefixo,
-    aviso: (await page.locator('#fluxo-aviso-exemplo').count()) ? await page.locator('#fluxo-aviso-exemplo').textContent() : null,
+    avisoDoExemplo: await page.locator('#fluxo-aviso-exemplo').count(), // 0: o aviso do exemplo não existe mais
     linkEstado: await page.locator('#fluxo-link-estado').textContent(),
     avisoLink: await page.locator('#fluxo-aviso-link').textContent(),
     dicaOutro: await page.locator('#fluxo-outro-dica').textContent(),
@@ -254,7 +258,7 @@ export async function depois(page: Page, prefixo: string, esperado: { titulo: st
   await tocar(page.getByRole('link', { name: /Divulgar um evento|Contar uma conquista/ }).first());
   await expect(titulo(page)).toContainText('Passo 1 de 3');
   const t = await page.locator('#fluxo-titulo').inputValue();
-  nota('fazer-outro-depois', { prefixo, titulo: t, org: await page.locator('#fluxo-organizacao').inputValue(), voltouAoExemplo: t !== esperado.titulo });
+  nota('fazer-outro-depois', { prefixo, titulo: t, org: await page.locator('#fluxo-organizacao').inputValue(), camposVazios: t === '' });
   await page.goBack();
   await page.waitForTimeout(400);
   nota('goback-do-passo1-ao-inicio', { prefixo, titulo: (await passoDe(page))?.replace(/\s+/g, ' '), url: page.url() });

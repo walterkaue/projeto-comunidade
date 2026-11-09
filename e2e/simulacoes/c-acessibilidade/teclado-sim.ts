@@ -142,3 +142,33 @@ export async function ordemVisual(page: Page): Promise<string[]> {
     return ach;
   });
 }
+
+/**
+ * Escreve o dia (dd/mm/aaaa) no campo `#fluxo-data` só pelo teclado. No campo de calendário (type="date") as teclas
+ * vão de segmento em segmento (dia, mês, ano); no campo de texto de reserva, digita-se com as barras. Se o campo não
+ * aceitar as teclas, preenche pelo valor e diz que precisou. Devolve o valor do campo e se precisou do reserva.
+ */
+export async function digitarDia(page: Page, ddmmaaaa: string, o: { arquivo?: string; trilha?: Parada[] } = {}): Promise<{ valor: string; porTeclas: boolean }> {
+  const r = await tabAte(page, '#fluxo-data', { arquivo: o.arquivo, trilha: o.trilha });
+  const campo = page.locator('#fluxo-data');
+  const calendario = (await campo.getAttribute('type')) === 'date';
+  const [d, m, a] = ddmmaaaa.split('/');
+  const esperado = calendario ? `${a}-${m}-${d}` : ddmmaaaa;
+  if (r.achou) {
+    if (calendario) {
+      await page.keyboard.press('Backspace'); // limpa o segmento onde o foco caiu
+      await page.keyboard.type(`${d}${m}${a}`);
+    } else {
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('Delete');
+      await page.keyboard.type(ddmmaaaa);
+    }
+  }
+  let valor = await campo.inputValue();
+  const porTeclas = valor === esperado;
+  if (!porTeclas) {
+    await campo.fill(esperado);
+    valor = await campo.inputValue();
+  }
+  return { valor, porTeclas };
+}

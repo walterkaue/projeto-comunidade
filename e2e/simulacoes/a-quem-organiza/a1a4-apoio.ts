@@ -84,6 +84,16 @@ export async function valores(page: Page, ids: string[]): Promise<Record<string,
   return r;
 }
 
+/** O exemplo em cinza (placeholder "Ex.: …") de cada campo: os campos dos passos 1 e 2 começam vazios. */
+export async function exemplosEmCinza(page: Page, ids: string[]): Promise<Record<string, string>> {
+  const r: Record<string, string> = {};
+  for (const id of ids) {
+    const l = page.locator(`[id="${id}"]`);
+    r[id] = (await l.count()) ? ((await l.getAttribute('placeholder')) ?? '(sem exemplo em cinza)') : '(não existe)';
+  }
+  return r;
+}
+
 export async function naTela(l: Locator): Promise<{ top: number; bottom: number; altura: number; dentro: boolean }> {
   return l.evaluate((el) => {
     const r = el.getBoundingClientRect();
