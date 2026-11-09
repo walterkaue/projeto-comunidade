@@ -41,15 +41,6 @@
   /* Foco: a --cor dentro de uma porta, a tinta fora (contorno de 3 px, afastado 2 px). */
   --foco: var(--tinta);
 
-  /* Nomes antigos, apelidos dos novos até as telas trocarem (docs/proximos-passos.md: saem depois).
-     As três --porta-* ficam em hexadecimal porque src/paginas/inicio.test.ts lê o valor: são a --cor-clara,
-     a --tinta e a --tinta-suave da reunião. */
-  --destaque: var(--cor);
-  --sobre-destaque: var(--sobre-cor);
-  --porta-fundo: #e2eef2;
-  --porta-texto: #2a211b;
-  --porta-desc: #5c4f45;
-
   --raio: 12px;
   --raio-botao: 14px;
   --raio-aviso: 14px;
@@ -84,10 +75,6 @@
     --clara-resultado: #352a10;
     --cor-agradecimento: #eba0c5;
     --clara-agradecimento: #3a1e2c;
-
-    --porta-fundo: #18323c;
-    --porta-texto: #f6efe6;
-    --porta-desc: #cbbdad;
   }
 }
 
@@ -120,7 +107,6 @@
 /* Variável que usa outra é calculada onde é declarada: dentro da porta, de novo, para pegar a cor dela. */
 [data-porta] {
   --foco: var(--cor);
-  --destaque: var(--cor);
 }
 
 *,
@@ -225,113 +211,6 @@ a {
   color: var(--tinta);
 }
 
-.botao-grande {
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  min-height: 5.5rem;
-  padding: 1rem 1.25rem;
-  gap: 0.25rem;
-  overflow-wrap: anywhere;
-}
-
-.botao-titulo {
-  font-size: 1.25rem;
-}
-
-.botao-descricao {
-  font-weight: 400;
-}
-
-/* ---------- inicial ---------- */
-
-.inicio-nome {
-  color: var(--tinta-suave);
-  font-size: 0.9375rem;
-  font-weight: 700;
-  margin: 0 0 0.25rem;
-}
-
-.inicio-lema {
-  color: var(--tinta-suave);
-  margin: 0 0 1rem;
-}
-
-.inicio-portas {
-  display: grid;
-  /* Duas colunas mesmo em 360 px (nunca três, nem deitado); com texto muito ampliado cai para uma. */
-  grid-template-columns: repeat(auto-fit, minmax(max(9.5rem, 40%), 1fr));
-  gap: 0.75rem;
-}
-
-.inicio-portas .botao {
-  margin: 0;
-  height: 100%;
-  background: transparent;
-  color: var(--tinta);
-  border-color: var(--tinta);
-}
-
-.porta-destaque,
-.porta-larga {
-  grid-column: 1 / -1;
-}
-
-.inicio-portas .botao-grande {
-  justify-content: flex-start;
-  min-height: var(--toque);
-  padding: 0.875rem 1rem;
-  gap: 0.5rem;
-}
-
-.porta-destaque .botao-grande,
-.porta-larga .botao-grande {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.875rem;
-  min-height: 5rem;
-}
-
-.porta-destaque .botao-grande {
-  min-height: 6.5rem;
-  background: var(--porta-fundo);
-  /* contorno de tinta: no tema escuro, o fundo da porta quase some contra a página */
-  border-color: var(--tinta);
-  color: var(--porta-texto);
-}
-
-.porta-destaque .botao-titulo {
-  font-size: 1.375rem;
-}
-
-.porta-destaque .botao-descricao {
-  color: var(--porta-desc);
-}
-
-.porta-icone {
-  flex: none;
-}
-
-.porta-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
-}
-
-.porta-meia .botao-titulo {
-  font-size: 1.125rem;
-}
-
-.porta-meia .botao-descricao {
-  font-size: 0.9375rem;
-}
-
-.inicio-ata {
-  margin-top: 1.5rem;
-}
-
-.inicio-portas,
 .rodape ul {
   list-style: none;
   margin: 0;
@@ -378,14 +257,14 @@ a {
 
 /* Contraste forçado (Windows): o botão principal mantém fundo e foco visíveis. */
 @media (forced-colors: active) {
-  .botao:not(.botao-sec):not(.botao-grande):not(.botao-ter) {
+  .botao:not(.botao-sec):not(.botao-ter) {
     forced-color-adjust: none;
     background: ButtonText;
     color: ButtonFace;
     border-color: ButtonText;
   }
 
-  .botao:not(.botao-sec):not(.botao-grande):not(.botao-ter):focus-visible {
+  .botao:not(.botao-sec):not(.botao-ter):focus-visible {
     outline-color: Highlight;
   }
 }

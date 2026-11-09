@@ -168,17 +168,9 @@ describe('tema.css: tokens', () => {
       expect(escuro[nome]).toMatch(/rgba\(0, 0, 0/);
     }
   });
-  it('nomes antigos continuam valendo como apelidos (saem quando as telas trocarem)', () => {
-    for (const modo of MODOS) {
-      const t = tokens(modo);
-      expect(hex(t, '--destaque')).toBe(hex(t, '--cor'));
-      expect(hex(t, '--sobre-destaque')).toBe(hex(t, '--sobre-cor'));
-      const r = tokens(modo, 'reuniao');
-      expect(hex(t, '--porta-fundo')).toBe(hex(r, '--cor-clara'));
-      expect(hex(t, '--porta-texto')).toBe(hex(t, '--tinta'));
-      expect(hex(t, '--porta-desc')).toBe(hex(t, '--tinta-suave'));
-    }
-    expect(regra(cssForaDoEscuro, '[data-porta]')['--destaque']).toBe('var(--cor)');
+  it('os nomes antigos (--destaque, --sobre-destaque, --porta-*) saíram', () => {
+    expect(css).not.toMatch(/--destaque|--sobre-destaque|--porta-fundo|--porta-texto|--porta-desc/);
+    expect(css).not.toMatch(/\.(inicio-|porta-|botao-grande|botao-titulo|botao-descricao)/);
   });
 });
 
@@ -187,7 +179,7 @@ describe('tema.css', () => {
     const i = css.indexOf('@media (forced-colors: active)');
     expect(i).toBeGreaterThan(-1);
     const b = css.slice(i);
-    expect(b).toContain('.botao:not(.botao-sec):not(.botao-grande)');
+    expect(b).toContain('.botao:not(.botao-sec):not(.botao-ter)');
     expect(b).toContain('forced-color-adjust: none');
     expect(b).toContain('background: ButtonText');
     expect(b).toContain('color: ButtonFace');
