@@ -178,17 +178,6 @@
   text-align: start;
 }
 
-/* cópia provisória: pedido em docs/pedidos-comum.md */
-/* O campo de data nativo tem largura mínima própria: com letra a 200% em 320 px não pode passar da tela (WCAG 1.4.10). */
-.fluxo-form .campo {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-.fluxo-form .campo-entrada {
-  min-width: 0;
-  max-width: 100%;
-}
-
 /* ---------- linha da prévia (passos 1 e 2): fixa no topo ---------- */
 .fluxo-mini {
   position: sticky;

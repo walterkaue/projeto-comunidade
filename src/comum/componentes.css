@@ -155,6 +155,8 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   padding: 0;
   border: 0;
   min-width: 0;
+  /* Coluna que encolhe: o <input type="date"> nativo tem largura mínima própria e, a 200% em 320 px, passaria da tela. */
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .campo-rotulo {
@@ -164,9 +166,8 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
   line-height: 1.3;
 }
 
-/* "(opcional)" só nos campos que não são obrigatórios (formulario.ts). .campo-obrig fica até o fluxo trocar. */
-.campo-opcional,
-.campo-obrig {
+/* "(opcional)" só nos campos que não são obrigatórios (formulario.ts). */
+.campo-opcional {
   font-weight: 400;
   color: var(--tinta-suave);
 }
@@ -210,6 +211,8 @@ html:has(.aviso-vivo-alto.aviso-vivo-visivel) {
 .campo-entrada {
   display: block;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   min-height: var(--toque);
   padding: 10px 12px;
   border: 2px solid var(--borda-campo);

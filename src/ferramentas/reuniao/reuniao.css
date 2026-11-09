@@ -136,13 +136,3 @@
   .ata-ponto h4 { break-after: avoid; }
   .ata-aviso { color: #000; }
 }
-
-/* Campo Data (type="date") a 200% em 320 px: o controle nativo tem largura mínima própria e passava da tela.
-   cópia provisória: pedido em docs/pedidos-comum.md (o certo é em .campo, src/comum/componentes.css). */
-.reuniao-tela .campo {
-  grid-template-columns: minmax(0, 1fr);
-}
-.reuniao-tela .campo-entrada {
-  min-width: 0;
-  max-width: 100%;
-}
