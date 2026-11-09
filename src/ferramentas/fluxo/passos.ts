@@ -5,6 +5,7 @@ import { avisar } from '../../comum/aviso';
 import { campoAreaDeTexto, campoTexto, limparErro, limparTodosOsErros, mostrarErro } from '../../comum/formulario';
 import { esc } from '../../comum/html';
 import { icone } from '../../comum/icones';
+import { nomeCurtoDaOrganizacao } from '../cards/exemplos';
 import { DEF_MODELOS } from '../cards/modelos';
 import {
   apagarOPasso1,
@@ -69,7 +70,7 @@ function camposDoPasso1Html(d: DadosDoFluxo): string {
   // Reunião: o corretor do navegador pode mandar o texto para fora do aparelho (nome de pessoa na pauta).
   const semCorretor = d.tipo === 'reuniao';
   return `${campoTexto({ id: 'fluxo-titulo', rotulo: 'Título', valor: d.titulo, exemplo: d.exemplo.titulo, maximo: LIMITES.titulo, obrigatorio: true, semCorretor })}
-      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: DICA_DA_ORGANIZACAO, valor: d.organizacao, exemplo: d.exemplo.organizacao, maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
+      ${campoTexto({ id: 'fluxo-organizacao', rotulo: 'Organização', dica: DICA_DA_ORGANIZACAO, valor: d.organizacao, exemplo: nomeCurtoDaOrganizacao(d.exemplo.organizacao), maximo: LIMITES.organizacao, autocomplete: 'off', semCorretor })}
       ${
         d.tipo === 'reuniao'
           ? `<div class="aviso-info fluxo-aviso-do-link" id="fluxo-aviso-do-link">${icone('info', { classe: 'aviso-icone' })}<div class="aviso-corpo"><p><strong>${esc(AVISO_DO_LINK_TITULO)}</strong> ${esc(AVISO_DO_LINK_RESTO)}</p></div></div>

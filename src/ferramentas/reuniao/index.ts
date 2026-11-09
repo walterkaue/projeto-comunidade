@@ -21,7 +21,7 @@ import {
   type Ata,
 } from './ata';
 import { moverItem, tirarItem } from './convocacao';
-import { exemploDeOrganizacao, sorteioDoExemplo } from './exemploOrg';
+import { exemploDeOrganizacao, sorteioDoRodizio } from '../cards/exemplos';
 import { apagarAta, apagarConvocacao, ligarAvisoDeSaidaDaAta, rascunho } from './rascunho';
 
 type NomeDaLista = 'pontos' | 'encaminhamentos';
@@ -39,7 +39,7 @@ export const tela: Tela = (raiz) => {
   raiz.replaceChildren(base);
 
   // Exemplo cinza do campo Organização: rodízio dos exemplos, fixo enquanto a tela está aberta.
-  const exemploOrg = exemploDeOrganizacao(sorteioDoExemplo());
+  const exemploOrg = exemploDeOrganizacao(sorteioDoRodizio());
 
   // O h1 tem as duas partes juntas: o leitor de tela ouve "Depois da reunião: a ata" (o texto de antes; a maiúscula de "A ata" vem do CSS, ::first-letter). O aria-label fixa o nome: sem ele, o Chrome lia "reunião : a ata" por causa do span escondido.
   base.innerHTML = `<header class="reuniao-topo">

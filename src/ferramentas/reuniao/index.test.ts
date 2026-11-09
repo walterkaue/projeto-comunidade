@@ -6,8 +6,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { campoTexto } from '../../comum/formulario';
-import { ORGANIZACOES, VOLTA_DO_RODIZIO } from '../cards/exemplos';
-import { cortarLimpo, exemploDeOrganizacao, MAXIMO_DO_EXEMPLO, NOMES_CURTOS, nomesSemCurto } from './exemploOrg';
+import { cortarLimpo, exemploDeOrganizacao, MAXIMO_DO_EXEMPLO, NOMES_CURTOS, nomesSemCurto, ORGANIZACOES, VOLTA_DO_RODIZIO } from '../cards/exemplos';
 
 const pasta = dirname(fileURLToPath(import.meta.url));
 const codigo = readFileSync(join(pasta, 'index.ts'), 'utf8');
