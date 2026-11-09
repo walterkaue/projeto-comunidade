@@ -207,6 +207,15 @@ function corpoDe(texto: string, seletor: string): string {
   return bloco(semComentario, m.index).dentro;
 }
 
+describe('componentes.css: campo de data cabe a 200% em 320 px', () => {
+  it('.campo tem coluna minmax(0, 1fr) e .campo-entrada pode encolher', () => {
+    expect(corpoDe(componentes, '.campo')).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)/);
+    const entrada = corpoDe(componentes, '.campo-entrada');
+    expect(entrada).toMatch(/min-width:\s*0/);
+    expect(entrada).toMatch(/max-width:\s*100%/);
+  });
+});
+
 describe('componentes.css', () => {
   const secao10 = visual.slice(visual.indexOf('## 10. Classes no código'));
   const classes = [...secao10.matchAll(/^\| `([\w-]+)`/gm)].map((m) => m[1]!);

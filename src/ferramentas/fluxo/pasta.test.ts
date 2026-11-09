@@ -73,3 +73,9 @@ describe('o exemplo só ilustra (placeholder e miniatura dos passos 1 e 2)', () 
     }
   });
 });
+
+describe('exemplo da Organização no passo 1', () => {
+  it('o placeholder usa o nome curto (cabe numa linha, sem "…")', () => {
+    expect(semComentarios('passos.ts')).toContain('exemplo: nomeCurtoDaOrganizacao(d.exemplo.organizacao)');
+  });
+});
