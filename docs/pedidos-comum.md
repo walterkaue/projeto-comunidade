@@ -14,30 +14,37 @@ Modelo de pedido (copie, preencha e apague os comentários):
 
 ## Pedidos abertos
 
+(nenhum pedido aberto)
+
+## Pedidos atendidos
+
 ### 2026-11-07 · sessão 3 da nova cara · tirar de `tema.css` o início antigo e os apelidos de tokens
 - **O que precisa:** apagar de `src/comum/tema.css` as regras do início antigo, que nenhuma tela usa mais: `.inicio-nome`, `.inicio-lema`, `.inicio-portas` (e o `.inicio-portas .botao`; na regra conjunta `.inicio-portas, .rodape ul`, tirar só o `.inicio-portas`), `.porta-destaque`, `.porta-larga`, `.porta-meia`, `.porta-icone`, `.porta-texto` e as combinações com `.botao-grande`, `.botao-titulo` e `.botao-descricao`, e `.inicio-ata`. Apagar também os tokens `--porta-fundo`, `--porta-texto` e `--porta-desc` (claro e escuro) e, depois que a Sessão 2 trocar o fluxo, `--destaque` e `--sobre-destaque`. Conferir antes se `.botao-grande` ainda é usada no fluxo; se não for, sai também o `:not(.botao-grande)` do bloco forced-colors e o que o `tema.test.ts` espera dele.
 - **Por quê:** o início novo (`src/paginas/inicio.ts` e `inicio.css`) usa classes novas (`ini-*`, `porta`, `porta-<peso>`). As regras velhas pesam no pacote inicial e uma delas ainda age: `.porta-larga { grid-column: 1 / -1 }` casa com o `<a class="porta porta-larga">` novo (sem efeito visível hoje, mas por acaso). E `.porta-texto` está nos dois arquivos.
 - **Cópia provisória:** nenhuma.
+- **Atendido em 08/11/2026** (sessão 4 da nova cara, acabamento): saíram de `tema.css` o início antigo (`.inicio-*`, `.porta-*`, `.botao-grande`, `.botao-titulo`, `.botao-descricao`) e os tokens `--destaque`, `--sobre-destaque`, `--porta-fundo`, `--porta-texto`, `--porta-desc` (e o `:not(.botao-grande)` do forced-colors); `.campo-obrig` saiu de `componentes.css`. O teste dos apelidos virou um teste de que eles não voltam.
 
 ### 2026-11-07 · sessão 3 da nova cara · campo de data não passar da tela a 200% em 320 px
 - **O que precisa:** em `src/comum/componentes.css`, `.campo { grid-template-columns: minmax(0, 1fr); }` e `.campo-entrada { min-width: 0; max-width: 100%; }`.
 - **Por quê:** o `<input type="date">` nativo tem largura mínima própria; com a letra a 200% em 320 px, o campo Data da ata termina em 341 px e abre rolagem lateral (WCAG 1.4.10, revisão de acessibilidade de 07/11/2026). Deve valer também para o Dia do passo 2.
 - **Cópia provisória:** `src/ferramentas/reuniao/reuniao.css` (`.reuniao-tela .campo` e `.reuniao-tela .campo-entrada`), marcada.
+- **Atendido em 08/11/2026** (sessão 4): `.campo` e `.campo-entrada` em `componentes.css`; as cópias provisórias de `reuniao.css` e `fluxo.css` saíram.
 
 ### 2026-11-07 · sessão 3 da nova cara · sorteio do rodízio de exemplos num lugar só
 - **O que precisa:** uma função compartilhada que sorteie o ponto de partida do rodízio de exemplos (hoje em `src/ferramentas/fluxo/memoria.ts`), por exemplo em `src/ferramentas/cards/exemplos.ts` ou `src/comum/`: `function sorteioDoRodizio(): number`. Se a lista de nomes curtos da ata servir também ao fluxo (exemplo de uma linha no campo Organização), levar junto `NOMES_CURTOS`.
 - **Por quê:** a ata passou a mostrar um exemplo em cinza na Organização, do mesmo rodízio, e repete o sorteio. Com nomes curtos escritos à mão porque os do catálogo passam de 28 letras e o `::placeholder` não quebra linha (docs/visual.md, seção 10).
 - **Cópia provisória:** `src/ferramentas/reuniao/exemploOrg.ts`, marcada.
+- **Atendido em 08/11/2026** (sessão 4): `sorteioDoRodizio`, `NOMES_CURTOS`, `MAXIMO_DO_EXEMPLO`, `cortarLimpo`, `nomeCurtoDaOrganizacao` e `exemploDeOrganizacao` ficam em `src/ferramentas/cards/exemplos.ts`; a ata e o fluxo usam os dois. O exemplo da Organização no passo 1 usa o nome curto (sem "…"). `reuniao/exemploOrg.ts` foi removido; o equilíbrio do rodízio e os três grupos religiosos seguem como antes (testes em `reuniao/index.test.ts`).
 
 ### 2026-11-07 · sessão 3 da nova cara · acabamentos que ficaram fora das pastas da sessão 3
 - **O que precisa:** (1) `src/comum/icones.ts:7`: o comentário diz que os cinco das portas são "iguais aos de src/paginas/inicio.ts", mas o início agora usa `icone()` (o `icones.test.ts` já guarda os caminhos de antes). (2) `e2e/simulacoes/a-quem-organiza/a5-apoio.ts:161` usa `.inicio-portas a` (agora `.ini-portas a`) e `a2-rogerio.sim.ts:216` usa `.reuniao-aviso` com `.first()` (agora pega só a linha do relógio; o cartão inteiro é `.reuniao-avisos`). (3) Na tela de link removido, o e-mail de contato quebra no meio do domínio em 360 px ("…@gmail.c / om") por causa do `overflow-wrap: anywhere` do `.aviso-atencao`; dá para pôr `<wbr>` depois do `@` e dos pontos sem mudar uma palavra (o texto está congelado até o advogado).
 - **Por quê:** achados da revisão de 07/11/2026; os arquivos são compartilhados.
 - **Cópia provisória:** nenhuma.
+- **Atendido em 08/11/2026** (sessão 4): (1) comentário de `icones.ts` corrigido; (2) seletores das simulações atualizados (e2e/simulacoes); (3) `htmlDoParagrafo` (`evento/removido.ts`) põe `<wbr>` depois do @ e dos pontos do e-mail na tela de link removido (página do evento e tela de editar), sem mudar uma palavra.
 
 ### 2026-11-07 · sessão 3 da nova cara (registro) · `src/comum/icones.test.ts` mudou nesta sessão
 - **O que mudou:** o teste "as cinco portas são iguais às de src/paginas/inicio.ts" lia os caminhos de ícone que o brief mandou tirar de `inicio.ts`. Virou "as cinco portas continuam com os caminhos de antes" (os cinco caminhos fixos no teste) e "o início não tem mais caminhos de ícone próprios". Nenhum código de `src/comum/` mudou.
-
-## Pedidos atendidos
+- **Registro, nada a fazer.**
 
 ### 2026-11-07 · Sessão 2 (parte A, exemplo só em cinza) · exceção em `e2e/apoio.ts` e `e2e/evento.spec.ts`
 - **O que foi feito:** a Sessão 2 mexeu em dois arquivos de e2e compartilhados, só no mínimo, porque a mudança dela (os campos do fluxo começam vazios, com o exemplo em cinza) quebrava esses testes. Em `e2e/apoio.ts`, `irAteOPronto` agora preenche os obrigatórios que estiverem vazios (título, pauta da reunião, dia, hora e local) por `preencherObrigatoriosVazios` (novo `e2e/fluxo-apoio.ts`); sem isso, o passo 1 e o 2 barram. Em `e2e/evento.spec.ts`, `criarEvento` escreve o título em vez de ler o do exemplo. Também `e2e/simulacoes/b-quem-recebe/g3-varredura.vitest.ts`: troca `exemploDoFluxo` por `dadosNovos` + `exemploDoRodizio`, porque o nome sumiu. Nada mais mudou nesses arquivos.
